@@ -1,0 +1,17 @@
+version: 1
+categories:
+  system:       "on"
+  business:     "on"
+  product:      "on"
+  architecture: "on"
+  research:     "on"
+  ui:           "off"
+  services:     "off"
+  security:     "off"
+  testing:      "off"
+  observability: "off"
+  deployment:   "off"
+  operations:   "off"
+  decisions:    "off"
+  readiness:    "off"
+  epics:        "off"

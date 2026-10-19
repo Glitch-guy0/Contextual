@@ -1,0 +1,46 @@
+# Delivery Strategy — Engineering Process Depth Contract (DBW v1.2)
+schema: 1
+decided_by: delivery-strategy-agent
+delivery_mode: balanced
+target_maturity: mvp
+rationale: "Default balanced MVP strategy established during initial workspace scaffolding."
+inputs:
+  value: medium
+  time_budget: "standard"
+  effort_budget: "standard"
+  risk: medium
+  reversibility: moderate
+  scale: "standard"
+  security_sensitivity: low
+  operational_impact: low
+planning_depth:
+  pm: lite
+  architecture: lite
+  test_planning: targeted
+  party_mode: on-trigger
+artifact_budget:
+  required:
+    - requirements.md
+    - delivery-strategy.yaml
+    - verification.md
+    - sprint-status.yaml
+  optional:
+    - prd.md
+    - conventions.md
+    - design-doc.md
+  unnecessary: []
+gates:
+  G1: full
+  G2: lite
+  G3: on-trigger
+  G4: full
+  G5: full
+  G6: full
+change_boundary: standard
+history:
+  - at: "2026-10-19T05:01:43.561Z"
+    event: initial
+    from: null
+    to: "balanced/mvp"
+    reason: "Initial workspace scaffold"
+    confirmed_by_user: true
