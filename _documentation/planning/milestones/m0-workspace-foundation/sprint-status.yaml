@@ -1,0 +1,138 @@
+# Sprint Status — Milestone M0: Workspace Foundation & Scaffolding (DBW v2.6)
+# Managed and written by sprint-agent; certified by pm-agent.
+version: 2
+updated_at: "2026-10-23T16:10:00.000Z"
+current_milestone: "m0-workspace-foundation"
+milestone_status: "not-started"
+
+stories:
+  - id: "S0.1"
+    epic: "EPIC-001"
+    title: "Turborepo Monorepo Root Scaffolding & Bun Toolchain"
+    owner: "developer-agent"
+    status: "not-started"
+    build_vs_buy_ref: "SW-CORE-001 / ADR-0002"
+    change_matrix:
+      new_files:
+        - "package.json"
+        - "turbo.json"
+        - "bunfig.toml"
+        - ".gitignore"
+      allowed_files: []
+      forbidden_files:
+        - "apps/**"
+        - "packages/**"
+        - "infra/**"
+    tests:
+      files:
+        - "tests/monorepo-layout.test.ts"
+      scenarios:
+        - "TC-0.1.1: Root package.json defines workspaces: ['apps/*', 'packages/*']"
+        - "TC-0.1.2: turbo.json specifies build, typecheck, lint, and clean task pipelines"
+        - "TC-0.1.3: bunfig.toml configures Bun package manager lockfile behavior"
+    observability:
+      events:
+        - "workspace.scaffold.initialized"
+      log_level: "INFO"
+      correlation_id: "x-correlation-id"
+      redaction: []
+    verification_scenarios:
+      - id: "TC-0.1.1"
+        command: "bun test tests/monorepo-layout.test.ts"
+        expected: "3 passed, 0 failed"
+    evidence:
+      command: ""
+      result: ""
+      signed_off_by: ""
+
+  - id: "S0.2"
+    epic: "EPIC-001"
+    title: "Internal Shared Packages Foundation (@repo/config, contracts, db, ui)"
+    owner: "developer-agent"
+    status: "not-started"
+    build_vs_buy_ref: "SW-CORE-002 / CV-001"
+    change_matrix:
+      new_files:
+        - "packages/config/package.json"
+        - "packages/config/tsconfig.base.json"
+        - "packages/config/tsconfig.node.json"
+        - "packages/config/tsconfig.react.json"
+        - "packages/contracts/package.json"
+        - "packages/contracts/tsconfig.json"
+        - "packages/contracts/src/index.ts"
+        - "packages/contracts/src/rfc9457.ts"
+        - "packages/db/package.json"
+        - "packages/db/tsconfig.json"
+        - "packages/db/src/index.ts"
+        - "packages/db/src/schema.ts"
+        - "packages/ui/package.json"
+        - "packages/ui/tsconfig.json"
+        - "packages/ui/src/index.ts"
+      allowed_files:
+        - "package.json"
+      forbidden_files:
+        - "apps/**"
+        - "infra/**"
+    tests:
+      files:
+        - "tests/package-exports.test.ts"
+      scenarios:
+        - "TC-0.2.1: packages/config exports valid strict TypeScript tsconfig presets"
+        - "TC-0.2.2: packages/contracts exports RFC 9457 standard problem details schema"
+        - "TC-0.2.3: packages/db exports Kysely database schema interface stubs"
+        - "TC-0.2.4: packages/ui exports foundational design token interfaces"
+    observability:
+      events:
+        - "workspace.packages.configured"
+      log_level: "INFO"
+      correlation_id: "x-correlation-id"
+      redaction: []
+    verification_scenarios:
+      - id: "TC-0.2.1"
+        command: "bun test tests/package-exports.test.ts"
+        expected: "4 passed, 0 failed"
+    evidence:
+      command: ""
+      result: ""
+      signed_off_by: ""
+
+  - id: "S0.3"
+    epic: "EPIC-001"
+    title: "Toolchain Scripts, Strict Typecheck & Monorepo Build Pipeline"
+    owner: "developer-agent"
+    status: "not-started"
+    build_vs_buy_ref: "SW-CORE-003 / NFR-010"
+    change_matrix:
+      new_files:
+        - "tests/monorepo-build.test.ts"
+      allowed_files:
+        - "package.json"
+        - "turbo.json"
+        - "packages/contracts/package.json"
+        - "packages/config/package.json"
+        - "packages/db/package.json"
+        - "packages/ui/package.json"
+      forbidden_files:
+        - "apps/**"
+        - "infra/**"
+    tests:
+      files:
+        - "tests/monorepo-build.test.ts"
+      scenarios:
+        - "TC-0.3.1: bun run build completes in < 15s with zero circular dependency warnings"
+        - "TC-0.3.2: bun run typecheck validates all packages under strict mode with 0 errors"
+        - "TC-0.3.3: bun run clean purges all build artifacts and .turbo cache directories"
+    observability:
+      events:
+        - "workspace.pipeline.verified"
+      log_level: "INFO"
+      correlation_id: "x-correlation-id"
+      redaction: []
+    verification_scenarios:
+      - id: "TC-0.3.1"
+        command: "bun run build && bun run typecheck"
+        expected: "Tasks: 4 successful, 4 total; 0 errors"
+    evidence:
+      command: ""
+      result: ""
+      signed_off_by: ""

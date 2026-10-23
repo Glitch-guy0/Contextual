@@ -3,7 +3,7 @@
 version: 2
 updated_at: "2026-10-23T10:28:00.000Z"
 current_milestone: "m2-metering-spine"
-milestone_status: "in-progress"
+milestone_status: "not-started"
 
 stories:
   - id: "S2.1"

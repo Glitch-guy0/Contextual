@@ -7,13 +7,13 @@
 # erroneously marked complete and M2 in-progress based on external project inferences.
 # Current workspace contains 0 product code files. M0 is the active next milestone.
 version: 1
-updated_at: "2026-10-23T15:25:00.000Z"
+updated_at: "2026-10-23T16:10:00.000Z"
 milestones:
   - id: "M0"
     name: "Workspace Foundation & Scaffolding"
     target_version: "v0.1.0-alpha.1"
     status: "not-started"
-    gate: "G1"
+    gate: "G5"
     gate_status: "READY"
     delivers: "Turborepo monorepo layout, Bun toolchain, shared packages (@repo/contracts, @repo/config, @repo/db, @repo/ui)"
     criteria:

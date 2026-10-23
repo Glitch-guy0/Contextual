@@ -233,6 +233,8 @@ The 42 functional requirements sealed in `project-brief.md` are mapped across 9 
 | **PTY-010** | Single Atomic Redis Lua Script for Metering & Rate Limiting | Eliminates concurrency race conditions on debit, enforces sliding window, and bounds Upstash command budget. |
 | **D-01** | Gemini Primary with Cloudflare Workers AI Llama-3.1-70B Fallback | Protects Cloudflare 10k daily neuron budget by routing primary traffic to Gemini, using Workers AI strictly as secondary circuit-breaker. |
 | **ADR-0004** | Unified Upstash Serverless Architecture (Redis, Vector, QStash) & Groq Fallback | Supersedes ADR-0001; replaces Cloudflare Workers AI and Qdrant with Upstash Vector (10k ops/day, no suspension) and Groq (1,000 RPD 70B fallback). |
+| **Q-001** | Unified Next.js 15 Landing Page Architecture | Marketing landing page hosted directly inside `apps/platform` on Next.js 15 App Router; single Vercel Hobby deployment, shared @repo/ui tokens, zero cross-domain auth redirects. |
+| **Q-002** | Strictly Social OAuth (Google & GitHub) Authentication | Limits authentication surface to Google and GitHub via Clerk, eliminating email magic link delivery services and password credential management. |
 
 ---
 
@@ -258,5 +260,10 @@ Contextual is an open, enterprise-grade conversational knowledge platform that e
   - Active planning sequence restored to Milestone M0 (Workspace Foundation & Scaffolding, `v0.1.0-alpha.1`) to establish Turborepo, Bun toolchain, and shared packages before subsequent milestones proceed.
   - Premature M2 sprint board (`m2-metering-spine/sprint-status.yaml`) and stories flagged as deferred pending M0/M1 completion.
 
+### Dated Delta Update: 2026-10-23 (User Decisions Q-001 & Q-002 Ratified)
+- **Trace ID:** `[Q-001]`, `[Q-002]` (User Questionnaire Responses)
+- **Landing Page Architecture ([Q-001]):** Ratified unified Next.js 15 App Router architecture (`apps/platform`) for the public marketing landing page, deploying under a single Vercel Hobby project and sharing `@repo/ui` component tokens.
+- **Authentication Perimeter ([Q-002]):** Ratified strictly Google and GitHub social OAuth via Clerk, disabling passwordless email magic link flows and email credential handling.
+
 ---
-*Authored and sealed by pm-agent at Checkpoint 2; updated by architect-agent at Checkpoint 3 (Gate G4); reconciled by pm-agent on drift audit.*
+*Authored and sealed by pm-agent at Checkpoint 2; updated by architect-agent at Checkpoint 3 (Gate G4); reconciled and updated by pm-agent on questionnaire ratification.*
