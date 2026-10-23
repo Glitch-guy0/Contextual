@@ -4,11 +4,15 @@ workflow:
   delivery_mode: balanced
   target_maturity: mvp
   risk_tier: HIGH
-  current_stage: "phase_2_pm_planning"
-  active_agent: pm-agent
-  checkpoint: "CP2"
-  gate: "G2"
-  gate_status: "PASS"
+  current_stage: "phase_4_developer_execution"
+  active_agent: developer-agent
+  checkpoint: "CP4"
+  gate: "G5"
+  gate_status: "IN_PROGRESS"
+  commands:
+    build_cmd: "bun run build"
+    test_cmd: "bun test"
+    lint_cmd: "bun run lint"
   artifacts:
     - path: "_documentation/planning/project-brief.md"
       type: "project-brief"
