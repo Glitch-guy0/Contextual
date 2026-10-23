@@ -43,7 +43,8 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [prd.md](planning/prd.md) | Product Requirements Document (10 sections) | A | `pm-agent` |
 | [conventions.md](planning/conventions.md) | Engineering standards & SemVer v0 to v1 | A | `pm-agent` |
 | [milestones/overview.md](planning/milestones/overview.md) | Release roadmap, testing strategy & gates | A | `pm-agent` |
-| [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter | A | `pm-agent` |
+| [m0-workspace-foundation/milestone.md](planning/milestones/m0-workspace-foundation/milestone.md) | Milestone M0 Charter (Active) | A | `pm-agent` |
+| [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Deferred) | A | `pm-agent` |
 | [m2-metering-spine/sprint-status.yaml](planning/milestones/m2-metering-spine/sprint-status.yaml) | Milestone M2 Sprint Board | B | `sprint-agent` |
 | [m2-metering-spine/git-plan.md](planning/milestones/m2-metering-spine/git-plan.md) | Milestone M2 Git & Branching Plan | A | `git-planner-agent` |
 | [quality/verification.md](planning/quality/verification.md) | M2 Verification Plan & Truth Tables | A | `test-agent` |
@@ -65,8 +66,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 
 ## 3. Closed Milestones
 
-- **M0: Workspace Foundation & Scaffolding** (`v0.1.0-alpha.1`) — Monorepo layout, Bun toolchain, TypeScript & ESLint configurations. Closed at Gate G6.
-- **M1: Developer Golden Path & Core Authentication** (`v0.1.0`) — Containerized local stack (`infra/compose.yaml`), `npm run dev:doctor`, Clerk OAuth JWT authentication, Neon Postgres schema setup. Closed at Gate G6.
+None. (Milestones M0 and M1 were previously noted as closed due to reference template drift; reconciled on 2026-10-23 to reflect current workspace reality where implementation has not yet commenced).
 
 ## 4. Open Questions & Roadmap Gaps
 

@@ -2,15 +2,19 @@
 # High-level milestone lifecycle. Managed by pm-agent.
 # For story-level implementation tracking, see each milestone's
 # sprint-status.yaml under planning/milestones/<id>/.
+#
+# NOTE (Reconciliation 2026-10-23): Reconciled milestone drift. M0 & M1 were
+# erroneously marked complete and M2 in-progress based on external project inferences.
+# Current workspace contains 0 product code files. M0 is the active next milestone.
 version: 1
-updated_at: "2026-10-23T09:55:00.000Z"
+updated_at: "2026-10-23T15:25:00.000Z"
 milestones:
   - id: "M0"
     name: "Workspace Foundation & Scaffolding"
     target_version: "v0.1.0-alpha.1"
-    status: "complete"
-    gate: "G6"
-    gate_status: "PASS"
+    status: "not-started"
+    gate: "G1"
+    gate_status: "READY"
     delivers: "Turborepo monorepo layout, Bun toolchain, shared packages (@repo/contracts, @repo/config, @repo/db, @repo/ui)"
     criteria:
       - "Turborepo workspace builds cleanly with zero circular dependencies"
@@ -19,9 +23,9 @@ milestones:
   - id: "M1"
     name: "Developer Golden Path & Core Authentication"
     target_version: "v0.1.0"
-    status: "complete"
-    gate: "G6"
-    gate_status: "PASS"
+    status: "not-started"
+    gate: "G1"
+    gate_status: "PENDING"
     delivers: "Containerized local stack (infra/compose.yaml), dev:doctor diagnostic, Clerk OAuth JWT auth, Neon Postgres schema"
     criteria:
       - "npm run dev:doctor validates healthy stack in < 5 minutes"
@@ -31,9 +35,9 @@ milestones:
   - id: "M2"
     name: "Metering Spine & Quota Throttling"
     target_version: "v0.2.0"
-    status: "in-progress"
-    gate: "G2"
-    gate_status: "PASS"
+    status: "not-started"
+    gate: "G1"
+    gate_status: "PENDING"
     delivers: "Upstash Redis Lua atomic credit ledger, 5 RPS sliding rate limiter, RFC 9457 error catalogue, daily 08:00 UTC reset"
     criteria:
       - "Balance never observed negative across 100 concurrent debit races"

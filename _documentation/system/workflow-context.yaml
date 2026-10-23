@@ -4,10 +4,10 @@ workflow:
   delivery_mode: balanced
   target_maturity: mvp
   risk_tier: HIGH
-  current_stage: "phase_3_architecture"
-  active_agent: architect-agent
-  checkpoint: "CP3"
-  gate: "G4"
+  current_stage: "phase_2_pm_planning"
+  active_agent: pm-agent
+  checkpoint: "CP2"
+  gate: "G2"
   gate_status: "PASS"
   artifacts:
     - path: "_documentation/planning/project-brief.md"
@@ -25,9 +25,12 @@ workflow:
     - path: "_documentation/planning/milestones/milestone-status.yaml"
       type: "milestone-status"
       status: "final"
-    - path: "_documentation/planning/milestones/m2-metering-spine/milestone.md"
+    - path: "_documentation/planning/milestones/m0-workspace-foundation/milestone.md"
       type: "milestone-charter"
       status: "final"
+    - path: "_documentation/planning/milestones/m2-metering-spine/milestone.md"
+      type: "milestone-charter"
+      status: "deferred"
     - path: "_documentation/planning/architecture.md"
       type: "architecture-narrative"
       status: "final"
@@ -65,6 +68,8 @@ workflow:
       summary: "Google AI Studio primary LLM with mandatory dynamic UI data egress disclosure (opt_c)"
     - id: "PTY-010"
       summary: "Single atomic Upstash Redis Lua script for sliding rate limiting and credit debiting"
+    - id: "DRIFT-AUDIT-001"
+      summary: "Reconcile milestone drift: M0 & M1 reset from completed to not-started, M2 reset from in-progress to not-started (deferred). Active target reset to Milestone M0 Workspace Foundation."
   handoffs:
     - id: "handoff-001"
       from: "analyst-agent"

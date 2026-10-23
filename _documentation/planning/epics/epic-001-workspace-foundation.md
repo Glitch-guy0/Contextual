@@ -2,7 +2,7 @@
 doc_class: canonical
 owner: pm-agent
 milestone: M1
-status: completed
+status: planned
 created: 2026-10-23
 last_verified: 2026-10-23
 review_cadence_days: 90
@@ -17,7 +17,7 @@ pinned: false
 
 # EPIC-001: Workspace Foundation, Toolchain & Core Authentication
 
-> **Milestone:** M0 & M1 (`v0.1.0`) · **Status:** Completed · **Risk Tier:** LOW  
+> **Milestone:** M0 & M1 (`v0.1.0`) · **Status:** Planned · **Risk Tier:** LOW  
 > **Business Outcome:** Developers can bootstrap a local containerized stack in < 5 minutes, and users can securely authenticate via Clerk OAuth with tenant data isolated across Neon Postgres.  
 
 ```mermaid

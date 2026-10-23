@@ -2,7 +2,7 @@
 doc_class: canonical
 owner: pm-agent
 milestone: M2
-status: active
+status: planned
 created: 2026-10-23
 last_verified: 2026-10-23
 review_cadence_days: 90
@@ -19,7 +19,7 @@ pinned: false
 
 # Milestone Charter — M2: Metering Spine & Quota Throttling (v0.2.0)
 
-> **Status:** Active (Gate G2 Approved · Ready for Architecture Gate G3/G4)  
+> **Status:** Planned (Deferred pending M0 Workspace Scaffolding and M1 Core Auth; reconciled from prior drift)  
 > **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-23  
 > **Target Version:** `v0.2.0` · **Risk Tier:** HIGH  
 > **Grounding:** `project-brief.md` (FR-014..FR-018, FR-024..FR-029; BR-013..BR-017, BR-025..BR-032; NFR-011..NFR-013, NFR-020, NFR-023..NFR-030)  

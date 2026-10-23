@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & Sizing Verdict
 
-- **Overall Scale Classification:** Large (L) for full multi-milestone platform (M0..GA); Medium (M) for active Milestone M2 (`v0.2.0`)
+- **Overall Scale Classification:** Large (L) for full multi-milestone platform (M0..GA); Small-Medium (S/M) for initial Milestone M0 Workspace Foundation (`v0.1.0-alpha.1`)
 - **Estimated Total Code Changes:** ~8,500–9,500 LOC across 65–85 files across full platform; ~1,280 LOC across 18 files for Milestone M2
 - **Decomposition Target:** 9 Epics, 48–54 Stories across 10 Milestones; 1 Epic (`EPIC-002`), 6 Stories (`S2.1`–`S2.6`) for Milestone M2
 - **Cognitive Load Index:** High for full platform (due to strict $0.00/mo cost ceiling across 8 cloud providers); Moderate for Milestone M2
@@ -85,7 +85,7 @@ graph TD
 
 | Milestone | Target Version | Capability Domain | Est. LOC | Est. Stories | Est. Sessions |
 |---|---|---|---|---|---|
-| **M0 & M1** | `v0.1.0` | Monorepo Scaffolding, DevX, Clerk OAuth JWT & Neon | ~1,200 | 6 | Completed |
+| **M0 & M1** | `v0.1.0` | Monorepo Scaffolding, DevX, Clerk OAuth JWT & Neon | ~1,200 | 6 | 6 sessions (Planned) |
 | **M2** | `v0.2.0` | Metering Spine, Upstash Lua, 5 RPS Limiter & RFC 9457 | ~1,280 | 6 | 6 sessions |
 | **M3** | `v0.3.0` | Ingestion Pipeline (PDF/YT/Web), Filebase, Upstash Vector | ~1,400 | 7 | 7 sessions |
 | **M4** | `v0.4.0` | Notebook Workspace, Hierarchical Nodes, Typed Edges | ~1,100 | 5 | 5 sessions |

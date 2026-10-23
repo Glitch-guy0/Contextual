@@ -53,12 +53,16 @@ graph TD
 
 Contextual follows a structured evolutionary delivery path. Each milestone is a self-contained, demoable, and verifiable increment that builds upon verified foundational contracts.
 
+> **Drift Reconciliation Notice (2026-10-23):**  
+> Earlier planning passes erroneously assumed M0 (Workspace Scaffold) and M1 (DevX & Auth) were completed based on external reference project inferences. The current repository contains zero implementation code. M0, M1, and M2 are tracked as `not-started`. M0 is the active priority for milestone breakdown and scaffolding.
+
 ### Milestone Hierarchy & SemVer Mapping
 
 | Milestone | Target Version | Capability Domain | Key Delivered Artifacts | Gate | Verification Focus |
 |---|---|---|---|---|---|
-| **M0 & M1** | `v0.1.0` | Foundation & Auth | Monorepo layout, Bun toolchain, `infra/compose.yaml`, Clerk OAuth JWT, Neon Postgres schema | G1–G6 Pass | `npm run dev:doctor` < 5m; 401 on unauthenticated requests |
-| **M2** | `v0.2.0` | Metering Spine | Atomic Upstash Redis Lua credit ledger (10 daily credits), sliding window rate limiter (5 RPS), RFC 9457 error catalogue | G2 (Active) | 100 concurrent debit races without negative balance; HTTP 402 short-circuit |
+| **M0** | `v0.1.0-alpha.1` | Workspace Scaffold | Monorepo layout, Bun toolchain, shared packages (`@repo/contracts`, `@repo/config`, `@repo/db`, `@repo/ui`) | G1 Ready | Turborepo builds cleanly; TypeScript strict check passes |
+| **M1** | `v0.1.0` | DevX & Core Auth | Containerized local stack (`infra/compose.yaml`), `npm run dev:doctor`, Clerk OAuth JWT, Neon Postgres schema | Planned | `npm run dev:doctor` < 5m; 401 on unauthenticated requests |
+| **M2** | `v0.2.0` | Metering Spine | Atomic Upstash Redis Lua credit ledger (10 daily credits), sliding window rate limiter (5 RPS), RFC 9457 error catalogue | Planned | 100 concurrent debit races without negative balance; HTTP 402 short-circuit |
 | **M3** | `v0.3.0` | Ingestion Pipeline | Filebase S3 transient staging, PDF / YouTube / Web parsers, Cloudflare BGE-M3 embeddings, Qdrant indexing, live SSE stream (cap 280s), immediate post-ingest binary deletion | Planned | 35-page text PDF at > 5 pages/sec; staging bytes deleted post-upsert |
 | **M4** | `v0.4.0` | Notebook Workspace | Hierarchical notebook nodes, typed relations (`cites` and `related`), document-backed cards (< 10ms resolution), scoped retrieval security | Planned | Zero cross-tenant node visibility; invalid edge rejected with HTTP 400 |
 | **M5** | `v0.5.0` | Reasoning Engine | Query decomposition (2–5 sub-questions), HyDE hypothetical passages, Top-3 vector retrieval per question, Gemini Flash primary synthesis, Cloudflare Llama-3.1 fallback, inline citations | Planned | Synthesized claims backed 100% by citations; transparent fallback on Gemini 429 |

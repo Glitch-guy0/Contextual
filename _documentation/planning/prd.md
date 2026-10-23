@@ -248,5 +248,15 @@ Contextual is an open, enterprise-grade conversational knowledge platform that e
 - **Asynchronous Task Queue:** Replaced BullMQ (which required a persistent long-running TCP worker process) with **Upstash QStash** (500 messages/day serverless HTTP webhook dispatches with automatic retries), achieving 100% native compatibility with Vercel serverless execution limits.
 - **Embeddings:** Primary dense embeddings powered by **Google AI Studio (`gemini-embedding-001`)** with local in-process fallback via **`@huggingface/transformers` (`bge-small-en-v1.5`)**, completely removing Cloudflare Workers AI.
 
+### Dated Delta Update: 2026-10-23 (PM Agent Milestone Drift Audit & Baseline Reconciliation)
+- **Trace ID:** `DRIFT-AUDIT-001` (User Report: Milestone status drift from actual workspace reality)
+- **Discovered Drift:** Milestones M0 (Workspace Scaffolding) and M1 (DevX & Auth) were prematurely recorded as "completed" in `milestone-status.yaml`, `overview.md`, `project-details.md`, and `sizing-estimate.md`, and execution jumped directly into Milestone M2 (`m2-metering-spine`) based on assumptions inferred from an external reference template.
+- **Repository Evidence:** Inspection of `git ls-files` and workspace tree confirms 0 application code files exist (no `packages/`, no `apps/`, no `infra/compose.yaml`).
+- **Corrective Action & Ratification:**
+  - Milestones M0, M1, and M2 reset to `not-started` in `milestone-status.yaml`.
+  - EPIC-001 reset to `status: planned`.
+  - Active planning sequence restored to Milestone M0 (Workspace Foundation & Scaffolding, `v0.1.0-alpha.1`) to establish Turborepo, Bun toolchain, and shared packages before subsequent milestones proceed.
+  - Premature M2 sprint board (`m2-metering-spine/sprint-status.yaml`) and stories flagged as deferred pending M0/M1 completion.
+
 ---
-*Authored and sealed by pm-agent at Checkpoint 2; updated by architect-agent at Checkpoint 3 (Gate G4).*
+*Authored and sealed by pm-agent at Checkpoint 2; updated by architect-agent at Checkpoint 3 (Gate G4); reconciled by pm-agent on drift audit.*
