@@ -1,0 +1,10 @@
+# Bun runtime and package manager configuration
+# ADR-0002 / NFR-010
+
+[install]
+exact = true
+save = "exact"
+lockfile = true
+
+[test]
+root = "."
