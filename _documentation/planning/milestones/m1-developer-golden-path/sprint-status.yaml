@@ -1,16 +1,16 @@
 # Sprint Status — Milestone M1: Developer Golden Path & Core Authentication (DBW v2.6)
 # Managed and written by sprint-agent; certified by pm-agent.
 version: 2
-updated_at: "2026-10-23T11:55:00.000Z"
+updated_at: "2026-10-23T12:25:00.000Z"
 current_milestone: "m1-developer-golden-path"
-milestone_status: "in-progress"
+milestone_status: "completed"
 
 stories:
   - id: "S1.1"
     epic: "EPIC-001"
     title: "Containerized Local Stack (infra/compose.yaml) & Strict Environment Configuration"
     owner: "developer-agent"
-    status: "not-started"
+    status: "completed"
     build_vs_buy_ref: "SW-CORE-004 / ADR-0002 / NFR-010"
     change_matrix:
       new_files:
@@ -48,15 +48,15 @@ stories:
         command: "bun test tests/infra-compose.test.ts"
         expected: "3 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test tests/infra-compose.test.ts"
+      result: "3 pass, 0 fail, 39 expect() calls [0.32ms]"
+      signed_off_by: "developer-agent"
 
   - id: "S1.2"
     epic: "EPIC-001"
     title: "8-Layer Developer Diagnostic Suite (npm run dev:doctor)"
     owner: "developer-agent"
-    status: "not-started"
+    status: "completed"
     build_vs_buy_ref: "SW-CORE-005 / FR-012 / NFR-010"
     change_matrix:
       new_files:
@@ -98,15 +98,15 @@ stories:
         command: "bun test tests/dev-doctor.test.ts"
         expected: "4 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test tests/dev-doctor.test.ts"
+      result: "4 pass, 0 fail, 44 expect() calls [45.60ms]"
+      signed_off_by: "developer-agent"
 
   - id: "S1.3"
     epic: "EPIC-001"
     title: "Kysely Relational Persistence Schemas, Indexes & Migration Runner (@repo/db)"
     owner: "developer-agent"
-    status: "not-started"
+    status: "completed"
     build_vs_buy_ref: "SW-CORE-006 / FR-002 / BR-002"
     change_matrix:
       new_files:
@@ -146,15 +146,15 @@ stories:
         command: "bun test tests/database-persistence.test.ts"
         expected: "4 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test tests/database-persistence.test.ts"
+      result: "4 pass, 0 fail, 33 expect() calls [2.38ms]"
+      signed_off_by: "developer-agent"
 
   - id: "S1.4"
     epic: "EPIC-001"
     title: "Core Authentication Module (@repo/auth), JWKS Offline Token Verification & Edge Middleware Guard"
     owner: "developer-agent"
-    status: "not-started"
+    status: "completed"
     build_vs_buy_ref: "SW-CORE-007 / FR-001 / FR-003 / NFR-006"
     change_matrix:
       new_files:
@@ -197,6 +197,6 @@ stories:
         command: "bun test tests/auth-perimeter.test.ts"
         expected: "4 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test tests/auth-perimeter.test.ts"
+      result: "4 pass, 0 fail, 33 expect() calls [1.32ms]"
+      signed_off_by: "developer-agent"

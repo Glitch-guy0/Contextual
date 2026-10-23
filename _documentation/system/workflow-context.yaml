@@ -8,8 +8,8 @@ workflow:
   active_agent: developer-agent
   active_milestone: "M1"
   checkpoint: "CP4"
-  gate: "G5"
-  gate_status: "PENDING"
+  gate: "G6"
+  gate_status: "READY_FOR_VERIFICATION"
   commands:
     build_cmd: "bun run build"
     test_cmd: "bun test"
@@ -133,5 +133,10 @@ workflow:
     - id: "handoff-007"
       from: "sprint-agent"
       to: "developer-agent"
+      stage: 4
+      status: "ACCEPTED"
+    - id: "handoff-008"
+      from: "developer-agent"
+      to: "test-agent"
       stage: 4
       status: "READY_FOR_HANDOFF"
