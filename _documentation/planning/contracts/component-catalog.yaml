@@ -1,0 +1,149 @@
+# Component Catalog — Architecture Contract
+# Canonical software inventory, service boundaries, and dependency rules.
+# Owned by architect-agent.
+version: 1
+updated_at: "2026-10-23T10:10:00.000Z"
+
+components:
+  - id: "comp-auth"
+    name: "Authentication & Identity Module"
+    package: "@repo/auth"
+    owner: "architect-agent"
+    responsibilities:
+      - "Verify Clerk OAuth RS256 JWT tokens"
+      - "Inject verified TenantContext into request context"
+      - "Reject unauthenticated requests with HTTP 401 Problem Details"
+    interfaces:
+      public_types:
+        - "TenantContext"
+        - "AuthSession"
+      methods:
+        - "verifyToken(rawJwt: string): Promise<TenantContext>"
+    dependencies:
+      - target: "@clerk/backend"
+        severity: "FATAL"
+        type: "external_sdk"
+      - target: "@repo/contracts"
+        severity: "FATAL"
+        type: "internal_package"
+
+  - id: "comp-metering"
+    name: "Metering Spine & Rate Limiter"
+    package: "@repo/metering"
+    owner: "architect-agent"
+    responsibilities:
+      - "Enforce 5 RPS sliding window rate limiting via Redis"
+      - "Execute atomic credit debit (0.5 LLM, 1.0 Ingest) via single Lua script"
+      - "Short-circuit exhausted accounts with HTTP 402 Insufficient Credits"
+      - "Execute idempotent daily 08:00 UTC credit resets"
+    interfaces:
+      methods:
+        - "checkRateLimit(userId: string): Promise<RateLimitResult>"
+        - "debitCredits(userId: string, cost: number, action: string): Promise<DebitResult>"
+        - "resetDailyCredits(userId: string): Promise<ResetResult>"
+    dependencies:
+      - target: "@upstash/redis"
+        severity: "FATAL"
+        type: "external_service"
+      - target: "@repo/contracts"
+        severity: "FATAL"
+        type: "internal_package"
+
+  - id: "comp-ingestion"
+    name: "Transient Ingestion & Extraction Worker"
+    package: "@repo/ingestion"
+    owner: "architect-agent"
+    responsibilities:
+      - "Issue pre-signed Filebase S3 upload URLs (<= 5MB)"
+      - "Parse PDF documents, YouTube transcripts, and web URLs"
+      - "Generate dense vector embeddings via Google gemini-embedding-001"
+      - "Upsert vectors to Upstash Vector with tenant payload"
+      - "Immediately purge transient S3 staging binaries post-upsert"
+      - "Emit deterministic SSE progress events capped at 280s"
+    interfaces:
+      methods:
+        - "createPresignedUploadUrl(userId: string, filename: string): Promise<PresignedUrl>"
+        - "processIngestionJob(jobId: string, source: IngestionSource): Promise<IngestionResult>"
+        - "subscribeProgressStream(jobId: string): AsyncIterable<ProgressEvent>"
+    dependencies:
+      - target: "@aws-sdk/client-s3"
+        severity: "ERROR"
+        type: "external_service"
+      - target: "@upstash/vector"
+        severity: "FATAL"
+        type: "external_service"
+      - target: "@upstash/qstash"
+        severity: "ERROR"
+        type: "external_service"
+      - target: "@google/genai"
+        severity: "ERROR"
+        type: "external_service"
+
+  - id: "comp-reasoning"
+    name: "6-Phase Grounded Reasoning Engine"
+    package: "@repo/reasoning"
+    owner: "architect-agent"
+    responsibilities:
+      - "Decompose complex prompts into 2-5 sub-questions"
+      - "Generate HyDE hypothetical passages per sub-question"
+      - "Execute top-3 vector searches in Upstash Vector per sub-question"
+      - "Deduplicate retrieved chunks and build grounded citation context"
+      - "Stream grounded synthesis via Google Gemini Flash"
+      - "Execute automatic circuit-breaker fallback to Groq Llama-3.3 on Gemini 429"
+    interfaces:
+      methods:
+        - "synthesizeResponse(query: string, scope: SearchScope): AsyncIterable<AnswerChunk>"
+    dependencies:
+      - target: "@google/genai"
+        severity: "FATAL"
+        type: "external_service"
+      - target: "groq-sdk"
+        severity: "WARN"
+        type: "external_service"
+      - target: "@upstash/vector"
+        severity: "FATAL"
+        type: "external_service"
+
+  - id: "comp-memory"
+    name: "Pluggable Long-Term Memory Store"
+    package: "@repo/memory"
+    owner: "architect-agent"
+    responsibilities:
+      - "Provide abstract MemoryStore interface for long-term user context"
+      - "Store and retrieve semantic memory points backed by Upstash Vector and Redis"
+    interfaces:
+      methods:
+        - "addMemory(userId: string, text: string): Promise<void>"
+        - "searchMemory(userId: string, query: string): Promise<MemoryResult[]>"
+    dependencies:
+      - target: "@upstash/vector"
+        severity: "WARN"
+        type: "external_service"
+      - target: "@upstash/redis"
+        severity: "WARN"
+        type: "external_service"
+
+  - id: "comp-db"
+    name: "Relational Persistence & Schemas"
+    package: "@repo/db"
+    owner: "architect-agent"
+    responsibilities:
+      - "Type-safe SQL queries and migrations via Kysely"
+      - "Persist users, notebooks, text nodes, document nodes, typed edges, and tombstones"
+      - "Scale-to-zero serverless database connection management"
+    interfaces:
+      methods:
+        - "getKyselyDb(): Kysely<Database>"
+    dependencies:
+      - target: "pg"
+        severity: "FATAL"
+        type: "external_service"
+      - target: "kysely"
+        severity: "FATAL"
+        type: "internal_package"
+
+rules:
+  - "Domain packages must never import Next.js web transport libraries (next/server)"
+  - "Direct database connections must never be instantiated outside @repo/db"
+  - "All external vector calls must route through @repo/contracts/VectorStore interface"
+  - "All upstream error handling must map directly to RFC 9457 Problem Details"

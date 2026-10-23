@@ -1,0 +1,444 @@
+openapi: 3.1.0
+info:
+  title: Contextual AI Platform API
+  version: 1.0.0
+  description: >
+    Canonical OpenAPI 3.1 contract for the Contextual AI Platform.
+    Guarded by Clerk OAuth RS256 JWT, Upstash Redis 5 RPS rate limiting,
+    atomic Lua credit metering, and RFC 9457 Problem Details error envelopes.
+servers:
+  - url: https://contextual.ai/api/v1
+    description: Production Vercel Edge Serverless
+  - url: http://localhost:3000/api/v1
+    description: Local Development Server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /credits/balance:
+    get:
+      summary: Get Current User Credit Balance & Quota State
+      operationId: getCreditBalance
+      tags: [Metering]
+      responses:
+        '200':
+          description: Current account credits and daily reset countdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditBalanceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /notebooks:
+    get:
+      summary: List User Notebooks
+      operationId: listNotebooks
+      tags: [Notebooks]
+      responses:
+        '200':
+          description: Array of user-owned notebooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotebookSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Create New Notebook
+      operationId: createNotebook
+      tags: [Notebooks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotebookRequest'
+      responses:
+        '201':
+          description: Notebook created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notebooks/{notebookId}:
+    parameters:
+      - name: notebookId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get Notebook Details
+      operationId: getNotebook
+      tags: [Notebooks]
+      responses:
+        '200':
+          description: Notebook details with nodes and edges
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/GoneTombstone'
+    delete:
+      summary: Delete Notebook (Triggers Cascade Purge)
+      operationId: deleteNotebook
+      tags: [Notebooks]
+      responses:
+        '204':
+          description: Notebook and associated vectors marked deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /ingestions/presign:
+    post:
+      summary: Generate Pre-signed S3 Upload URL (Filebase)
+      operationId: createPresignedUpload
+      tags: [Ingestion]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignedUploadRequest'
+      responses:
+        '200':
+          description: Pre-signed S3 PUT URL for direct client upload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresignedUploadResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+
+  /ingestions:
+    post:
+      summary: Initiate Ingestion Job (Debits 1.0 Credit)
+      operationId: submitIngestionJob
+      tags: [Ingestion]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitIngestionRequest'
+      responses:
+        '202':
+          description: Ingestion job accepted and queued via QStash
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionJobAccepted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/InsufficientCredits'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /ingestions/{jobId}/progress:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Live Ingestion Progress Stream (SSE)
+      operationId: streamIngestionProgress
+      tags: [Ingestion]
+      responses:
+        '200':
+          description: Server-Sent Events stream (capped at 280s)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /chat:
+    post:
+      summary: Grounded Contextual Question-Answering (Debits 0.5 Credit)
+      operationId: streamChatSynthesis
+      tags: [Reasoning]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSynthesisRequest'
+      responses:
+        '200':
+          description: Streamed synthesized answer chunks with inline citations
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/InsufficientCredits'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Clerk OAuth RS256 JWT session token
+
+  schemas:
+    ProblemDetails:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Immutable URI identifying problem type
+        title:
+          type: string
+          description: Short human-readable summary
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Specific occurrence description
+        instance:
+          type: string
+          description: Relative request URI
+        service:
+          type: string
+          description: Canonical upstream service (e.g. upstash-vector, google-ai-studio)
+        quota_period:
+          type: string
+          enum: [daily, monthly]
+        resets_in_seconds:
+          type: integer
+        credits_remaining:
+          type: number
+
+    CreditBalanceResponse:
+      type: object
+      required: [balance, daily_grant, resets_at, resets_in_seconds]
+      properties:
+        balance:
+          type: number
+          example: 8.5
+        daily_grant:
+          type: number
+          example: 10.0
+        resets_at:
+          type: string
+          format: date-time
+          example: "2026-10-24T08:00:00Z"
+        resets_in_seconds:
+          type: integer
+          example: 79200
+
+    CreateNotebookRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+
+    NotebookSummary:
+      type: object
+      required: [id, title, created_at, expires_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+
+    NotebookDetail:
+      type: object
+      required: [id, title, nodes, edges]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        nodes:
+          type: array
+          items:
+            type: object
+        edges:
+          type: array
+          items:
+            type: object
+            required: [source_id, target_id, relation_type]
+            properties:
+              source_id:
+                type: string
+                format: uuid
+              target_id:
+                type: string
+                format: uuid
+              relation_type:
+                type: string
+                enum: [cites, related]
+
+    PresignedUploadRequest:
+      type: object
+      required: [filename, file_size_bytes, content_type]
+      properties:
+        filename:
+          type: string
+        file_size_bytes:
+          type: integer
+          maximum: 5242880 # 5 MB
+        content_type:
+          type: string
+          enum: [application/pdf]
+
+    PresignedUploadResponse:
+      type: object
+      required: [upload_url, staging_key, expires_in_seconds]
+      properties:
+        upload_url:
+          type: string
+          format: uri
+        staging_key:
+          type: string
+        expires_in_seconds:
+          type: integer
+          example: 300
+
+    SubmitIngestionRequest:
+      type: object
+      required: [notebook_id, source_type]
+      properties:
+        notebook_id:
+          type: string
+          format: uuid
+        source_type:
+          type: string
+          enum: [pdf_staging_key, youtube_url, web_url]
+        source_value:
+          type: string
+
+    IngestionJobAccepted:
+      type: object
+      required: [job_id, progress_stream_url, status]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        progress_stream_url:
+          type: string
+        status:
+          type: string
+          example: "queued"
+
+    ChatSynthesisRequest:
+      type: object
+      required: [prompt, notebook_id]
+      properties:
+        prompt:
+          type: string
+          minLength: 3
+          maxLength: 2000
+        notebook_id:
+          type: string
+          format: uuid
+        scope_node_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+  responses:
+    BadRequest:
+      description: Bad Request (Invalid parameters or relation type)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Unauthorized:
+      description: Authentication Required or Invalid JWT
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    InsufficientCredits:
+      description: Insufficient Credit Balance (HTTP 402)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: Resource Not Found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    GoneTombstone:
+      description: Notebook Expired (30-day tombstone HTTP 410)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    PayloadTooLarge:
+      description: Upload File Exceeds 5 MB Ceiling (HTTP 413)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    TooManyRequests:
+      description: Rate Limit Exceeded (HTTP 429)
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Integer seconds to wait
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    ServiceUnavailable:
+      description: Progress Stream Unavailable or Upstream Saturated (HTTP 503)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
