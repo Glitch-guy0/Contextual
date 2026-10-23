@@ -23,9 +23,9 @@ milestones:
   - id: "M1"
     name: "Developer Golden Path & Core Authentication"
     target_version: "v0.1.0"
-    status: "not-started"
-    gate: "G1"
-    gate_status: "PENDING"
+    status: "in-progress"
+    gate: "G4"
+    gate_status: "PASS"
     delivers: "Containerized local stack (infra/compose.yaml), dev:doctor diagnostic, Clerk OAuth JWT auth, Neon Postgres schema"
     criteria:
       - "npm run dev:doctor validates healthy stack in < 5 minutes"

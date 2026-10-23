@@ -1,0 +1,202 @@
+# Sprint Status — Milestone M1: Developer Golden Path & Core Authentication (DBW v2.6)
+# Managed and written by sprint-agent; certified by pm-agent.
+version: 2
+updated_at: "2026-10-23T11:55:00.000Z"
+current_milestone: "m1-developer-golden-path"
+milestone_status: "in-progress"
+
+stories:
+  - id: "S1.1"
+    epic: "EPIC-001"
+    title: "Containerized Local Stack (infra/compose.yaml) & Strict Environment Configuration"
+    owner: "developer-agent"
+    status: "not-started"
+    build_vs_buy_ref: "SW-CORE-004 / ADR-0002 / NFR-010"
+    change_matrix:
+      new_files:
+        - "infra/compose.yaml"
+        - ".env.example"
+        - "packages/config/src/env.ts"
+        - "tests/infra-compose.test.ts"
+      allowed_files:
+        - "packages/config/package.json"
+        - "packages/config/src/index.ts"
+      forbidden_files:
+        - "packages/auth/**"
+        - "packages/db/**"
+        - "packages/ui/**"
+        - "apps/**"
+    tests:
+      files:
+        - "tests/infra-compose.test.ts"
+      scenarios:
+        - "TC-1.1.1: infra/compose.yaml defines valid postgres:16-alpine and redis:7-alpine services with healthchecks"
+        - "TC-1.1.2: .env.example contains all required environment variables with sensible local defaults"
+        - "TC-1.1.3: packages/config/src/env.ts validates valid environment configurations and rejects invalid inputs"
+    observability:
+      events:
+        - "config.env.validated"
+        - "config.env.failed"
+      log_level: "INFO"
+      correlation_id: "x-correlation-id"
+      redaction:
+        - "POSTGRES_PASSWORD"
+        - "CLERK_SECRET_KEY"
+        - "DATABASE_URL"
+    verification_scenarios:
+      - id: "TC-1.1.1"
+        command: "bun test tests/infra-compose.test.ts"
+        expected: "3 passed, 0 failed"
+    evidence:
+      command: ""
+      result: ""
+      signed_off_by: ""
+
+  - id: "S1.2"
+    epic: "EPIC-001"
+    title: "8-Layer Developer Diagnostic Suite (npm run dev:doctor)"
+    owner: "developer-agent"
+    status: "not-started"
+    build_vs_buy_ref: "SW-CORE-005 / FR-012 / NFR-010"
+    change_matrix:
+      new_files:
+        - "packages/config/src/doctor/index.ts"
+        - "packages/config/src/doctor/types.ts"
+        - "packages/config/src/doctor/layers.ts"
+        - "packages/config/src/doctor/cli.ts"
+        - "tests/dev-doctor.test.ts"
+      allowed_files:
+        - "package.json"
+        - "packages/config/package.json"
+        - "packages/config/src/index.ts"
+      forbidden_files:
+        - "packages/auth/**"
+        - "packages/db/**"
+        - "packages/ui/**"
+        - "apps/**"
+    tests:
+      files:
+        - "tests/dev-doctor.test.ts"
+      scenarios:
+        - "TC-1.2.1: Doctor engine instantiates all 8 distinct diagnostic layers with timeout budgets"
+        - "TC-1.2.2: Layer 1 correctly asserts Node >= 22 or Bun >= 1.1 runtime compatibility"
+        - "TC-1.2.3: Layer 3 flags missing or malformed required environment variables"
+        - "TC-1.2.4: Doctor CLI exits 0 on all passing layers and non-zero on failure"
+    observability:
+      events:
+        - "doctor.run.started"
+        - "doctor.layer.checked"
+        - "doctor.run.completed"
+      log_level: "INFO"
+      correlation_id: "x-correlation-id"
+      redaction:
+        - "password"
+        - "secret"
+        - "token"
+    verification_scenarios:
+      - id: "TC-1.2.1"
+        command: "bun test tests/dev-doctor.test.ts"
+        expected: "4 passed, 0 failed"
+    evidence:
+      command: ""
+      result: ""
+      signed_off_by: ""
+
+  - id: "S1.3"
+    epic: "EPIC-001"
+    title: "Kysely Relational Persistence Schemas, Indexes & Migration Runner (@repo/db)"
+    owner: "developer-agent"
+    status: "not-started"
+    build_vs_buy_ref: "SW-CORE-006 / FR-002 / BR-002"
+    change_matrix:
+      new_files:
+        - "packages/db/src/client.ts"
+        - "packages/db/src/migrator.ts"
+        - "packages/db/src/migrations/001_initial_auth_and_notebooks.ts"
+        - "tests/database-persistence.test.ts"
+      allowed_files:
+        - "packages/db/package.json"
+        - "packages/db/src/index.ts"
+        - "packages/db/src/schema.ts"
+      forbidden_files:
+        - "packages/auth/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "apps/**"
+    tests:
+      files:
+        - "tests/database-persistence.test.ts"
+      scenarios:
+        - "TC-1.3.1: Database schema exports typed table interfaces for users, conversation_threads, conversation_messages, notebooks"
+        - "TC-1.3.2: Initial migration script defines correct primary keys, UUID generators, and foreign keys with ON DELETE CASCADE"
+        - "TC-1.3.3: Tenant indexes on user_id and idle_since are present in migration DDL"
+        - "TC-1.3.4: Kysely client initializes connection pool and migrator provider successfully"
+    observability:
+      events:
+        - "db.client.initialized"
+        - "db.migration.started"
+        - "db.migration.completed"
+      log_level: "INFO"
+      correlation_id: "x-correlation-id"
+      redaction:
+        - "password"
+        - "connection_string"
+    verification_scenarios:
+      - id: "TC-1.3.1"
+        command: "bun test tests/database-persistence.test.ts"
+        expected: "4 passed, 0 failed"
+    evidence:
+      command: ""
+      result: ""
+      signed_off_by: ""
+
+  - id: "S1.4"
+    epic: "EPIC-001"
+    title: "Core Authentication Module (@repo/auth), JWKS Offline Token Verification & Edge Middleware Guard"
+    owner: "developer-agent"
+    status: "not-started"
+    build_vs_buy_ref: "SW-CORE-007 / FR-001 / FR-003 / NFR-006"
+    change_matrix:
+      new_files:
+        - "packages/auth/package.json"
+        - "packages/auth/tsconfig.json"
+        - "packages/auth/src/index.ts"
+        - "packages/auth/src/jwks.ts"
+        - "packages/auth/src/verifier.ts"
+        - "packages/auth/src/context.ts"
+        - "packages/auth/src/middleware.ts"
+        - "tests/auth-perimeter.test.ts"
+      allowed_files:
+        - "package.json"
+      forbidden_files:
+        - "packages/db/**"
+        - "packages/ui/**"
+        - "packages/config/**"
+        - "apps/**"
+    tests:
+      files:
+        - "tests/auth-perimeter.test.ts"
+      scenarios:
+        - "TC-1.4.1: Auth verifier validates RS256 JWT signatures offline against cached Clerk JWKS keys"
+        - "TC-1.4.2: Missing or invalid Authorization header triggers HTTP 401 with RFC 9457 Problem Details envelope"
+        - "TC-1.4.3: Expired JWT triggers HTTP 401 with code AUTH_TOKEN_EXPIRED"
+        - "TC-1.4.4: Valid JWT successfully constructs and returns typed TenantContext with userId and claims"
+    observability:
+      events:
+        - "auth.token.verified"
+        - "auth.token.rejected"
+        - "auth.jwks.refreshed"
+      log_level: "INFO"
+      correlation_id: "x-correlation-id"
+      redaction:
+        - "raw_jwt"
+        - "token"
+        - "signature"
+    verification_scenarios:
+      - id: "TC-1.4.1"
+        command: "bun test tests/auth-perimeter.test.ts"
+        expected: "4 passed, 0 failed"
+    evidence:
+      command: ""
+      result: ""
+      signed_off_by: ""

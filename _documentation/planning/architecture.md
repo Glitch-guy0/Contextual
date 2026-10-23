@@ -14,6 +14,12 @@ related:
   - _documentation/planning/conventions.md
   - _documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md
   - _documentation/planning/architecture/04-tech-stack.md
+  - _documentation/planning/architecture/05-m1-developer-golden-path-and-auth.md
+  - _documentation/planning/contracts/config-schema.yaml
+  - _documentation/planning/contracts/deployment-config.yaml
+  - _documentation/planning/registers/package-dependency-plan.md
+  - _documentation/planning/registers/failure-mode-register.md
+  - _documentation/planning/registers/raw-sql-exceptions.md
 supersedes: []
 regenerable: false
 pinned: false
@@ -143,11 +149,13 @@ Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalo
 
 The technical foundation is a **modular monolith on Next.js 15 App Router** deployed to Vercel Hobby, supported by a unified serverless cloud data layer:
 - **Persistence & Vectors:** Neon Postgres 16 (metadata) via Kysely ORM, Upstash Redis (rate limiting & credits), and Upstash Vector (semantic search).
+- **ORM & Data-Access Governance:** Persistence strictly declares Kysely as the approved typed data-access layer; bare database clients and non-Kysely queries are prohibited (`references/schema-orm-governance.md`). Zero raw SQL exceptions exist (`registers/raw-sql-exceptions.md`).
 - **Asynchronous Execution:** Upstash QStash serverless message queue dispatches long-running ingestion and maintenance tasks via signed webhooks.
 - **Inference Dual-Stack:** Google Gemini 1.5/2.0 Flash primary with Groq Llama-3.3-70B fallback circuit-breaker (`ADR-0004`).
 - **Transient Storage:** Filebase S3 holds uploads temporarily; binaries are permanently purged once vector upserts commit (`ADR-0003`).
+- **Developer Golden Path & Auth Perimeter (M1):** Local containerized stack via Docker Compose (`infra/compose.yaml`), 8-layer diagnostic health probe (`dev:doctor`), Clerk OAuth with offline RS256 JWKS JWT verification, and Kysely database schemas for `users`, `conversation_threads`, `conversation_messages`, and `notebooks`.
 
-Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md) · [`planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`](decisions/adr-0004-unified-upstash-serverless-architecture.md)
+Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`](decisions/adr-0004-unified-upstash-serverless-architecture.md)
 
 ---
 
@@ -158,38 +166,56 @@ graph TD
     subgraph "apps/platform"
         APP_ROUTER["Next.js App Router & Server Components"]
         API_ROUTES["Route Handlers (/api/v1/*)"]
+        MID["Auth Middleware (Edge RS256 Guard)"]
     end
 
     subgraph "Core Domain Packages"
+        PKG_AUTH["@repo/auth<br/>(Clerk JWKS & TenantContext)"]
         PKG_METER["@repo/metering<br/>(Upstash Lua & Rate Limiter)"]
         PKG_INGEST["@repo/ingestion<br/>(Parsers & QStash Task Handlers)"]
         PKG_REASON["@repo/reasoning<br/>(Decomp, HyDE, Gemini & Groq)"]
         PKG_MEM["@repo/memory<br/>(Mem0 in-process Adapter)"]
         PKG_DB["@repo/db<br/>(Kysely & Neon Schema)"]
         PKG_CONTRACTS["@repo/contracts<br/>(Zod & RFC 9457 Catalogue)"]
+        PKG_CONFIG["@repo/config<br/>(Zod Env & dev:doctor)"]
     end
 
+    MID --> PKG_AUTH
     API_ROUTES --> PKG_METER
     API_ROUTES --> PKG_INGEST
     API_ROUTES --> PKG_REASON
     API_ROUTES --> PKG_MEM
     PKG_REASON --> PKG_DB
     PKG_METER --> PKG_CONTRACTS
+    PKG_AUTH --> PKG_CONTRACTS
+    PKG_DB --> PKG_CONFIG
 ```
 
 ### Building Block Responsibilities
-1. **`@repo/metering`**: Evaluates 5 RPS sliding window and executes single-roundtrip Redis Lua script for credit debit (10 daily grant) and daily 08:00 UTC resets.
-2. **`@repo/ingestion`**: Handles PDF/YouTube/Web extraction, generates embeddings, upserts to Upstash Vector, and purges transient Filebase staging files.
-3. **`@repo/reasoning`**: Coordinates query decomposition into 2–5 sub-questions, generates HyDE summaries, queries Upstash Vector, and streams grounded citations via Gemini Flash or Groq fallback.
-4. **`@repo/memory`**: Implements `MemoryStore` interface using in-process Mem0 backed by Upstash Redis and Upstash Vector.
-5. **`@repo/db`**: Manages Kysely database schema, migrations, and typed queries for Neon Postgres.
-6. **`@repo/contracts`**: Exports shared Zod schemas, OpenAPI types, and the closed 17-member RFC 9457 problem catalogue.
+1. **`@repo/auth`**: Decodes and verifies Clerk OAuth RS256 JWT tokens offline via cached JWKS keys; constructs and injects typed `TenantContext` (`userId`, `sessionId`, `claims`).
+2. **`apps/platform Middleware`**: Edge-compatible guard intercepting `/api/v1/*` routes; enforces Bearer token authentication and terminates unauthorized calls with HTTP 401 RFC 9457 Problem Details.
+3. **`@repo/config`**: Exports strict Zod environment validation schemas (`ConfigSchema`), shared tsconfig presets, and the 8-layer diagnostic health probe engine (`dev:doctor`).
+4. **`@repo/db`**: Manages Kysely relational database schema, migrations, connection pooling, and typed queries for Neon Postgres (`users`, `conversation_threads`, `conversation_messages`, `notebooks`).
+5. **`@repo/metering`**: Evaluates 5 RPS sliding window and executes single-roundtrip Redis Lua script for credit debit (10 daily grant) and daily 08:00 UTC resets.
+6. **`@repo/ingestion`**: Handles PDF/YouTube/Web extraction, generates embeddings, upserts to Upstash Vector, and purges transient Filebase staging files.
+7. **`@repo/reasoning`**: Coordinates query decomposition into 2–5 sub-questions, generates HyDE summaries, queries Upstash Vector, and streams grounded citations via Gemini Flash or Groq fallback.
+8. **`@repo/memory`**: Implements `MemoryStore` interface using in-process Mem0 backed by Upstash Redis and Upstash Vector.
+9. **`@repo/contracts`**: Exports shared Zod schemas, OpenAPI types, and the closed 17-member RFC 9457 problem catalogue.
 
-Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalog.yaml)
+Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalog.yaml) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md)
 
 ---
 
 ## 6. Runtime View
+
+### Primary Scenario 0: Edge Authentication & Tenant Context Verification Flow (M1)
+1. Incoming request arrives at `/api/v1/*` endpoint.
+2. Next.js Edge Middleware checks for `Authorization: Bearer <jwt>`.
+   - If missing: short-circuits immediately with HTTP 401 RFC 9457 Problem Details (`AUTH_UNAUTHORIZED`).
+3. `@repo/auth` verifies RS256 cryptographic signature using cached Clerk JWKS public keys.
+   - If signature invalid or token expired: returns HTTP 401 (`AUTH_TOKEN_EXPIRED` or `AUTH_TOKEN_INVALID`).
+4. Decodes payload, constructs `TenantContext` (`userId`), and injects request headers `x-tenant-user-id`.
+5. Passes control downstream to Route Handler.
 
 ### Primary Scenario 1: Metered Grounded Synthesis Flow
 1. User submits question to `/api/v1/chat`.
@@ -215,16 +241,21 @@ Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalo
 
 ## 7. Deployment View
 
-The platform deploys as a serverless monorepo on **Vercel Hobby** (`$0.00/month`):
-- **Web & Route Handlers:** Vercel Serverless Functions (Node.js 22 LTS, region `iad1` / US East).
-- **Database:** Neon Serverless Postgres (Scale-to-zero compute, region `us-east-1`).
-- **Caching & State:** Upstash Serverless Redis (region `us-east-1`).
-- **Vector Search:** Upstash Vector (region `us-east-1`, cosine metric).
-- **Task Queue & Crons:** Upstash QStash (dispatching HTTP webhooks to Vercel API endpoints).
-- **Object Storage:** Filebase S3 (`s3.filebase.io`).
-- **Telemetry:** OpenTelemetry OTLP pushed directly to Better Stack.
+The platform operates across two synchronized deployment topologies (see [`contracts/deployment-config.yaml`](contracts/deployment-config.yaml)):
+- **Local Development Runtime (`infra/compose.yaml`):**
+  - PostgreSQL 16 Alpine container (`contextual-postgres`) on port `5432`.
+  - Redis 7 Alpine container (`contextual-redis`) on port `6379`.
+  - Offline-first development without external cloud account credentials.
+- **Production Serverless Monorepo (Vercel Hobby, `$0.00/month`):**
+  - **Web & Route Handlers:** Vercel Serverless Functions (Node.js 22 LTS, region `iad1` / US East).
+  - **Database:** Neon Serverless Postgres (Scale-to-zero compute, region `us-east-1`).
+  - **Caching & State:** Upstash Serverless Redis (region `us-east-1`).
+  - **Vector Search:** Upstash Vector (region `us-east-1`, cosine metric).
+  - **Task Queue & Crons:** Upstash QStash (dispatching HTTP webhooks to Vercel API endpoints).
+  - **Object Storage:** Filebase S3 (`s3.filebase.io`).
+  - **Telemetry:** OpenTelemetry OTLP pushed directly to Better Stack.
 
-Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md)
+Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md) · [`planning/contracts/deployment-config.yaml`](contracts/deployment-config.yaml) · [`planning/contracts/config-schema.yaml`](contracts/config-schema.yaml)
 
 ---
 

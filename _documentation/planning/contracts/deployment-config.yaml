@@ -1,0 +1,174 @@
+# Canonical Deployment Configuration Contract
+# Commissioned by architect-agent; stewarded by deployment-agent
+# Canonical path: _documentation/planning/contracts/deployment-config.yaml
+version: 1
+updated_at: "2026-10-23T11:45:00.000Z"
+
+environments:
+  - id: "dev"
+    name: "Local Development"
+    host: "Docker Compose / Workstation Loopback"
+    domain: "localhost:3000"
+    deltas_from_production:
+      - "Local PostgreSQL 16 container replaces Neon Serverless"
+      - "Local Redis 7 container replaces Upstash Serverless"
+      - "Pino logs to stdout with pretty formatting"
+
+  - id: "staging"
+    name: "Preview / Staging"
+    host: "Vercel Preview Deployments"
+    domain: "*-contextual.vercel.app"
+    deltas_from_production:
+      - "Isolated staging branch database schema on Neon"
+      - "Ephemeral preview URLs bound per Git Pull Request"
+
+  - id: "production"
+    name: "Production Release"
+    host: "Vercel Hobby Serverless Runtime"
+    domain: "contextual.ai"
+    deltas_from_production:
+      - "Full scale-to-zero Neon PostgreSQL pooler"
+      - "Upstash REST endpoints with strict rate limiting"
+      - "Better Stack OTLP streaming telemetry"
+
+environment_variables:
+  - name: "PORT"
+    purpose: "HTTP listener port"
+    default: "3000"
+    secret_class: "public"
+    environments: ["dev", "staging", "production"]
+
+  - name: "NODE_ENV"
+    purpose: "Node.js runtime environment mode"
+    default: "development"
+    secret_class: "public"
+    environments: ["dev", "staging", "production"]
+
+  - name: "LOG_LEVEL"
+    purpose: "Pino structured logger minimum severity"
+    default: "info"
+    secret_class: "public"
+    environments: ["dev", "staging", "production"]
+
+  - name: "DATABASE_URL"
+    purpose: "PostgreSQL connection string with pooling query parameters"
+    default: "postgresql://postgres:postgrespassword@localhost:5432/contextual_dev"
+    secret_class: "secret"
+    environments: ["dev", "staging", "production"]
+
+  - name: "REDIS_URL"
+    purpose: "Redis connection URI for local container or Upstash"
+    default: "redis://localhost:6379"
+    secret_class: "internal"
+    environments: ["dev", "staging", "production"]
+
+  - name: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+    purpose: "Clerk frontend browser publishable key"
+    default: "pk_test_placeholder"
+    secret_class: "public"
+    environments: ["dev", "staging", "production"]
+
+  - name: "CLERK_SECRET_KEY"
+    purpose: "Clerk backend server-side secret key"
+    default: "sk_test_placeholder"
+    secret_class: "secret"
+    environments: ["dev", "staging", "production"]
+
+container_specifications:
+  - service: "postgres"
+    image: "postgres:16-alpine"
+    container_name: "contextual-postgres"
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      cmd: "pg_isready -U postgres -d contextual_dev"
+      interval_s: 5
+      timeout_s: 5
+      retries: 5
+    resources:
+      cpu_limit: "1.0"
+      memory_limit: "512Mi"
+
+  - service: "redis"
+    image: "redis:7-alpine"
+    container_name: "contextual-redis"
+    ports: ["6379:6379"]
+    volumes: ["redis_data:/data"]
+    healthcheck:
+      cmd: "redis-cli ping"
+      interval_s: 5
+      timeout_s: 5
+      retries: 5
+    resources:
+      cpu_limit: "0.5"
+      memory_limit: "256Mi"
+
+companion_env_example: |
+  # ==============================================================================
+  # Contextual AI Platform — Environment Configuration Template (.env.example)
+  # ==============================================================================
+  # Copy to .env for local development: cp .env.example .env
+  # Values below are configured for the local Docker Compose stack (infra/compose.yaml).
+  
+  # --- Application Runtime ---
+  PORT=3000
+  NODE_ENV=development
+  LOG_LEVEL=info
+  
+  # --- Local Container Database (PostgreSQL 16) ---
+  DATABASE_URL=postgresql://postgres:postgrespassword@localhost:5432/contextual_dev
+  POSTGRES_USER=postgres
+  POSTGRES_PASSWORD=postgrespassword
+  POSTGRES_DB=contextual_dev
+  
+  # --- Local Container Cache (Redis 7) ---
+  REDIS_URL=redis://localhost:6379
+  
+  # --- Clerk Authentication (Social OAuth: Google & GitHub) ---
+  # Obtain development keys from https://dashboard.clerk.com
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_sample_clerk_key
+  CLERK_SECRET_KEY=sk_test_sample_clerk_secret
+  
+  # --- Telemetry & Health ---
+  OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+
+ci_pipeline_gates:
+  - stage: "Lint & Formatting"
+    command: "bun run lint"
+    gate: "Zero ESLint warnings or errors"
+
+  - stage: "Strict Typecheck"
+    command: "bun run typecheck"
+    gate: "100% strict TypeScript compilation across all monorepo packages"
+
+  - stage: "Unit & Contract Tests"
+    command: "bun test"
+    gate: "100% test scenario pass with zero regressions"
+
+  - stage: "Monorepo Build"
+    command: "bun run build"
+    gate: "Turborepo build artifacts compile cleanly in < 30s"
+
+health_probes:
+  liveness:
+    endpoint: "GET /api/health"
+    expected_status: 200
+    expected_body:
+      status: "healthy"
+      timestamp: "<ISO_TIMESTAMP>"
+  readiness:
+    endpoint: "GET /api/health/ready"
+    expected_status: 200
+    expected_body:
+      status: "ready"
+      database: "connected"
+      redis: "connected"
+
+preflight_and_hygiene:
+  preflight_check:
+    - "Verify Docker Engine is active: docker info >/dev/null 2>&1"
+    - "Verify port availability: 3000, 5432, 6379 are not occupied by conflicting daemons"
+    - "Verify directory presence: mkdir -p infra"
+  clean_rebuild_hygiene:
+    - "Stop stale containers: docker compose -f infra/compose.yaml down --remove-orphans"
+    - "Clear Turbo build caches: bun run clean"

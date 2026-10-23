@@ -16,6 +16,49 @@ security:
   - BearerAuth: []
 
 paths:
+  /health:
+    get:
+      summary: Liveness and Health Probe
+      operationId: getHealth
+      tags: [System]
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, timestamp]
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  database:
+                    type: string
+                    example: "connected"
+                  redis:
+                    type: string
+                    example: "connected"
+
+  /users/me:
+    get:
+      summary: Get Authenticated User Identity
+      operationId: getCurrentUser
+      tags: [Identity]
+      responses:
+        '200':
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /credits/balance:
     get:
       summary: Get Current User Credit Balance & Quota State
@@ -214,6 +257,27 @@ components:
       description: Clerk OAuth RS256 JWT session token
 
   schemas:
+    UserProfileResponse:
+      type: object
+      required: [id, email, created_at]
+      properties:
+        id:
+          type: string
+          description: Clerk user ID (e.g. user_2xyz...)
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+          nullable: true
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
     ProblemDetails:
       type: object
       required: [type, title, status]

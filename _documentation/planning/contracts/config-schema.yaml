@@ -1,0 +1,185 @@
+# Canonical Configuration Schema Contract
+# Owned by governance-specialist / architect-agent
+# Output format: Typed configuration schema enforcing truth separation across constants, deploy vars, and secrets
+version: 1
+schema_id: "config-contract-contextual-v1"
+updated_at: "2026-10-23T11:45:00.000Z"
+
+environments:
+  - id: "local"
+    description: "Local workstation development (offline-first with Docker Compose)"
+  - id: "test"
+    description: "Automated test harness / CI pipeline (Vitest & Playwright)"
+  - id: "production"
+    description: "Vercel Hobby Serverless runtime and Neon PostgreSQL"
+
+config_contract:
+  # --- Network & Server Runtime ---
+  PORT:
+    type: "integer"
+    required:
+      local: false
+      test: false
+      production: false
+    default: 3000
+    secret: false
+    secrecy_class: "PUBLIC"
+    description: "HTTP listener port for Next.js web application"
+
+  NODE_ENV:
+    type: "string"
+    enum: ["development", "test", "production"]
+    required:
+      local: true
+      test: true
+      production: true
+    default: "development"
+    secret: false
+    secrecy_class: "PUBLIC"
+    description: "Node.js application execution environment mode"
+
+  LOG_LEVEL:
+    type: "string"
+    enum: ["debug", "info", "warn", "error", "critical"]
+    required:
+      local: false
+      test: false
+      production: false
+    default: "info"
+    secret: false
+    secrecy_class: "PUBLIC"
+    description: "Active logging threshold for Pino structured JSON logger"
+
+  # --- Relational Database (PostgreSQL / Neon) ---
+  DATABASE_URL:
+    type: "uri"
+    required:
+      local: true
+      test: true
+      production: true
+    default: "postgresql://postgres:postgrespassword@localhost:5432/contextual_dev"
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://DATABASE_URL"
+    description: "PostgreSQL connection string with pooling parameters for Kysely"
+
+  POSTGRES_USER:
+    type: "string"
+    required:
+      local: true
+      test: false
+      production: false
+    default: "postgres"
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "Postgres user for local Docker Compose container"
+
+  POSTGRES_PASSWORD:
+    type: "string"
+    required:
+      local: true
+      test: false
+      production: false
+    default: "postgrespassword"
+    secret: true
+    secrecy_class: "SECRET"
+    description: "Postgres password for local Docker Compose container"
+
+  POSTGRES_DB:
+    type: "string"
+    required:
+      local: true
+      test: false
+      production: false
+    default: "contextual_dev"
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "Postgres database name for local Docker Compose container"
+
+  # --- Caching & Rate Limiting (Redis / Upstash) ---
+  REDIS_URL:
+    type: "uri"
+    required:
+      local: true
+      test: true
+      production: true
+    default: "redis://localhost:6379"
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "Redis connection URI for local container or Upstash Serverless"
+
+  UPSTASH_REDIS_REST_URL:
+    type: "uri"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "Upstash Redis REST endpoint for production serverless HTTP execution"
+
+  UPSTASH_REDIS_REST_TOKEN:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://UPSTASH_REDIS_REST_TOKEN"
+    description: "Upstash Redis REST authentication bearer token"
+
+  # --- Authentication & Identity (Clerk) ---
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+    type: "string"
+    required:
+      local: true
+      test: true
+      production: true
+    default: "pk_test_placeholder_key"
+    secret: false
+    secrecy_class: "PUBLIC"
+    description: "Clerk public publishable key for browser client OAuth initiation"
+
+  CLERK_SECRET_KEY:
+    type: "string"
+    required:
+      local: true
+      test: true
+      production: true
+    default: "sk_test_placeholder_secret"
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://CLERK_SECRET_KEY"
+    description: "Clerk server-side secret key for backend API verification"
+
+  CLERK_JWKS_URL:
+    type: "uri"
+    required:
+      local: false
+      test: false
+      production: false
+    default: "https://api.clerk.com/v1/jwks"
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "Clerk public JSON Web Key Set URL for offline RS256 token verification"
+
+  # --- Telemetry & Health ---
+  OTEL_EXPORTER_OTLP_ENDPOINT:
+    type: "uri"
+    required:
+      local: false
+      test: false
+      production: false
+    default: "http://localhost:4318"
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "OpenTelemetry OTLP HTTP collector endpoint (Better Stack in prod)"
+
+validation_rules:
+  - rule: "All secret variables must not match sample strings in production"
+    assertion: "NODE_ENV === 'production' => !DATABASE_URL.includes('localhost')"
+  - rule: "Clerk key format validation"
+    assertion: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.startsWith('pk_')"
+  - rule: "Clerk secret format validation"
+    assertion: "CLERK_SECRET_KEY.startsWith('sk_')"

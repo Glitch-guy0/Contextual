@@ -134,6 +134,7 @@ components:
     interfaces:
       methods:
         - "getKyselyDb(): Kysely<Database>"
+        - "runMigrations(): Promise<void>"
     dependencies:
       - target: "pg"
         severity: "FATAL"
@@ -142,8 +143,50 @@ components:
         severity: "FATAL"
         type: "internal_package"
 
+  - id: "comp-config"
+    name: "Environment Configuration & Diagnostic Doctor"
+    package: "@repo/config"
+    owner: "architect-agent"
+    responsibilities:
+      - "Strict runtime Zod validation of all environment variables"
+      - "TypeScript tsconfig base and framework configurations"
+      - "8-layer diagnostic health probe (dev:doctor) for local developer onboarding"
+    interfaces:
+      public_types:
+        - "AppConfig"
+        - "DoctorResult"
+      methods:
+        - "validateEnv(): AppConfig"
+        - "runDoctor(): Promise<DoctorResult[]>"
+    dependencies:
+      - target: "zod"
+        severity: "FATAL"
+        type: "external_package"
+
+  - id: "comp-middleware"
+    name: "Edge Security & Multi-Tenant Middleware"
+    package: "apps/platform"
+    owner: "architect-agent"
+    responsibilities:
+      - "Intercept all requests to /api/v1/* and enforce Clerk Bearer token authentication"
+      - "Extract and verify RS256 JWT signatures offline using Clerk JWKS"
+      - "Inject verified TenantContext headers into request pipeline"
+      - "Reject unauthenticated or invalid calls with HTTP 401 RFC 9457 Problem Details"
+    interfaces:
+      methods:
+        - "middleware(req: NextRequest): Promise<NextResponse>"
+    dependencies:
+      - target: "@repo/auth"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "@repo/contracts"
+        severity: "FATAL"
+        type: "internal_package"
+
 rules:
   - "Domain packages must never import Next.js web transport libraries (next/server)"
   - "Direct database connections must never be instantiated outside @repo/db"
   - "All external vector calls must route through @repo/contracts/VectorStore interface"
   - "All upstream error handling must map directly to RFC 9457 Problem Details"
+  - "100% of protected API endpoints (/api/v1/*) must sit behind comp-middleware guard"
+
