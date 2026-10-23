@@ -8,11 +8,11 @@ inputs:
   value: medium
   time_budget: "standard"
   effort_budget: "standard"
-  risk: medium
+  risk: high
   reversibility: moderate
   scale: "standard"
-  security_sensitivity: low
-  operational_impact: low
+  security_sensitivity: medium
+  operational_impact: medium
 planning_depth:
   pm: lite
   architecture: lite

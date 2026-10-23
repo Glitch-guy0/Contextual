@@ -34,6 +34,9 @@ Records in `logs/` are history, never a description of the current system. A pat
 | Document | Purpose | Class | Owner |
 |---|---|---|---|
 | [project-details.md](project-details.md) | Project overview | A | `pm-agent` |
+| [project-brief.md](planning/project-brief.md) | Requirements, business rules & glossary | A | `analyst-agent` |
+| [memo-001](logs/research-artifacts/memo-001-contextual-standards-and-free-tier-research.md) | Standards & cloud free-tier research | C | `analyst-agent` |
+| [handoff-001](logs/handoff-documents/handoff-001-analyst-to-pm.md) | Stage 1 to Stage 2 Handoff | C | `analyst-agent` |
 | [questionnaire.yaml](planning/questionnaire.yaml) | Open questions for the user | user | user |
 | [milestone-status.yaml](planning/milestones/milestone-status.yaml) | Milestone board | B | `pm-agent` |
 | [delivery-strategy.yaml](system/delivery-strategy.yaml) | Process depth and artifact budget | B | `delivery-strategy-agent` |

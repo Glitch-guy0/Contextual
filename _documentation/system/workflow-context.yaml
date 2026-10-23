@@ -1,10 +1,34 @@
 # system/workflow-context.yaml — Active Delivery Workflow State
 workflow:
-  id: "wf-init"
+  id: "wf-contextual-001"
   delivery_mode: balanced
   target_maturity: mvp
+  risk_tier: HIGH
   current_stage: "phase_1_requirements"
-  active_agent: discovery-agent
-  artifacts: []
-  decisions: []
-  handoffs: []
+  active_agent: analyst-agent
+  checkpoint: "CP1"
+  gate: "G1"
+  gate_status: "PASS"
+  artifacts:
+    - path: "_documentation/planning/project-brief.md"
+      type: "project-brief"
+      status: "final"
+    - path: "_documentation/logs/research-artifacts/memo-001-contextual-standards-and-free-tier-research.md"
+      type: "research-memo"
+      status: "final"
+    - path: "_documentation/logs/handoff-documents/handoff-001-analyst-to-pm.md"
+      type: "handoff"
+      status: "ready"
+  decisions:
+    - id: "ADR-0001"
+      summary: "Hosting to Vercel Hobby, Vector Store to Qdrant Cloud Free, 7-day retention cascade, 48h keepalive"
+    - id: "ADR-0002"
+      summary: "Runtime split (Bun tooling, Node 22 runtime), Kysely ORM, Better Stack direct OTLP telemetry"
+    - id: "ADR-0003"
+      summary: "Filebase S3 for transient staging only (5 MB cap), post-ingestion deletion, Qdrant as sole record"
+  handoffs:
+    - id: "handoff-001"
+      from: "analyst-agent"
+      to: "pm-agent"
+      stage: 1
+      status: "READY_FOR_HANDOFF"

@@ -17,9 +17,9 @@ graph TD
 
 ## 1. Overview
 
-- **Purpose:** {one paragraph, written by `pm-agent` once the project brief exists}
-- **Users and stakeholders:** {who it is for}
-- **Current milestone:** see [milestone-status.yaml](planning/milestones/milestone-status.yaml)
+- **Purpose:** Contextual AI Platform (`contextual`) is an enterprise-grade conversational knowledge retrieval platform operating strictly within a $0.00/month infrastructure ceiling. It ingests heterogeneous documents (PDFs, YouTube transcripts, web articles) into personal notebook workspaces and executes a 6-phase reasoning pipeline with query decomposition, HyDE passages, and grounded citations.
+- **Users and stakeholders:** Knowledge workers, researchers, software engineers, and students who require grounded multi-document question-answering without incurring monthly cloud fees.
+- **Current milestone:** M0 & M1 Completed; M2 (Metering Spine) in active design/wave-1 development. See [milestone-status.yaml](planning/milestones/milestone-status.yaml).
 
 ## 2. Workspace Layout
 
