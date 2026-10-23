@@ -6,5 +6,11 @@
     "tsconfig.base.json",
     "tsconfig.node.json",
     "tsconfig.react.json"
-  ]
+  ],
+  "scripts": {
+    "build": "true",
+    "typecheck": "true",
+    "lint": "true",
+    "clean": "true"
+  }
 }
