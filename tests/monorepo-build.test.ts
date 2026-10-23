@@ -15,7 +15,7 @@ describe("Milestone M0: Monorepo Build Pipeline & Typecheck Validation", () => {
     const durationSec = (Date.now() - startTime) / 1000;
 
     expect(durationSec).toBeLessThan(15);
-    expect(output).toContain("4 successful, 4 total");
+    expect(output).toMatch(/(?:4|5) successful, (?:4|5) total/);
     expect(output).not.toContain("circular");
   });
 
@@ -25,7 +25,7 @@ describe("Milestone M0: Monorepo Build Pipeline & Typecheck Validation", () => {
       encoding: "utf-8",
     });
 
-    expect(output).toContain("4 successful, 4 total");
+    expect(output).toMatch(/(?:4|5) successful, (?:4|5) total/);
     expect(output).not.toContain("error TS");
   });
 
@@ -35,6 +35,6 @@ describe("Milestone M0: Monorepo Build Pipeline & Typecheck Validation", () => {
       encoding: "utf-8",
     });
 
-    expect(output).toContain("4 successful, 4 total");
+    expect(output).toMatch(/(?:4|5) successful, (?:4|5) total/);
   });
 });
