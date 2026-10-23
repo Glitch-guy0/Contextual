@@ -3,13 +3,13 @@ workflow:
   id: "wf-contextual-001"
   delivery_mode: balanced
   target_maturity: mvp
-  risk_tier: MEDIUM
-  current_stage: "phase_4_implementation"
-  active_agent: developer-agent
-  active_milestone: "M1"
-  checkpoint: "CP4"
-  gate: "G6"
-  gate_status: "READY_FOR_VERIFICATION"
+  risk_tier: HIGH
+  current_stage: "phase_4_planning"
+  active_agent: architect-agent
+  active_milestone: "M2"
+  checkpoint: "CP3"
+  gate: "G4"
+  gate_status: "READY_FOR_HANDOFF"
   commands:
     build_cmd: "bun run build"
     test_cmd: "bun test"
@@ -41,7 +41,7 @@ workflow:
       status: "final"
     - path: "_documentation/planning/milestones/m2-metering-spine/milestone.md"
       type: "milestone-charter"
-      status: "deferred"
+      status: "final"
     - path: "_documentation/planning/architecture.md"
       type: "architecture-narrative"
       status: "final"
@@ -49,6 +49,9 @@ workflow:
       type: "tech-stack-spec"
       status: "final"
     - path: "_documentation/planning/architecture/05-m1-developer-golden-path-and-auth.md"
+      type: "design-doc"
+      status: "final"
+    - path: "_documentation/planning/architecture/05-m2-metering-spine-and-quota-throttling.md"
       type: "design-doc"
       status: "final"
     - path: "_documentation/planning/contracts/component-catalog.yaml"
@@ -99,6 +102,8 @@ workflow:
       summary: "Single atomic Upstash Redis Lua script for sliding rate limiting and credit debiting"
     - id: "M1-ARCH-001"
       summary: "Containerized local stack (PostgreSQL 16, Redis 7), 8-layer dev:doctor diagnostic probe (< 5m), Clerk offline RS256 JWKS verification, Kysely schema models (users, conversation_threads, conversation_messages, notebooks)"
+    - id: "M2-ARCH-001"
+      summary: "Atomic Upstash Redis Lua credit ledger (10.0 grant, 0.5 LLM, 1.0 ingest), 5 RPS sliding rate limiter, HTTP 402 short-circuit guard, closed 17-member RFC 9457 error catalogue, idempotent daily 08:00 UTC resets"
   handoffs:
     - id: "handoff-001"
       from: "analyst-agent"
@@ -139,4 +144,9 @@ workflow:
       from: "developer-agent"
       to: "test-agent"
       stage: 4
+      status: "ACCEPTED"
+    - id: "handoff-009"
+      from: "architect-agent"
+      to: "sprint-agent"
+      stage: 3
       status: "READY_FOR_HANDOFF"

@@ -15,6 +15,7 @@ related:
   - _documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md
   - _documentation/planning/architecture/04-tech-stack.md
   - _documentation/planning/architecture/05-m1-developer-golden-path-and-auth.md
+  - _documentation/planning/architecture/05-m2-metering-spine-and-quota-throttling.md
   - _documentation/planning/contracts/config-schema.yaml
   - _documentation/planning/contracts/deployment-config.yaml
   - _documentation/planning/registers/package-dependency-plan.md
@@ -154,8 +155,9 @@ The technical foundation is a **modular monolith on Next.js 15 App Router** depl
 - **Inference Dual-Stack:** Google Gemini 1.5/2.0 Flash primary with Groq Llama-3.3-70B fallback circuit-breaker (`ADR-0004`).
 - **Transient Storage:** Filebase S3 holds uploads temporarily; binaries are permanently purged once vector upserts commit (`ADR-0003`).
 - **Developer Golden Path & Auth Perimeter (M1):** Local containerized stack via Docker Compose (`infra/compose.yaml`), 8-layer diagnostic health probe (`dev:doctor`), Clerk OAuth with offline RS256 JWKS JWT verification, and Kysely database schemas for `users`, `conversation_threads`, `conversation_messages`, and `notebooks`.
+- **Metering Spine & Quota Throttling (M2):** Atomic Upstash Redis Lua credit ledger (10.0 daily grant, 0.5 LLM, 1.0 ingest) executing in single EVALSHA roundtrips, 5 RPS sliding rate limiter, HTTP 402 short-circuit ingress guard, closed 17-member RFC 9457 error catalogue, upstream provider quota classifier, and daily 08:00 UTC resets without rollover.
 
-Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`](decisions/adr-0004-unified-upstash-serverless-architecture.md)
+Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/architecture/05-m2-metering-spine-and-quota-throttling.md`](architecture/05-m2-metering-spine-and-quota-throttling.md) · [`planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`](decisions/adr-0004-unified-upstash-serverless-architecture.md)
 
 ---
 
@@ -196,13 +198,13 @@ graph TD
 2. **`apps/platform Middleware`**: Edge-compatible guard intercepting `/api/v1/*` routes; enforces Bearer token authentication and terminates unauthorized calls with HTTP 401 RFC 9457 Problem Details.
 3. **`@repo/config`**: Exports strict Zod environment validation schemas (`ConfigSchema`), shared tsconfig presets, and the 8-layer diagnostic health probe engine (`dev:doctor`).
 4. **`@repo/db`**: Manages Kysely relational database schema, migrations, connection pooling, and typed queries for Neon Postgres (`users`, `conversation_threads`, `conversation_messages`, `notebooks`).
-5. **`@repo/metering`**: Evaluates 5 RPS sliding window and executes single-roundtrip Redis Lua script for credit debit (10 daily grant) and daily 08:00 UTC resets.
+5. **`@repo/metering`**: Evaluates 5 RPS sliding window and executes single-roundtrip Redis Lua script for credit debit (10 daily grant) and daily 08:00 UTC resets; guards ingress with HTTP 402 short-circuit and formats IETF rate limit headers.
 6. **`@repo/ingestion`**: Handles PDF/YouTube/Web extraction, generates embeddings, upserts to Upstash Vector, and purges transient Filebase staging files.
 7. **`@repo/reasoning`**: Coordinates query decomposition into 2–5 sub-questions, generates HyDE summaries, queries Upstash Vector, and streams grounded citations via Gemini Flash or Groq fallback.
 8. **`@repo/memory`**: Implements `MemoryStore` interface using in-process Mem0 backed by Upstash Redis and Upstash Vector.
 9. **`@repo/contracts`**: Exports shared Zod schemas, OpenAPI types, and the closed 17-member RFC 9457 problem catalogue.
 
-Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalog.yaml) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md)
+Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalog.yaml) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/architecture/05-m2-metering-spine-and-quota-throttling.md`](architecture/05-m2-metering-spine-and-quota-throttling.md)
 
 ---
 
@@ -216,6 +218,25 @@ Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalo
    - If signature invalid or token expired: returns HTTP 401 (`AUTH_TOKEN_EXPIRED` or `AUTH_TOKEN_INVALID`).
 4. Decodes payload, constructs `TenantContext` (`userId`), and injects request headers `x-tenant-user-id`.
 5. Passes control downstream to Route Handler.
+
+### Primary Scenario 0b: Ingress 5 RPS Rate Limiting & Atomic Lua Credit Metering Flow (M2)
+1. Request arrives at protected route handler with extracted `TenantContext` (`userId`).
+2. `RateLimiterService` executes `sliding-window.lua` in Upstash Redis via `EVALSHA`:
+   - Prunes calls older than `now - 1000ms` via `ZREMRANGEBYSCORE`.
+   - If count >= 5: computes `retry_after`, aborts and returns HTTP 429 with `Retry-After: 1` and `RateLimit` headers. Zero credits debited (`BR-017`).
+3. If rate admitted, `CreditLedgerService` executes `debit-credits.lua` via `EVALSHA` (`cost=0.5` for LLM, `1.0` for ingestion):
+   - Reads balance from `credits:{userId}` (defaults to 10.0 if not yet initialized).
+   - If balance < cost: aborts and returns HTTP 402 `INSUFFICIENT_CREDITS` RFC 9457 Problem Details. Downstream route handler receives 0 invocations (`BR-015`).
+   - If balance >= cost: decrements balance atomically and resets 48h rolling TTL.
+4. Downstream handler executes and appends `RateLimit-*` and `X-Credit-*` headers to HTTP response.
+
+### Primary Scenario 0c: Idempotent Daily 08:00 UTC Credit Reset Flow (M2)
+1. At 08:00 UTC, Upstash QStash triggers `/api/v1/credits/reset` with cryptographic signature verification.
+2. `DailyResetEngine` iterates active tenants and executes `daily-reset.lua`:
+   - Evaluates atomic lock `SET reset:{YYYY-MM-DD}:{userId} 1 NX EX 86400`.
+   - If lock acquired: reads current balance, resets `credits:{userId}` to 10.0, and logs `{ userId, expiredCredits }`. Unspent credits permanently expire (`BR-024`, `BR-025`).
+   - If lock exists: no-ops idempotently (`NFR-023`).
+3. Lazy evaluation fallback: If a user's first daily request precedes QStash cron, `CreditLedgerService` detects date boundary via Redis `TIME` and triggers reset on the fly.
 
 ### Primary Scenario 1: Metered Grounded Synthesis Flow
 1. User submits question to `/api/v1/chat`.
@@ -264,9 +285,9 @@ Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md
 ### 8.1 Centralized Logging & Telemetry Architecture (CP3 Gate Item)
 - **Mechanism:** Structured JSON logging via Pino integrated with `@opentelemetry/sdk-node` (`NFR-009`, `BR-010`).
 - **Severity Levels:**
-  - `DEBUG`: Internal chunk boundaries, raw tokens, cache hits.
-  - `INFO`: User actions, debit commits, completed ingestions, QStash dispatches.
-  - `WARN`: Throttling events (429), provider failovers (Gemini → Groq), retry attempts.
+  - `DEBUG`: Internal chunk boundaries, raw tokens, cache hits, rate limit admissions (`metering.rate_limit.admitted`).
+  - `INFO`: User actions, debit commits (`metering.credits.debited`), completed ingestions, QStash dispatches, daily credit resets (`metering.reset.executed`).
+  - `WARN`: Throttling events (429 `metering.rate_limit.throttled`), insufficient credits (402 `metering.credits.insufficient`), provider failovers (Gemini → Groq), retry attempts.
   - `ERROR`: Terminal job failures, database connection aborts, upstream 5xx errors.
   - `CRITICAL`: Unhandled exceptions, data corruption alerts.
 - **Contextual Metadata:** Every log entry carries `{ timestamp, level, correlation_id, service, event, payload }`. Trace context conforms to W3C `traceparent`.

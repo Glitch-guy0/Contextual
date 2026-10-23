@@ -6,12 +6,15 @@
 ```mermaid
 graph TD
     APPS["apps/platform (Next.js 15 Web & Route Handlers)"] --> AUTH["@repo/auth (Clerk JWT & Middleware)"]
+    APPS --> METER["@repo/metering (Rate Limiter & Lua Credits)"]
     APPS --> DB["@repo/db (Kysely Relational Store)"]
     APPS --> UI["@repo/ui (Shared Design Tokens & Components)"]
     APPS --> CONTRACTS["@repo/contracts (Zod Schemas & RFC 9457)"]
     APPS --> CONFIG["@repo/config (Environment Config & dev:doctor)"]
 
     AUTH --> CONTRACTS
+    METER --> CONTRACTS
+    METER --> CONFIG
     DB --> CONFIG
     DB --> CONTRACTS
     UI --> CONTRACTS
@@ -21,7 +24,7 @@ graph TD
     classDef purple fill:#F3E8FD,stroke:#A142F4,stroke-width:1.5px,color:#7627BB;
 
     class APPS blue;
-    class AUTH,DB green;
+    class AUTH,METER,DB green;
     class UI,CONTRACTS,CONFIG purple;
 ```
 
@@ -47,7 +50,8 @@ contextual/
 │   ├── contracts/             # Zod DTOs, OpenAPI types, RFC 9457 error catalogue
 │   ├── db/                    # Kysely typed database client, schemas, migrations
 │   ├── ui/                    # Design tokens, typography, glassmorphism components
-│   └── auth/                  # Clerk JWT verification, TenantContext, middleware
+│   ├── auth/                  # Clerk JWT verification, TenantContext, middleware
+│   └── metering/              # Rate limiter, Lua credit ledger, daily reset cron
 ├── apps/
 │   └── platform/              # Next.js 15 App Router platform application
 └── tests/                     # Monorepo layout, package exports, and doctor suites
@@ -64,7 +68,8 @@ contextual/
 | **`@repo/db`** | `packages/db` | `kysely@^0.27.4`, `pg@^8.12.0`, `@types/pg` | `@repo/config`, `@repo/contracts` | MIT | Exact / Caret |
 | **`@repo/ui`** | `packages/ui` | None (pure CSS/TS token interfaces) | `@repo/contracts` | MIT | Exact / Caret |
 | **`@repo/auth`** | `packages/auth` | `@clerk/backend@^1.15.0` | `@repo/contracts` | MIT | Exact / Caret |
-| **`apps/platform`** | `apps/platform` | `next@^15.0.0`, `react@^19.0.0`, `@clerk/nextjs` | `@repo/auth`, `@repo/db`, `@repo/contracts`, `@repo/ui`, `@repo/config` | Proprietary | Workspace Protocol (`workspace:*`) |
+| **`@repo/metering`** | `packages/metering` | `@upstash/redis@^1.34.3`, `ioredis@^5.4.1` | `@repo/config`, `@repo/contracts` | MIT | Exact / Caret |
+| **`apps/platform`** | `apps/platform` | `next@^15.0.0`, `react@^19.0.0`, `@clerk/nextjs` | `@repo/auth`, `@repo/metering`, `@repo/db`, `@repo/contracts`, `@repo/ui`, `@repo/config` | Proprietary | Workspace Protocol (`workspace:*`) |
 
 ---
 

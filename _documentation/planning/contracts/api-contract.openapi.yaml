@@ -67,6 +67,27 @@ paths:
       responses:
         '200':
           description: Current account credits and daily reset countdown
+          headers:
+            RateLimit-Limit:
+              schema:
+                type: integer
+              description: Maximum requests allowed in current window
+            RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current window
+            RateLimit-Reset:
+              schema:
+                type: integer
+              description: Seconds until rate limit window resets
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Rate limit policy parameter (e.g. 5;w=1)
+            X-Credit-Balance:
+              schema:
+                type: number
+              description: Current user credit balance
           content:
             application/json:
               schema:
@@ -75,6 +96,43 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+
+  /credits/reset:
+    post:
+      summary: Trigger Daily Credit Reset (QStash Scheduled Webhook)
+      operationId: triggerDailyReset
+      tags: [Metering]
+      security: []
+      parameters:
+        - name: Upstash-Signature
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Cryptographic webhook signature from QStash
+      responses:
+        '200':
+          description: Daily credit reset batch executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, processed, idempotent_skips, timestamp]
+                properties:
+                  status:
+                    type: string
+                    example: "completed"
+                  processed:
+                    type: integer
+                    example: 42
+                  idempotent_skips:
+                    type: integer
+                    example: 5
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /notebooks:
     get:

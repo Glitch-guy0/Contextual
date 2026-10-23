@@ -49,6 +49,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [m0-workspace-foundation/dev-log.md](planning/milestones/m0-workspace-foundation/dev-log.md) | Milestone M0 Developer Execution Log | C | `developer-agent` |
 | [m1-developer-golden-path/milestone.md](planning/milestones/m1-developer-golden-path/milestone.md) | Milestone M1 Charter (In-Progress) | A | `pm-agent` |
 | [05-m1-developer-golden-path-and-auth.md](planning/architecture/05-m1-developer-golden-path-and-auth.md) | Milestone M1 Architectural Blueprint | A | `architect-agent` |
+| [05-m2-metering-spine-and-quota-throttling.md](planning/architecture/05-m2-metering-spine-and-quota-throttling.md) | Milestone M2 Architectural Blueprint | A | `architect-agent` |
 | [m1-developer-golden-path/sprint-status.yaml](planning/milestones/m1-developer-golden-path/sprint-status.yaml) | Milestone M1 Sprint Board (Active) | B | `sprint-agent` |
 | [m1-developer-golden-path/dev-log.md](planning/milestones/m1-developer-golden-path/dev-log.md) | Milestone M1 Developer Execution Log | C | `developer-agent` |
 | [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Planned) | A | `pm-agent` |
@@ -72,7 +73,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [config-schema.yaml](planning/contracts/config-schema.yaml) | Canonical typed configuration schema contract | A | `governance-specialist` |
 | [deployment-config.yaml](planning/contracts/deployment-config.yaml) | Deployment & container configuration contract | A | `deployment-agent` |
 | [package-dependency-plan.md](planning/registers/package-dependency-plan.md) | Package dependency plan & monorepo topology | A | `code-maintenance-specialist` |
-| [raw-sql-exceptions.md](planning/registers/raw-sql-exceptions.md) | Raw SQL exception register (0 in M1) | A | `data-architect` |
+| [raw-sql-exceptions.md](planning/registers/raw-sql-exceptions.md) | Raw SQL exception register (0 in M1/M2) | A | `data-architect` |
 | [failure-mode-register.md](planning/registers/failure-mode-register.md) | Failure mode register (FMEA & Action Priorities) | A | `failure-mode-specialist` |
 | [adr-0004](planning/decisions/adr-0004-unified-upstash-serverless-architecture.md) | Unified Upstash Serverless Architecture | A | `architect-agent` |
 | [sizing-estimate.md](planning/registers/sizing-estimate.md) | Project sizing, cognitive load & effort register | A | `delivery-strategy-agent` |
@@ -87,6 +88,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [handoff-006](logs/handoff-documents/handoff-006-architect-to-sprint-developer.md) | Stage 3 to Stage 4 M1 Planning Handoff | C | `architect-agent` |
 | [handoff-007](logs/handoff-documents/handoff-007-sprint-to-developer.md) | Stage 4 Sprint Breakdown to Implementation Handoff | C | `sprint-agent` |
 | [handoff-008](logs/handoff-documents/handoff-008-developer-to-test.md) | Stage 4 Clean Implementation to Test Verification Handoff | C | `developer-agent` |
+| [handoff-009](logs/handoff-documents/handoff-009-architect-to-sprint-developer.md) | Stage 3 to Stage 4 M2 Planning Handoff | C | `architect-agent` |
 | [questionnaire.yaml](planning/questionnaire.yaml) | Open questions for the user (0 pending) | user | user |
 | [delivery-strategy.yaml](system/delivery-strategy.yaml) | Process depth and artifact budget | B | `delivery-strategy-agent` |
 | [workflow-context.yaml](system/workflow-context.yaml) | Current workflow status | B | stage owners |

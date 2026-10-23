@@ -32,6 +32,11 @@ graph TD
 | **DSP-003** | 2026-10-23T11:40:00Z | `architect-agent` | `governance-specialist` | Typed configuration schema, secret classification | `_documentation/planning/contracts/config-schema.yaml` | ACCEPTED |
 | **DSP-004** | 2026-10-23T11:42:00Z | `architect-agent` | `deployment-agent` | Multi-environment deployment, container specs, .env.example | `_documentation/planning/contracts/deployment-config.yaml` | ACCEPTED |
 | **DSP-005** | 2026-10-23T11:45:00Z | `architect-agent` | `failure-mode-specialist` | M1 FMEA analysis, JWKS rotation failure, Action Priority scoring | `_documentation/planning/registers/failure-mode-register.md` | ACCEPTED |
+| **DSP-006** | 2026-10-23T18:10:00Z | `architect-agent` | `code-maintenance-specialist` | `@repo/metering` package boundaries and dependency matrix | `_documentation/planning/registers/package-dependency-plan.md` | ACCEPTED |
+| **DSP-007** | 2026-10-23T18:12:00Z | `architect-agent` | `data-architect` | Redis key namespaces, TTL policies, atomic Lua script CAP design | `_documentation/planning/architecture/05-m2-metering-spine-and-quota-throttling.md` §3.3–3.4 | ACCEPTED |
+| **DSP-008** | 2026-10-23T18:14:00Z | `architect-agent` | `governance-specialist` | RFC 9457 closed error catalogue and secret sanitization rules | `_documentation/planning/contracts/component-catalog.yaml` | ACCEPTED |
+| **DSP-009** | 2026-10-23T18:16:00Z | `architect-agent` | `deployment-agent` | Upstash Redis connection pooling, keep-alive, local Redis 7 parity | `_documentation/planning/contracts/deployment-config.yaml` | ACCEPTED |
+| **DSP-010** | 2026-10-23T18:18:00Z | `architect-agent` | `failure-mode-specialist` | M2 FMEA sweep on rate limiting, EVALSHA NOSCRIPT, 08:00 UTC race | `_documentation/planning/registers/failure-mode-register.md` | ACCEPTED |
 
 ---
 
@@ -117,4 +122,88 @@ graph TD
 - **How Supported (Deliverables & Recommendations):**
   - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md`
   - Recommendations: Identified single point of failure in cold JWKS fetch; recommended disk/build fallback cache.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-006: Metering Package Topology & Dependency Direction
+- **Timestamp:** 2026-10-23T18:10:00Z
+- **Calling Agent:** `architect-agent` (Stage 3 Owner)
+- **Target Specialist:** `code-maintenance-specialist`
+- **Architectural Dimension:** Maintainability & Structure
+- **Why Invoked (Rationale):**
+  > Establish package boundaries for `@repo/metering` within the monorepo first floor, ensuring zero dependencies on Next.js server packages and strict separation of Redis Lua scripts.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m2-metering-spine/milestone.md`
+  - `_documentation/planning/registers/package-dependency-plan.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Updated artifact: `_documentation/planning/registers/package-dependency-plan.md`
+  - Recommendations: Keep Lua scripts in `packages/metering/src/lua/`, export typed contracts via `@repo/contracts`, maintain `@upstash/redis` single-package dependency.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-007: Redis Persistence, Key Namespaces & Lua Script CAP Analysis
+- **Timestamp:** 2026-10-23T18:12:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `data-architect`
+- **Architectural Dimension:** Persistence, State & Consistency
+- **Why Invoked (Rationale):**
+  > Design Redis key namespaces (`credits:{userId}`, `rl:{userId}`, `reset:{date}:{userId}`), TTL rolling expiration policies, and atomic Lua script execution model (`debit-credits.lua`, `sliding-window.lua`, `daily-reset.lua`).
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m2-metering-spine/milestone.md`
+  - `_documentation/planning/architecture/04-tech-stack.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered section: `05-m2-metering-spine-and-quota-throttling.md` §3.3–3.4
+  - Recommendations: Single EVALSHA roundtrip per metered request; use Redis server `TIME` command to eliminate host clock skew; 48h rolling TTL on balances. Zero raw SQL exceptions registered.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-008: Closed RFC 9457 Problem Details Governance
+- **Timestamp:** 2026-10-23T18:14:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `governance-specialist`
+- **Architectural Dimension:** Governance & Standards
+- **Why Invoked (Rationale):**
+  > Validate closed 17-member RFC 9457 error catalogue, secret redaction filters, and machine-readable quota extensions against IETF and platform specifications.
+- **Inputs Provided:**
+  - `_documentation/planning/conventions.md` §4
+  - `packages/contracts/src/rfc9457.ts`
+- **How Supported (Deliverables & Recommendations):**
+  - Updated artifacts: `component-catalog.yaml`, `api-contract.openapi.yaml`
+  - Recommendations: Explicit `service`, `quota_period`, `resets_in_seconds` extensions for 402 errors; strict redaction of internal stack traces, API keys, and database connection strings before serialization.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-009: Upstash Redis Runtime Configuration & Local Parity
+- **Timestamp:** 2026-10-23T18:16:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `deployment-agent`
+- **Architectural Dimension:** Infrastructure & Parity
+- **Why Invoked (Rationale):**
+  > Verify deployment configuration for Upstash Redis Serverless REST connection pooling on Vercel Hobby and parity with local Redis 7 container (`infra/compose.yaml`).
+- **Inputs Provided:**
+  - `_documentation/planning/contracts/deployment-config.yaml`
+  - `_documentation/planning/contracts/config-schema.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Updated artifact: `_documentation/planning/contracts/deployment-config.yaml`
+  - Recommendations: Keep-Alive HTTP agent on Upstash REST client; enforce 2,000ms hard timeout to prevent edge lambda stalling during network partitions.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-010: Failure Mode & Effects Analysis (FMEA) for Metering Spine
+- **Timestamp:** 2026-10-23T18:18:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `failure-mode-specialist`
+- **Architectural Dimension:** Reliability & Fault Tolerance
+- **Why Invoked (Rationale):**
+  > Conduct bottom-up FMEA analysis for Upstash Redis network partition, EVALSHA NOSCRIPT cache misses, sliding window sorted set memory leaks, host clock drift, and concurrent 08:00 UTC daily reset race conditions.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m2-metering-spine-and-quota-throttling.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-201..FM-206)
+  - Recommendations: Automatic `SCRIPT LOAD` on `NOSCRIPT`; atomic `SET NX EX 86400` idempotency lock on daily reset; strict classification of Google AI Studio 429 into `SERVICE_LIMIT_REACHED`.
 - **Status:** ACCEPTED

@@ -32,15 +32,25 @@ components:
     package: "@repo/metering"
     owner: "architect-agent"
     responsibilities:
-      - "Enforce 5 RPS sliding window rate limiting via Redis"
+      - "Enforce 5 RPS sliding window rate limiting via Redis sorted sets"
       - "Execute atomic credit debit (0.5 LLM, 1.0 Ingest) via single Lua script"
       - "Short-circuit exhausted accounts with HTTP 402 Insufficient Credits"
       - "Execute idempotent daily 08:00 UTC credit resets"
+      - "Classify upstream AI provider errors into RFC 9457 service limit details"
+      - "Inject standardized RateLimit and X-Credit headers into HTTP responses"
     interfaces:
+      public_types:
+        - "RateLimitResult"
+        - "DebitResult"
+        - "ResetResult"
+        - "QuotaClassification"
+        - "RateLimitHeaders"
       methods:
         - "checkRateLimit(userId: string): Promise<RateLimitResult>"
         - "debitCredits(userId: string, cost: number, action: string): Promise<DebitResult>"
         - "resetDailyCredits(userId: string): Promise<ResetResult>"
+        - "classifyQuotaError(upstreamError: unknown): QuotaClassification"
+        - "generateRateLimitHeaders(limit: number, remaining: number, resetSeconds: number): Headers"
     dependencies:
       - target: "@upstash/redis"
         severity: "FATAL"
@@ -48,6 +58,27 @@ components:
       - target: "@repo/contracts"
         severity: "FATAL"
         type: "internal_package"
+
+  - id: "comp-contracts"
+    name: "Contracts & RFC 9457 Error System"
+    package: "@repo/contracts"
+    owner: "architect-agent"
+    responsibilities:
+      - "Enforce closed 17-member RFC 9457 Problem Details error catalogue"
+      - "Format and sanitize HTTP API error envelopes"
+      - "Export shared Zod DTOs, OpenAPI types, and quota extension interfaces"
+    interfaces:
+      public_types:
+        - "ProblemDocument"
+        - "ErrorCatalogueKey"
+        - "QuotaExtension"
+        - "ValidationErrorItem"
+      methods:
+        - "createProblemDetails(key: ErrorCatalogueKey, params: CreateProblemParams): ProblemDocument"
+    dependencies:
+      - target: "zod"
+        severity: "FATAL"
+        type: "external_package"
 
   - id: "comp-ingestion"
     name: "Transient Ingestion & Extraction Worker"

@@ -26,15 +26,16 @@ graph TD
 
 | Register ID | Source Location | Operation / Purpose | Justification Category | Target Engine | Real DB Test | Owner | Revisit Condition |
 |---|---|---|---|---|---|---|---|
-| *(None in M1)* | — | — | — | PostgreSQL 16 | — | `data-architect` | — |
+| *(None in M1/M2)* | — | — | — | PostgreSQL 16 | — | `data-architect` | — |
 
 ---
 
-## 2. Milestone M1 Assessment & Exception Policy
+## 2. Milestone M1 & M2 Assessment & Exception Policy
 
 ### Current Register Status: Zero Exceptions (0)
-For Milestone M1 (Developer Golden Path & Core Authentication):
-1. **100% Typed Coverage:** All database schema definitions, migrations, and CRUD operations for `users`, `conversation_threads`, `conversation_messages`, and `notebooks` are 100% expressible through standard typed Kysely query builders.
-2. **Prohibited Bare Clients:** No raw `pg.Client.query()` calls without Kysely typing are permitted in the codebase.
-3. **Parameterization Assurance:** All dynamic values are passed strictly as bound parameters through Kysely's expression builder, preventing SQL injection vulnerabilities.
-4. **Future Evaluation:** If complex vector similarity queries or advanced CTEs in Milestone M3/M5 require raw SQL, they must be registered in this document with qualifying justification and a containerized test verification before implementation.
+For Milestone M1 (Core Auth) and Milestone M2 (Metering Spine & Quota Throttling):
+1. **100% Typed Relational Coverage:** All PostgreSQL database access is expressible through typed Kysely query builders.
+2. **Redis Lua Storage Isolation:** In Milestone M2, high-concurrency rate limiting and atomic credit ledger debits are isolated entirely in Upstash Redis via Lua scripts (`debit-credits.lua`, `sliding-window.lua`, `daily-reset.lua`), with zero direct SQL touches.
+3. **Prohibited Bare Clients:** No raw `pg.Client.query()` calls without Kysely typing are permitted in the codebase.
+4. **Parameterization Assurance:** All dynamic values are passed strictly as bound parameters through Kysely's expression builder, preventing SQL injection vulnerabilities.
+5. **Future Evaluation:** If complex vector similarity queries or advanced CTEs in Milestone M3/M5 require raw SQL, they must be registered in this document with qualifying justification and a containerized test verification before implementation.

@@ -35,9 +35,9 @@ milestones:
   - id: "M2"
     name: "Metering Spine & Quota Throttling"
     target_version: "v0.2.0"
-    status: "not-started"
-    gate: "G1"
-    gate_status: "PENDING"
+    status: "in-progress"
+    gate: "G4"
+    gate_status: "PASS"
     delivers: "Upstash Redis Lua atomic credit ledger, 5 RPS sliding rate limiter, RFC 9457 error catalogue, daily 08:00 UTC reset"
     criteria:
       - "Balance never observed negative across 100 concurrent debit races"
