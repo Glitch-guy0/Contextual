@@ -3,14 +3,14 @@
 version: 2
 updated_at: "2026-10-23T16:10:00.000Z"
 current_milestone: "m0-workspace-foundation"
-milestone_status: "in-progress"
+milestone_status: "completed"
 
 stories:
   - id: "S0.1"
     epic: "EPIC-001"
     title: "Turborepo Monorepo Root Scaffolding & Bun Toolchain"
     owner: "developer-agent"
-    status: "verify-ready"
+    status: "completed"
     build_vs_buy_ref: "SW-CORE-001 / ADR-0002"
     change_matrix:
       new_files:
@@ -42,14 +42,14 @@ stories:
         expected: "3 passed, 0 failed"
     evidence:
       command: "bun test tests/monorepo-layout.test.ts"
-      result: "3 pass, 0 fail, 16 expect() calls"
-      signed_off_by: "developer-agent"
+      result: "3 pass, 0 fail, 16 expect() calls (certified)"
+      signed_off_by: "test-agent"
 
   - id: "S0.2"
     epic: "EPIC-001"
     title: "Internal Shared Packages Foundation (@repo/config, contracts, db, ui)"
     owner: "developer-agent"
-    status: "verify-ready"
+    status: "completed"
     build_vs_buy_ref: "SW-CORE-002 / CV-001"
     change_matrix:
       new_files:
@@ -93,14 +93,14 @@ stories:
         expected: "4 passed, 0 failed"
     evidence:
       command: "bun test tests/package-exports.test.ts"
-      result: "4 pass, 0 fail, 22 expect() calls"
-      signed_off_by: "developer-agent"
+      result: "4 pass, 0 fail, 22 expect() calls (certified)"
+      signed_off_by: "test-agent"
 
   - id: "S0.3"
     epic: "EPIC-001"
     title: "Toolchain Scripts, Strict Typecheck & Monorepo Build Pipeline"
     owner: "developer-agent"
-    status: "verify-ready"
+    status: "completed"
     build_vs_buy_ref: "SW-CORE-003 / NFR-010"
     change_matrix:
       new_files:
@@ -134,5 +134,5 @@ stories:
         expected: "Tasks: 4 successful, 4 total; 0 errors"
     evidence:
       command: "bun run build && bun run typecheck"
-      result: "Tasks: 4 successful, 4 total; 0 errors"
-      signed_off_by: "developer-agent"
+      result: "Tasks: 4 successful, 4 total; 0 errors (certified)"
+      signed_off_by: "test-agent"

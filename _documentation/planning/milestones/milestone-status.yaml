@@ -12,9 +12,9 @@ milestones:
   - id: "M0"
     name: "Workspace Foundation & Scaffolding"
     target_version: "v0.1.0-alpha.1"
-    status: "not-started"
-    gate: "G5"
-    gate_status: "READY"
+    status: "completed"
+    gate: "G6"
+    gate_status: "PASS"
     delivers: "Turborepo monorepo layout, Bun toolchain, shared packages (@repo/contracts, @repo/config, @repo/db, @repo/ui)"
     criteria:
       - "Turborepo workspace builds cleanly with zero circular dependencies"

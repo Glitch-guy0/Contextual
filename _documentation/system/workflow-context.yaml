@@ -4,11 +4,11 @@ workflow:
   delivery_mode: balanced
   target_maturity: mvp
   risk_tier: HIGH
-  current_stage: "phase_4_developer_execution"
-  active_agent: developer-agent
-  checkpoint: "CP4"
-  gate: "G5"
-  gate_status: "IN_PROGRESS"
+  current_stage: "phase_5_deployment_release"
+  active_agent: deployment-agent
+  checkpoint: "CP5"
+  gate: "G6"
+  gate_status: "PASS"
   commands:
     build_cmd: "bun run build"
     test_cmd: "bun test"
@@ -56,6 +56,12 @@ workflow:
     - path: "_documentation/planning/quality/verification.md"
       type: "verification-plan"
       status: "final"
+    - path: "_documentation/planning/quality/test-audit.md"
+      type: "test-audit"
+      status: "final"
+    - path: "_documentation/planning/milestones/m0-workspace-foundation/dev-log.md"
+      type: "dev-log"
+      status: "final"
     - path: "_documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md"
       type: "adr"
       status: "accepted"
@@ -89,4 +95,14 @@ workflow:
       from: "architect-agent"
       to: "developer-agent"
       stage: 3
+      status: "ACCEPTED"
+    - id: "handoff-004"
+      from: "sprint-agent"
+      to: "developer-agent"
+      stage: 4
+      status: "ACCEPTED"
+    - id: "handoff-005"
+      from: "test-agent"
+      to: "deployment-agent"
+      stage: 4
       status: "READY_FOR_HANDOFF"

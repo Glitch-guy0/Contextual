@@ -43,9 +43,10 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [prd.md](planning/prd.md) | Product Requirements Document (10 sections) | A | `pm-agent` |
 | [conventions.md](planning/conventions.md) | Engineering standards & SemVer v0 to v1 | A | `pm-agent` |
 | [milestones/overview.md](planning/milestones/overview.md) | Release roadmap, testing strategy & gates | A | `pm-agent` |
-| [m0-workspace-foundation/milestone.md](planning/milestones/m0-workspace-foundation/milestone.md) | Milestone M0 Charter (Active) | A | `pm-agent` |
-| [m0-workspace-foundation/sprint-status.yaml](planning/milestones/m0-workspace-foundation/sprint-status.yaml) | Milestone M0 Sprint Board (Ready) | B | `sprint-agent` |
+| [m0-workspace-foundation/milestone.md](planning/milestones/m0-workspace-foundation/milestone.md) | Milestone M0 Charter (Completed) | A | `pm-agent` |
+| [m0-workspace-foundation/sprint-status.yaml](planning/milestones/m0-workspace-foundation/sprint-status.yaml) | Milestone M0 Sprint Board (Completed) | B | `sprint-agent` |
 | [m0-workspace-foundation/git-plan.md](planning/milestones/m0-workspace-foundation/git-plan.md) | Milestone M0 Git & Branching Plan | A | `git-planner-agent` |
+| [m0-workspace-foundation/dev-log.md](planning/milestones/m0-workspace-foundation/dev-log.md) | Milestone M0 Developer Execution Log | C | `developer-agent` |
 | [m1-developer-golden-path/milestone.md](planning/milestones/m1-developer-golden-path/milestone.md) | Milestone M1 Charter (Planned) | A | `pm-agent` |
 | [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Planned) | A | `pm-agent` |
 | [m2-metering-spine/sprint-status.yaml](planning/milestones/m2-metering-spine/sprint-status.yaml) | Milestone M2 Sprint Board | B | `sprint-agent` |
@@ -59,6 +60,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [m9-hardening-benchmark/milestone.md](planning/milestones/m9-hardening-benchmark/milestone.md) | Milestone M9 Charter (Planned) | A | `pm-agent` |
 | [ga-production-release/milestone.md](planning/milestones/ga-production-release/milestone.md) | Milestone GA Charter (Planned) | A | `pm-agent` |
 | [quality/verification.md](planning/quality/verification.md) | M2 Verification Plan & Truth Tables | A | `test-agent` |
+| [quality/test-audit.md](planning/quality/test-audit.md) | M0 Test Audit & Baseline Inventory | A | `test-agent` |
 | [milestone-status.yaml](planning/milestones/milestone-status.yaml) | Milestone board (M0..M9/GA) | B | `pm-agent` |
 | [architecture.md](planning/architecture.md) | Canonical arc42 system architecture (§1–§12) | A | `architect-agent` |
 | [04-tech-stack.md](planning/architecture/04-tech-stack.md) | 23-layer tech stack & framework evaluation matrix | A | `architect-agent` |
@@ -78,7 +80,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 
 ## 3. Closed Milestones
 
-None. (Milestones M0 and M1 were previously noted as closed due to reference template drift; reconciled on 2026-10-23 to reflect current workspace reality where implementation has not yet commenced).
+- **M0: Workspace Foundation & Scaffolding (`v0.1.0-alpha.1`)** — Closed 2026-10-23. Established Turborepo monorepo layout, Bun toolchain, and core shared packages (`@repo/config`, `@repo/contracts`, `@repo/db`, `@repo/ui`). Verified with 10 unit and build tests across 3 suites. Gate G6 PASS. Certified by `test-agent`.
 
 ## 4. Open Questions & Roadmap Gaps
 
