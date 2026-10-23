@@ -1,0 +1,4 @@
+# Design-by-Work (DBW) Project Configuration
+# Canonical location: .dbw/config.yaml
+version: 1.3
+output_folder: _documentation

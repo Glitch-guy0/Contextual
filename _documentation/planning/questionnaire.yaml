@@ -1,0 +1,40 @@
+# =============================================================================
+# DBW QUESTIONNAIRE — OPEN QUESTIONS ONLY
+# =============================================================================
+# You do not need any other context to answer this file. Everything you need
+# is written below.
+#
+# WHAT THIS FILE IS
+#   A short list of questions that your AI coding agent cannot answer for you
+#   because they are decisions only you can make. It is the one file in this
+#   workspace that you own; every other file belongs to your coding agent.
+#
+# HOW TO ANSWER
+#   1. Look at the entries under 'questions:' at the bottom of this file.
+#   2. To answer one, replace the empty quotes on its 'user_answer' line with
+#      either the 'value' of one of its options (for example: opt_a), or your
+#      own words — both are fine.
+#   3. Change nothing else. Do not delete, rename, reorder or reformat any
+#      other line, and do not add new sections.
+#   4. Hand this file back to your coding agent (paste it into the chat, or
+#      tell the agent the path) and say your answers are ready.
+#
+# WHAT HAPPENS TO YOUR ANSWER
+#   Your agent reads the answers, works out what they mean for the project,
+#   writes that outcome into the project's planning documents, and then removes
+#   the answered question from this file.
+#
+# An empty 'questions: []' means nothing is waiting on you right now.
+# =============================================================================
+
+version: 2
+meta:
+  project: "DBW Workspace"
+  last_updated: "2026-10-23T03:45:45.684Z"
+  pending_count: 0
+  # The next question will be Q-<this number>. Ids are never reused, so an
+  # answer can always be traced back to the question that produced it.
+  next_question_id: 1
+
+# Open questions waiting for you. Entries are added by your coding agent.
+questions: []
