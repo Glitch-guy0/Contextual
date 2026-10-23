@@ -176,6 +176,119 @@ config_contract:
     secrecy_class: "DEPLOY_VAR"
     description: "OpenTelemetry OTLP HTTP collector endpoint (Better Stack in prod)"
 
+  # --- Filebase S3 Transient Staging (M3) ---
+  FILEBASE_ACCESS_KEY_ID:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://FILEBASE_ACCESS_KEY_ID"
+    description: "Filebase S3 compatible access key ID for direct transient uploads"
+
+  FILEBASE_SECRET_ACCESS_KEY:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://FILEBASE_SECRET_ACCESS_KEY"
+    description: "Filebase S3 compatible secret access key for pre-signing"
+
+  FILEBASE_BUCKET_NAME:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: true
+    default: "contextual-transient-staging"
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "Filebase S3 bucket name for transient binary staging"
+
+  FILEBASE_ENDPOINT_URL:
+    type: "uri"
+    required:
+      local: false
+      test: false
+      production: true
+    default: "https://s3.filebase.io"
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "Filebase S3 API endpoint URL"
+
+  # --- Upstash QStash Asynchronous Task Queue (M3) ---
+  QSTASH_TOKEN:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://QSTASH_TOKEN"
+    description: "Upstash QStash API bearer token for task dispatch"
+
+  QSTASH_CURRENT_SIGNING_KEY:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://QSTASH_CURRENT_SIGNING_KEY"
+    description: "Current cryptographic signing key for Upstash-Signature verification"
+
+  QSTASH_NEXT_SIGNING_KEY:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: false
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://QSTASH_NEXT_SIGNING_KEY"
+    description: "Next cryptographic signing key for seamless QStash key rotation"
+
+  # --- Upstash Vector Index (M3) ---
+  UPSTASH_VECTOR_REST_URL:
+    type: "uri"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: false
+    secrecy_class: "DEPLOY_VAR"
+    description: "Upstash Vector REST API endpoint URL"
+
+  UPSTASH_VECTOR_REST_TOKEN:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://UPSTASH_VECTOR_REST_TOKEN"
+    description: "Upstash Vector REST authentication bearer token"
+
+  # --- Google AI Studio (M3 Primary Embeddings) ---
+  GOOGLE_AI_STUDIO_API_KEY:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: true
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://GOOGLE_AI_STUDIO_API_KEY"
+    description: "Google AI Studio API key for gemini-embedding-001 (768-dim)"
+
 validation_rules:
   - rule: "All secret variables must not match sample strings in production"
     assertion: "NODE_ENV === 'production' => !DATABASE_URL.includes('localhost')"

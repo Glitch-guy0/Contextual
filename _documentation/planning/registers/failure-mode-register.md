@@ -9,18 +9,18 @@
 
 ## 1. Executive Summary
 
-- **Components analysed:** 11 (Clerk JWKS Cache, Auth Middleware, Docker Compose Stack, `dev:doctor` Probe, Kysely DB Pool, Schema Migrator, CreditLedgerService, RateLimiterService, MeteringGuard, DailyResetEngine, QuotaClassifier)
-- **Failure modes enumerated:** 13
-- **Action Priority H / M / L:** 4 / 7 / 2
-- **Fault class split (crash / omission / timing):** 4 / 5 / 4
-- **Single points of failure (cut-set size 1):** 2 (Clerk JWKS unreachability, Upstash Redis network partition during rate limit/credit evaluation)
+- **Components analysed:** 16 (Clerk JWKS Cache, Auth Middleware, Docker Compose Stack, `dev:doctor` Probe, Kysely DB Pool, Schema Migrator, CreditLedgerService, RateLimiterService, MeteringGuard, DailyResetEngine, QuotaClassifier, S3StagingService, QStashHandler, PdfParser, EmbeddingService, VectorIndexer)
+- **Failure modes enumerated:** 21
+- **Action Priority H / M / L:** 6 / 12 / 3
+- **Fault class split (crash / omission / timing):** 6 / 8 / 7
+- **Single points of failure (cut-set size 1):** 3 (Clerk JWKS unreachability, Upstash Redis network partition, Upstash Vector REST API outage)
 
 ```mermaid
 graph TD
-  REG["📋 M1 & M2 Failure Mode Register<br/>13 failure modes"] --> FMEA["🔍 FMEA Sweep<br/>Bottom-up analysis"]
+  REG["📋 M1, M2 & M3 Failure Mode Register<br/>21 failure modes"] --> FMEA["🔍 FMEA Sweep<br/>Bottom-up analysis"]
   FMEA --> DET["🔔 Detection Audit<br/>Telemetry & Doctor diagnostics"]
-  DET --> AP["🚦 Action Priority<br/>4 High / 7 Medium / 2 Low"]
-  AP --> CONTAIN["🛡️ Containment Design<br/>JWKS Stale-While-Revalidate, Atomic Lua, SET NX Idempotency"]
+  DET --> AP["🚦 Action Priority<br/>6 High / 12 Medium / 3 Low"]
+  AP --> CONTAIN["🛡️ Containment Design<br/>JWKS Stale Cache, Atomic Lua Refunds, S3 Purge Invariant, ONNX Embedding Fallback"]
 
   classDef purple fill:#F3E8FD,stroke:#A142F4,stroke-width:1.5px,color:#7627BB;
   classDef blue fill:#E8F0FE,stroke:#4285F4,stroke-width:1.5px,color:#174EA6;
@@ -52,6 +52,14 @@ graph TD
 | **FM-204** | DailyResetEngine | timing | Concurrent workers trigger daily reset at 08:00 UTC | Multiple reset calls race, potentially corrupting balance | All active users at 08:00 UTC | 8 | 3 | 7 | **H** | Atomic `SET reset:{date}:{userId} 1 NX EX 86400` lock; losers immediately no-op | `failure-mode-specialist` |
 | **FM-205** | DailyResetEngine | timing | Host clock drift triggers reset at incorrect time | Reset occurs before Google AI Studio 08:00 UTC boundary | User balance desync | 6 | 2 | 5 | **M** | Script inspects Redis server `TIME` command rather than local host clocks (`BR-026`) | `developer-agent` |
 | **FM-206** | QuotaClassifier | omission | Google AI Studio 429 classified as generic 500 error | Misleads user into retrying, worsening rate exhaustion | Users encountering Google 429 | 7 | 3 | 3 | **M** | QuotaClassifier maps `RESOURCE_EXHAUSTED` specifically to RFC 9457 `SERVICE_LIMIT_REACHED` (402) | `developer-agent` |
+| **FM-301** | S3StagingService | omission | Staged PDF upload exceeds 5 MB or bypasses presign validation | Client uploads massive binary; risks storage/compute saturation | Single upload request | 7 | 2 | 2 | **M** | Presign endpoint validates `file_size_bytes <= 5,242,880`; S3 bucket policy enforces max size | `architect-agent` |
+| **FM-302** | PdfParser | crash | Password-protected or corrupt PDF uploaded | Parser crashes during text stream parsing | Ingestion job for affected PDF | 6 | 3 | 2 | **M** | Parser catches decryption error, categorizes as `PASSWORD_PROTECTED`, triggers Lua refund | `developer-agent` |
+| **FM-303** | PdfParser | omission | Scanned image PDF uploaded with zero text layer | Parser extracts 0 characters; vectors cannot be created | Scanned PDF document | 5 | 4 | 2 | **M** | Parser checks `text.length < 50`; aborts with `NO_TEXT_LAYER`, refunds 1.0 credit | `developer-agent` |
+| **FM-304** | YouTubeParser | omission | Video has disabled transcripts or is age-restricted | YouTube transcript API returns 404 or disabled error | YouTube ingestion job | 6 | 3 | 3 | **M** | Parser maps error to `TRANSCRIPT_DISABLED`, refunds 1.0 credit, emits structured SSE failure | `developer-agent` |
+| **FM-305** | WebParser | omission | Web URL blocked by anti-bot, paywall, or DNS timeout | Crawler hangs or receives 403 Forbidden | Web ingestion job | 5 | 4 | 3 | **M** | Safe 8s HTTP timeout; Readability catches empty DOM, maps to `CRAWL_FAILED`, refunds credit | `developer-agent` |
+| **FM-306** | EmbeddingService | omission | Google AI Studio 429 quota exhaustion or API downtime | Embeddings fail; ingestion pipeline halts mid-stream | Ingestion jobs during Google quota cliff | 8 | 3 | 6 | **H** | Automatic in-process fallback to `@huggingface/transformers` (`bge-small-en-v1.5` / ONNX) | `architect-agent` |
+| **FM-307** | VectorIndexer | omission | Upstash Vector REST API timeout or network partition | Chunks fail to upsert; S3 staging binary left stranded | Ingestion jobs during Upstash network blip | 8 | 2 | 7 | **H** | QStash retries up to 3 times (`BR-005`); if all fail, dead-letter handler refunds credit and deletes S3 file | `failure-mode-specialist` |
+| **FM-308** | S3StagingService | timing | Worker crashes after vector commit before S3 `DeleteObjectCommand` | Staged binary remains in Filebase bucket (`BR-046` breach) | Staged S3 objects accumulation | 6 | 2 | 4 | **L** | Post-upsert S3 purge wrapped in finally block; hourly sweeper purges objects older than 1h | `deployment-agent` |
 
 ---
 
@@ -70,3 +78,10 @@ graph TD
   1. Upstash Redis network partition without client timeout (`FM-201`).
 - **Containment:**
   - In production, `@repo/metering` configures a hard 2,000ms timeout on Redis REST calls; on timeout, the guard returns HTTP 503 `UPSTREAM_PROVIDER_UNAVAILABLE` rather than crashing or hanging edge lambdas.
+
+### FT-03: Transient Storage Drift / Accumulation in Filebase S3
+- **Catastrophic Outcome:** Unpurged PDF binaries accumulate in Filebase bucket, breaching the zero-byte transient storage invariant (`BR-046`) and risking storage fees.
+- **Minimal Cut Set (Size 1):**
+  1. Silent worker termination between Upstash Vector commit and S3 deletion (`FM-308`).
+- **Containment:**
+  - S3 `DeleteObjectCommand` is executed in a guaranteed `finally` handler; in addition, a secondary lifecycle sweeper scans Filebase S3 for orphan staging objects older than 1 hour and purges them idempotently.

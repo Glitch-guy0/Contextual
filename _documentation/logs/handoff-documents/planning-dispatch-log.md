@@ -37,6 +37,11 @@ graph TD
 | **DSP-008** | 2026-10-23T18:14:00Z | `architect-agent` | `governance-specialist` | RFC 9457 closed error catalogue and secret sanitization rules | `_documentation/planning/contracts/component-catalog.yaml` | ACCEPTED |
 | **DSP-009** | 2026-10-23T18:16:00Z | `architect-agent` | `deployment-agent` | Upstash Redis connection pooling, keep-alive, local Redis 7 parity | `_documentation/planning/contracts/deployment-config.yaml` | ACCEPTED |
 | **DSP-010** | 2026-10-23T18:18:00Z | `architect-agent` | `failure-mode-specialist` | M2 FMEA sweep on rate limiting, EVALSHA NOSCRIPT, 08:00 UTC race | `_documentation/planning/registers/failure-mode-register.md` | ACCEPTED |
+| **DSP-011** | 2026-10-23T19:00:00Z | `architect-agent` | `code-maintenance-specialist` | `@repo/ingestion` package boundaries, parsers, and dependency matrix | `_documentation/planning/registers/package-dependency-plan.md` | ACCEPTED |
+| **DSP-012** | 2026-10-23T19:02:00Z | `architect-agent` | `data-architect` | Upstash Vector payload schema, cosine metric, zero-byte S3 transient purge | `_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md` §3.3, §3.6 | ACCEPTED |
+| **DSP-013** | 2026-10-23T19:04:00Z | `architect-agent` | `governance-specialist` | Filebase S3, QStash, and Upstash Vector typed configuration contracts | `_documentation/planning/contracts/config-schema.yaml` | ACCEPTED |
+| **DSP-014** | 2026-10-23T19:06:00Z | `architect-agent` | `security-architect` | S3 pre-sign scoping (5MB cap) and QStash Upstash-Signature verification | `_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md` §3.3, §3.4 | ACCEPTED |
+| **DSP-015** | 2026-10-23T19:08:00Z | `architect-agent` | `failure-mode-specialist` | M3 FMEA sweep, S3 purge failure, ONNX fallback, Lua credit compensation | `_documentation/planning/registers/failure-mode-register.md` (FM-301..FM-308) | ACCEPTED |
 
 ---
 
@@ -207,3 +212,88 @@ graph TD
   - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-201..FM-206)
   - Recommendations: Automatic `SCRIPT LOAD` on `NOSCRIPT`; atomic `SET NX EX 86400` idempotency lock on daily reset; strict classification of Google AI Studio 429 into `SERVICE_LIMIT_REACHED`.
 - **Status:** ACCEPTED
+
+---
+
+### DSP-011: Repository Structure & Ingestion Package Matrix
+- **Timestamp:** 2026-10-23T19:00:00Z
+- **Calling Agent:** `architect-agent` (Stage 3 Owner)
+- **Target Specialist:** `code-maintenance-specialist`
+- **Architectural Dimension:** Maintainability & Structure
+- **Why Invoked (Rationale):**
+  > Plan `@repo/ingestion` package boundaries, export signatures, and external dependencies (`@aws-sdk/client-s3`, `@upstash/vector`, `@upstash/qstash`, `pdf-parse`, `youtube-transcript`, `@mozilla/readability`).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md`
+  - `_documentation/planning/milestones/m3-transient-ingestion/milestone.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/registers/package-dependency-plan.md`
+  - Recommendations: Strict two-floor separation; parsers and chunkers live in `@repo/ingestion/src/parsers`; no Next.js runtime dependencies in first-floor package.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-012: Upstash Vector Persistence Schema & S3 Transient Hygiene
+- **Timestamp:** 2026-10-23T19:02:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `data-architect`
+- **Architectural Dimension:** Persistence Architecture & Invariants
+- **Why Invoked (Rationale):**
+  > Design Upstash Vector metadata payload schema, chunk indexing strategy, cosine similarity metric configuration, and verify Filebase zero-byte transient storage invariant (`BR-046`).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md` §3.3, §3.6
+  - `_documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m3-transient-ingestion-pipeline.md` §3.6, §3.7
+  - Recommendations: Mandatory `{ user_id, document_id, notebook_id }` payload; text chunk text stored solely in vector metadata (`BR-047`); zero chunk text in PostgreSQL; immediate post-upsert S3 deletion.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-013: Configuration Schema for Ingestion Cloud Services
+- **Timestamp:** 2026-10-23T19:04:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `governance-specialist`
+- **Architectural Dimension:** Configuration & Secret Governance
+- **Why Invoked (Rationale):**
+  > Author typed configuration schema contracts for Filebase S3, Upstash QStash, Upstash Vector, and Google AI Studio credentials.
+- **Inputs Provided:**
+  - `_documentation/planning/contracts/config-schema.yaml`
+  - `_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md` §5.3
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered updates: `_documentation/planning/contracts/config-schema.yaml`
+  - Recommendations: Mark access keys and tokens as `SECRET`; support dual signing keys (`QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY`) for zero-downtime rotation.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-014: Staging Security & Webhook Cryptographic Verification
+- **Timestamp:** 2026-10-23T19:06:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `security-architect`
+- **Architectural Dimension:** Security & Perimeter Integrity
+- **Why Invoked (Rationale):**
+  > Validate security boundaries for direct-to-S3 pre-signed upload URLs, tenant path isolation, 5 MB payload ceiling, and QStash webhook cryptographic signature validation.
+- **Inputs Provided:**
+  - `_documentation/planning/contracts/api-contract.openapi.yaml`
+  - `_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md` §3.3, §3.4
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m3-transient-ingestion-pipeline.md` §3.3, §3.4, §5.2
+  - Recommendations: Bind pre-signed PUT URLs strictly to `Content-Type: application/pdf` and 300s TTL; scope keys to `staging/{tenantId}/...`; reject webhooks missing valid `Upstash-Signature` with 401.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-015: Ingestion Failure Modes & Atomic Credit Compensation
+- **Timestamp:** 2026-10-23T19:08:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `failure-mode-specialist`
+- **Architectural Dimension:** Reliability & Fault Tolerance
+- **Why Invoked (Rationale):**
+  > Conduct bottom-up FMEA sweep for corrupted PDFs, password protection, YouTube subtitle absence, web crawler paywalls, Google embedding quota exhaustion, and post-upsert S3 deletion failures.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md` §3.9
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-301..FM-308, FT-03)
+  - Recommendations: In-process ONNX embedding fallback on Google 429; atomic `refund-credits.lua` script restoring 1.0 credit on terminal failure; non-debiting retry flow (`FR-040`); secondary hourly orphan S3 sweeper.
+- **Status:** ACCEPTED
+

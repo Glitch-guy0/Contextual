@@ -281,6 +281,70 @@ paths:
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
 
+  /ingestions/process:
+    post:
+      summary: Process Ingestion Job (QStash Signed Webhook)
+      operationId: processIngestionWebhook
+      tags: [Ingestion]
+      security: []
+      parameters:
+        - name: Upstash-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Cryptographic webhook signature from Upstash QStash
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestionProcessRequest'
+      responses:
+        '200':
+          description: Ingestion job completed, vectors committed, S3 purged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionProcessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ingestions/{jobId}/retry:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Retry Failed Ingestion Job (Non-Debiting)
+      operationId: retryIngestionJob
+      tags: [Ingestion]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_staging_key:
+                  type: string
+      responses:
+        '202':
+          description: Ingestion retry accepted without debiting credits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetryIngestionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /chat:
     post:
       summary: Grounded Contextual Question-Answering (Debits 0.5 Credit)
@@ -509,6 +573,100 @@ components:
           items:
             type: string
             format: uuid
+
+    IngestionProcessRequest:
+      type: object
+      required: [job_id, tenant_id, notebook_id, source_type]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        notebook_id:
+          type: string
+          format: uuid
+        source_type:
+          type: string
+          enum: [pdf_staging_key, youtube_url, web_url]
+        source_value:
+          type: string
+
+    IngestionProcessResponse:
+      type: object
+      required: [job_id, status, chunks_count, duration_ms]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: "completed"
+        chunks_count:
+          type: integer
+          example: 48
+        duration_ms:
+          type: integer
+          example: 3200
+
+    IngestionProgressEvent:
+      type: object
+      required: [job_id, status, percentage, current_step]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [processing, completed, failed]
+        percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        current_step:
+          type: string
+          enum: [presigned, downloading, parsing, chunking, embedding, indexing, purging, completed, failed]
+        pages_total:
+          type: integer
+          nullable: true
+        pages_processed:
+          type: integer
+          nullable: true
+        chunks_total:
+          type: integer
+          nullable: true
+        error_reason:
+          $ref: '#/components/schemas/IngestionFailureDetail'
+
+    IngestionFailureDetail:
+      type: string
+      enum:
+        - PASSWORD_PROTECTED
+        - NO_TEXT_LAYER
+        - UNSUPPORTED_FORMAT
+        - PAGE_LIMIT_EXCEEDED
+        - TRANSCRIPT_DISABLED
+        - SOURCE_NOT_FOUND
+        - CRAWL_FAILED
+        - NO_READABLE_CONTENT
+        - FILE_TOO_LARGE
+        - PROVIDER_UNAVAILABLE
+        - EMBEDDING_FAILED
+        - VECTOR_STORE_ERROR
+
+    RetryIngestionResponse:
+      type: object
+      required: [job_id, status, reused_debit]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: "queued"
+        reused_debit:
+          type: boolean
+          example: true
 
   responses:
     BadRequest:

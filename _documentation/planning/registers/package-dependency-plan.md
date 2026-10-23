@@ -7,6 +7,7 @@
 graph TD
     APPS["apps/platform (Next.js 15 Web & Route Handlers)"] --> AUTH["@repo/auth (Clerk JWT & Middleware)"]
     APPS --> METER["@repo/metering (Rate Limiter & Lua Credits)"]
+    APPS --> INGEST["@repo/ingestion (Parsers, S3 Staging & QStash)"]
     APPS --> DB["@repo/db (Kysely Relational Store)"]
     APPS --> UI["@repo/ui (Shared Design Tokens & Components)"]
     APPS --> CONTRACTS["@repo/contracts (Zod Schemas & RFC 9457)"]
@@ -15,6 +16,8 @@ graph TD
     AUTH --> CONTRACTS
     METER --> CONTRACTS
     METER --> CONFIG
+    INGEST --> CONTRACTS
+    INGEST --> CONFIG
     DB --> CONFIG
     DB --> CONTRACTS
     UI --> CONTRACTS
@@ -24,7 +27,7 @@ graph TD
     classDef purple fill:#F3E8FD,stroke:#A142F4,stroke-width:1.5px,color:#7627BB;
 
     class APPS blue;
-    class AUTH,METER,DB green;
+    class AUTH,METER,INGEST,DB green;
     class UI,CONTRACTS,CONFIG purple;
 ```
 
@@ -51,7 +54,8 @@ contextual/
 │   ├── db/                    # Kysely typed database client, schemas, migrations
 │   ├── ui/                    # Design tokens, typography, glassmorphism components
 │   ├── auth/                  # Clerk JWT verification, TenantContext, middleware
-│   └── metering/              # Rate limiter, Lua credit ledger, daily reset cron
+│   ├── metering/              # Rate limiter, Lua credit ledger, daily reset cron
+│   └── ingestion/             # S3 transient staging, parsers, embeddings, QStash
 ├── apps/
 │   └── platform/              # Next.js 15 App Router platform application
 └── tests/                     # Monorepo layout, package exports, and doctor suites
@@ -69,7 +73,8 @@ contextual/
 | **`@repo/ui`** | `packages/ui` | None (pure CSS/TS token interfaces) | `@repo/contracts` | MIT | Exact / Caret |
 | **`@repo/auth`** | `packages/auth` | `@clerk/backend@^1.15.0` | `@repo/contracts` | MIT | Exact / Caret |
 | **`@repo/metering`** | `packages/metering` | `@upstash/redis@^1.34.3`, `ioredis@^5.4.1` | `@repo/config`, `@repo/contracts` | MIT | Exact / Caret |
-| **`apps/platform`** | `apps/platform` | `next@^15.0.0`, `react@^19.0.0`, `@clerk/nextjs` | `@repo/auth`, `@repo/metering`, `@repo/db`, `@repo/contracts`, `@repo/ui`, `@repo/config` | Proprietary | Workspace Protocol (`workspace:*`) |
+| **`@repo/ingestion`** | `packages/ingestion`| `@aws-sdk/client-s3@^3.670.0`, `@aws-sdk/s3-request-presigner@^3.670.0`, `@upstash/vector@^1.2.0`, `@upstash/qstash@^2.7.17`, `@upstash/redis@^1.34.3`, `@google/genai@^0.1.1`, `@huggingface/transformers@^3.0.0`, `pdf-parse@^1.1.1`, `youtube-transcript@^1.2.1`, `@mozilla/readability@^0.5.0`, `linkedom@^0.18.5` | `@repo/config`, `@repo/contracts` | MIT | Exact / Caret |
+| **`apps/platform`** | `apps/platform` | `next@^15.0.0`, `react@^19.0.0`, `@clerk/nextjs` | `@repo/auth`, `@repo/metering`, `@repo/ingestion`, `@repo/db`, `@repo/contracts`, `@repo/ui`, `@repo/config` | Proprietary | Workspace Protocol (`workspace:*`) |
 
 ---
 

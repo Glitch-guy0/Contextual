@@ -15,6 +15,7 @@ related:
   - _documentation/planning/milestones/overview.md
   - _documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md
   - _documentation/planning/epics/epic-003-transient-ingestion-pipeline.md
+  - _documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md
 supersedes: []
 regenerable: false
 pinned: false
@@ -22,8 +23,8 @@ pinned: false
 
 # Milestone Charter — M3: Transient Ingestion Pipeline & Multi-Source Extraction (v0.3.0)
 
-> **Status:** Planned (Follows M2 Metering Spine)  
-> **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-23  
+> **Status:** Architecture Finalized (Gate G4 PASS · Ready for Sprint Breakdown)  
+> **Author:** pm-agent (Stage 2) & architect-agent (Stage 3) · **Date:** 2026-10-23  
 > **Target Version:** `v0.3.0` · **Risk Tier:** HIGH  
 > **Grounding:** `project-brief.md` (FR-004..FR-007, FR-031, FR-035, FR-037; BR-005..BR-007, BR-033..BR-036, BR-045..BR-046; NFR-004, NFR-014, NFR-024)  
 

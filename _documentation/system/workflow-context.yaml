@@ -42,6 +42,9 @@ workflow:
     - path: "_documentation/planning/milestones/m2-metering-spine/milestone.md"
       type: "milestone-charter"
       status: "final"
+    - path: "_documentation/planning/milestones/m3-transient-ingestion/milestone.md"
+      type: "milestone-charter"
+      status: "final"
     - path: "_documentation/planning/architecture.md"
       type: "architecture-narrative"
       status: "final"
@@ -52,6 +55,9 @@ workflow:
       type: "design-doc"
       status: "final"
     - path: "_documentation/planning/architecture/05-m2-metering-spine-and-quota-throttling.md"
+      type: "design-doc"
+      status: "final"
+    - path: "_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md"
       type: "design-doc"
       status: "final"
     - path: "_documentation/planning/contracts/component-catalog.yaml"
@@ -104,6 +110,8 @@ workflow:
       summary: "Containerized local stack (PostgreSQL 16, Redis 7), 8-layer dev:doctor diagnostic probe (< 5m), Clerk offline RS256 JWKS verification, Kysely schema models (users, conversation_threads, conversation_messages, notebooks)"
     - id: "M2-ARCH-001"
       summary: "Atomic Upstash Redis Lua credit ledger (10.0 grant, 0.5 LLM, 1.0 ingest), 5 RPS sliding rate limiter, HTTP 402 short-circuit guard, closed 17-member RFC 9457 error catalogue, idempotent daily 08:00 UTC resets"
+    - id: "M3-ARCH-001"
+      summary: "Transient Ingestion Pipeline & Multi-Source Extraction: direct-to-S3 Filebase staging (<= 5MB), QStash webhook tasks, PDF/YouTube/Web extractors, 800-char semantic chunking, Google gemini-embedding-001 (768-dim) with local ONNX fallback, Upstash Vector indexing with tenant metadata, 280s SSE progress stream, atomic refund-credits.lua compensation, and non-debiting retries."
   handoffs:
     - id: "handoff-001"
       from: "analyst-agent"
@@ -146,6 +154,16 @@ workflow:
       stage: 4
       status: "ACCEPTED"
     - id: "handoff-009"
+      from: "architect-agent"
+      to: "sprint-agent"
+      stage: 3
+      status: "ACCEPTED"
+    - id: "handoff-010"
+      from: "developer-agent"
+      to: "test-agent"
+      stage: 4
+      status: "ACCEPTED"
+    - id: "handoff-011"
       from: "architect-agent"
       to: "sprint-agent"
       stage: 3

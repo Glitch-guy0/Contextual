@@ -16,6 +16,7 @@ related:
   - _documentation/planning/architecture/04-tech-stack.md
   - _documentation/planning/architecture/05-m1-developer-golden-path-and-auth.md
   - _documentation/planning/architecture/05-m2-metering-spine-and-quota-throttling.md
+  - _documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md
   - _documentation/planning/contracts/config-schema.yaml
   - _documentation/planning/contracts/deployment-config.yaml
   - _documentation/planning/registers/package-dependency-plan.md
@@ -156,8 +157,9 @@ The technical foundation is a **modular monolith on Next.js 15 App Router** depl
 - **Transient Storage:** Filebase S3 holds uploads temporarily; binaries are permanently purged once vector upserts commit (`ADR-0003`).
 - **Developer Golden Path & Auth Perimeter (M1):** Local containerized stack via Docker Compose (`infra/compose.yaml`), 8-layer diagnostic health probe (`dev:doctor`), Clerk OAuth with offline RS256 JWKS JWT verification, and Kysely database schemas for `users`, `conversation_threads`, `conversation_messages`, and `notebooks`.
 - **Metering Spine & Quota Throttling (M2):** Atomic Upstash Redis Lua credit ledger (10.0 daily grant, 0.5 LLM, 1.0 ingest) executing in single EVALSHA roundtrips, 5 RPS sliding rate limiter, HTTP 402 short-circuit ingress guard, closed 17-member RFC 9457 error catalogue, upstream provider quota classifier, and daily 08:00 UTC resets without rollover.
+- **Transient Ingestion Pipeline & Multi-Source Extraction (M3):** Direct browser-to-S3 pre-signed upload to Filebase S3 (<= 5MB), asynchronous Upstash QStash signed webhooks, heterogeneous extractors (PDF > 5 pages/sec, YouTube < 30s, Web Readability), recursive character chunking (800 chars, 100 overlap), dual-stack embeddings (Google gemini-embedding-001 768-dim with in-process ONNX fallback), Upstash Vector indexing with tenant payload, immediate post-upsert S3 object deletion (zero stored bytes), deterministic SSE progress streaming (capped at 280s), and atomic credit compensation via refund-credits.lua on terminal failure.
 
-Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/architecture/05-m2-metering-spine-and-quota-throttling.md`](architecture/05-m2-metering-spine-and-quota-throttling.md) · [`planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`](decisions/adr-0004-unified-upstash-serverless-architecture.md)
+Detail: [`planning/architecture/04-tech-stack.md`](architecture/04-tech-stack.md) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/architecture/05-m2-metering-spine-and-quota-throttling.md`](architecture/05-m2-metering-spine-and-quota-throttling.md) · [`planning/architecture/05-m3-transient-ingestion-pipeline.md`](architecture/05-m3-transient-ingestion-pipeline.md) · [`planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`](decisions/adr-0004-unified-upstash-serverless-architecture.md)
 
 ---
 
@@ -204,7 +206,7 @@ graph TD
 8. **`@repo/memory`**: Implements `MemoryStore` interface using in-process Mem0 backed by Upstash Redis and Upstash Vector.
 9. **`@repo/contracts`**: Exports shared Zod schemas, OpenAPI types, and the closed 17-member RFC 9457 problem catalogue.
 
-Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalog.yaml) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/architecture/05-m2-metering-spine-and-quota-throttling.md`](architecture/05-m2-metering-spine-and-quota-throttling.md)
+Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalog.yaml) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/architecture/05-m2-metering-spine-and-quota-throttling.md`](architecture/05-m2-metering-spine-and-quota-throttling.md) · [`planning/architecture/05-m3-transient-ingestion-pipeline.md`](architecture/05-m3-transient-ingestion-pipeline.md)
 
 ---
 
@@ -249,14 +251,21 @@ Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalo
 6. Assembles context and streams response with inline citations via Google Gemini Flash (`FR-011`).
    - If Gemini returns 429 `RESOURCE_EXHAUSTED`, seamlessly fails over to Groq Llama-3.3-70B (`NFR-022`, `ADR-0004`).
 
-### Primary Scenario 2: Asynchronous Transient Ingestion Flow
-1. Client requests pre-signed S3 URL from `/api/v1/ingestions/presign` and uploads PDF (≤ 5MB) directly to Filebase.
-2. Client posts `file_key` to `/api/v1/ingestions`; route debits 1.0 credit via Redis Lua and dispatches job to Upstash QStash.
-3. QStash invokes `/api/v1/ingestions/process` with cryptographic signature verification.
-4. Worker parses text, computes dense embeddings, and upserts vector points to Upstash Vector with tenant metadata.
-5. Worker immediately calls S3 `DeleteObjectCommand` on Filebase, purging binary (`BR-046`).
-6. Worker emits final SSE progress event (`progress: 100%`).
-   - If parsing terminally fails, atomic Redis Lua script reverses debited credit (`FR-037`, `BR-033`).
+### Primary Scenario 2: Asynchronous Transient Ingestion & Live Progress Flow (M3)
+1. Client calls `POST /api/v1/ingestions/presign` with filename and size; server validates size <= 5MB (`BR-045`) and returns Filebase S3 pre-signed PUT URL (`staging/{userId}/{jobId}/{filename}`).
+2. Client uploads PDF binary directly to Filebase S3 via HTTP PUT (zero server RAM consumed).
+3. Client posts `{ notebook_id, source_type, source_value }` to `/api/v1/ingestions`.
+4. Route handler invokes `CreditLedgerService` to debit 1.0 credit atomically via Redis Lua (`debit-credits.lua`); returns HTTP 202 Accepted with `{ job_id, progress_stream_url }` and dispatches task to Upstash QStash.
+5. Client opens SSE stream `GET /api/v1/ingestions/{jobId}/progress` (capped at 280s, `BR-034`).
+6. Upstash QStash triggers `/api/v1/ingestions/process` with signed webhook header `Upstash-Signature`.
+7. Worker verifies signature, streams binary from S3, parses text (> 5 pages/sec for PDF), extracts YouTube subtitles, or crawls web DOM with Readability.
+8. `TextChunker` creates 800-character semantic chunks with 100-character overlap, emitting live progress updates to Redis `ingest:progress:{jobId}`.
+9. `EmbeddingService` generates 768-dim embeddings via Google AI Studio (`gemini-embedding-001`), falling back in-process to `@huggingface/transformers` (`bge-small-en-v1.5` / ONNX) on Google 429 quota exhaustion (`ADR-0004`).
+10. `VectorIndexer` upserts vector points to Upstash Vector with tenant payload `{ user_id, document_id, notebook_id }`.
+11. Worker immediately issues `DeleteObjectCommand` on Filebase S3, purging staged binary and returning bucket storage to 0 MB (`BR-046`).
+12. Worker emits final SSE progress event (`status: completed, percentage: 100%`).
+13. If parsing or embedding terminally fails, `CompensationService` triggers `refund-credits.lua` in Redis, restoring 1.0 credit atomically and purging the S3 object (`FR-037`, `BR-033`).
+14. Subsequent retries via `POST /api/v1/ingestions/{jobId}/retry` reuse the failed job state without debiting credits a second time (`FR-040`).
 
 ---
 
