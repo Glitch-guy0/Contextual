@@ -3,19 +3,19 @@ schema: 1
 decided_by: delivery-strategy-agent
 delivery_mode: balanced
 target_maturity: mvp
-rationale: "Default balanced MVP strategy established during initial workspace scaffolding."
+rationale: "Balanced MVP delivery strategy confirmed; calibrated against Tier L platform architecture (~9,500 LOC) and Tier M active Milestone M2 (~1,280 LOC)."
 inputs:
-  value: medium
+  value: high
   time_budget: "standard"
   effort_budget: "standard"
   risk: high
   reversibility: moderate
-  scale: "standard"
+  scale: "large-platform / medium-m2"
   security_sensitivity: medium
   operational_impact: medium
 planning_depth:
-  pm: lite
-  architecture: lite
+  pm: standard
+  architecture: standard
   test_planning: targeted
   party_mode: on-trigger
 artifact_budget:
@@ -23,14 +23,17 @@ artifact_budget:
     - project-brief.md
     - delivery-strategy.yaml
     - planning/quality/verification.md
+    - planning/registers/sizing-estimate.md
   optional:
     - prd.md
     - conventions.md
     - architecture.md
+    - component-catalog.yaml
+    - api-contract.openapi.yaml
   unnecessary: []
 gates:
   G1: full
-  G2: lite
+  G2: full
   G3: on-trigger
   G4: full
   G5: full
@@ -43,3 +46,10 @@ history:
     to: "balanced/mvp"
     reason: "Initial workspace scaffold"
     confirmed_by_user: true
+  - at: "2026-10-23T09:20:00.000Z"
+    event: calibration
+    from: "balanced/mvp"
+    to: "balanced/mvp"
+    reason: "Calibrated scale metrics and published sizing-estimate.md register (Platform Tier L, M2 Tier M)"
+    confirmed_by_user: true
+
