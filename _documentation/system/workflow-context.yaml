@@ -4,11 +4,11 @@ workflow:
   delivery_mode: balanced
   target_maturity: mvp
   risk_tier: HIGH
-  current_stage: "phase_4_planning"
-  active_agent: architect-agent
+  current_stage: "stage_4_implementation"
+  active_agent: developer-agent
   active_milestone: "M2"
-  checkpoint: "CP3"
-  gate: "G4"
+  checkpoint: "CP4"
+  gate: "G5"
   gate_status: "READY_FOR_HANDOFF"
   commands:
     build_cmd: "bun run build"

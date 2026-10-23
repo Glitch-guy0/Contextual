@@ -55,6 +55,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Planned) | A | `pm-agent` |
 | [m2-metering-spine/sprint-status.yaml](planning/milestones/m2-metering-spine/sprint-status.yaml) | Milestone M2 Sprint Board | B | `sprint-agent` |
 | [m2-metering-spine/git-plan.md](planning/milestones/m2-metering-spine/git-plan.md) | Milestone M2 Git & Branching Plan | A | `git-planner-agent` |
+| [m2-metering-spine/dev-log.md](planning/milestones/m2-metering-spine/dev-log.md) | Milestone M2 Developer Execution Log | C | `developer-agent` |
 | [m3-transient-ingestion/milestone.md](planning/milestones/m3-transient-ingestion/milestone.md) | Milestone M3 Charter (Planned) | A | `pm-agent` |
 | [m4-notebook-workspace/milestone.md](planning/milestones/m4-notebook-workspace/milestone.md) | Milestone M4 Charter (Planned) | A | `pm-agent` |
 | [m5-reasoning-engine/milestone.md](planning/milestones/m5-reasoning-engine/milestone.md) | Milestone M5 Charter (Planned) | A | `pm-agent` |
@@ -89,6 +90,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [handoff-007](logs/handoff-documents/handoff-007-sprint-to-developer.md) | Stage 4 Sprint Breakdown to Implementation Handoff | C | `sprint-agent` |
 | [handoff-008](logs/handoff-documents/handoff-008-developer-to-test.md) | Stage 4 Clean Implementation to Test Verification Handoff | C | `developer-agent` |
 | [handoff-009](logs/handoff-documents/handoff-009-architect-to-sprint-developer.md) | Stage 3 to Stage 4 M2 Planning Handoff | C | `architect-agent` |
+| [handoff-010](logs/handoff-documents/handoff-010-developer-to-test.md) | Stage 4 M2 Implementation to Test Gate Handoff | C | `developer-agent` |
 | [questionnaire.yaml](planning/questionnaire.yaml) | Open questions for the user (0 pending) | user | user |
 | [delivery-strategy.yaml](system/delivery-strategy.yaml) | Process depth and artifact budget | B | `delivery-strategy-agent` |
 | [workflow-context.yaml](system/workflow-context.yaml) | Current workflow status | B | stage owners |

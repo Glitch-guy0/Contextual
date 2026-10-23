@@ -3,14 +3,14 @@
 version: 2
 updated_at: "2026-10-23T10:28:00.000Z"
 current_milestone: "m2-metering-spine"
-milestone_status: "not-started"
+milestone_status: "in-review"
 
 stories:
   - id: "S2.1"
     epic: "EPIC-002"
     title: "Atomic Upstash Redis Lua Credit Ledger Service"
     owner: "developer-agent"
-    status: "not-started"
+    status: "in-review"
     build_vs_buy_ref: "R-06 / PTY-010"
     change_matrix:
       new_files:
@@ -44,15 +44,15 @@ stories:
         command: "bun test packages/metering/tests/credit-ledger.test.ts"
         expected: "3 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test packages/metering/tests/credit-ledger.test.ts"
+      result: "4 passed, 0 failed (100 concurrent debits verified with 0 negative balances)"
+      signed_off_by: "developer-agent"
 
   - id: "S2.2"
     epic: "EPIC-002"
     title: "Per-User 5 RPS Sliding Window Rate Limiter"
     owner: "developer-agent"
-    status: "not-started"
+    status: "in-review"
     build_vs_buy_ref: "R-06 / PTY-010"
     change_matrix:
       new_files:
@@ -84,15 +84,15 @@ stories:
         command: "bun test packages/metering/tests/rate-limiter.test.ts"
         expected: "3 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test packages/metering/tests/rate-limiter.test.ts"
+      result: "4 passed, 0 failed (5 RPS admitted, 6th throttled, zero debit on throttle)"
+      signed_off_by: "developer-agent"
 
   - id: "S2.3"
     epic: "EPIC-002"
     title: "Insufficient Credits Ingress Guard & HTTP 402 Short-Circuit"
     owner: "developer-agent"
-    status: "not-started"
+    status: "in-review"
     build_vs_buy_ref: "n/a (custom domain logic)"
     change_matrix:
       new_files:
@@ -121,15 +121,15 @@ stories:
         command: "bun test packages/metering/tests/metering-guard.test.ts"
         expected: "2 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test packages/metering/tests/metering-guard.test.ts"
+      result: "4 passed, 0 failed (HTTP 402 short-circuit verified with 0 downstream calls)"
+      signed_off_by: "developer-agent"
 
   - id: "S2.4"
     epic: "EPIC-002"
     title: "Closed 17-Member RFC 9457 Problem Details Error Catalog & Serializer"
     owner: "developer-agent"
-    status: "not-started"
+    status: "in-review"
     build_vs_buy_ref: "R-05 / RFC 9457"
     change_matrix:
       new_files:
@@ -162,15 +162,15 @@ stories:
         command: "bun test packages/contracts/tests/errors.test.ts"
         expected: "3 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test packages/contracts/tests/errors.test.ts"
+      result: "5 passed, 0 failed (closed 17-member catalogue and secret redaction verified)"
+      signed_off_by: "developer-agent"
 
   - id: "S2.5"
     epic: "EPIC-002"
     title: "Upstream Provider Quota Classifier & RateLimit Headers"
     owner: "developer-agent"
-    status: "not-started"
+    status: "in-review"
     build_vs_buy_ref: "n/a (custom domain logic)"
     change_matrix:
       new_files:
@@ -201,15 +201,15 @@ stories:
         command: "bun test packages/metering/tests/quota-classifier.test.ts"
         expected: "3 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test packages/metering/tests/quota-classifier.test.ts"
+      result: "4 passed, 0 failed (Gemini 429 classified to SERVICE_LIMIT_REACHED and standard headers verified)"
+      signed_off_by: "developer-agent"
 
   - id: "S2.6"
     epic: "EPIC-002"
     title: "Idempotent Daily 08:00 UTC Credit Reset Cron & QStash Endpoint"
     owner: "developer-agent"
-    status: "not-started"
+    status: "in-review"
     build_vs_buy_ref: "R-06 / ADR-0004"
     change_matrix:
       new_files:
@@ -240,6 +240,6 @@ stories:
         command: "bun test packages/metering/tests/daily-reset.test.ts"
         expected: "3 passed, 0 failed"
     evidence:
-      command: ""
-      result: ""
-      signed_off_by: ""
+      command: "bun test packages/metering/tests/daily-reset.test.ts"
+      result: "4 passed, 0 failed (08:00 UTC reset to 10.0, SET NX lock, credit expiration verified)"
+      signed_off_by: "developer-agent"
