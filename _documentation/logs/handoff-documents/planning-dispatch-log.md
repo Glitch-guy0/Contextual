@@ -42,6 +42,11 @@ graph TD
 | **DSP-013** | 2026-10-23T19:04:00Z | `architect-agent` | `governance-specialist` | Filebase S3, QStash, and Upstash Vector typed configuration contracts | `_documentation/planning/contracts/config-schema.yaml` | ACCEPTED |
 | **DSP-014** | 2026-10-23T19:06:00Z | `architect-agent` | `security-architect` | S3 pre-sign scoping (5MB cap) and QStash Upstash-Signature verification | `_documentation/planning/architecture/05-m3-transient-ingestion-pipeline.md` §3.3, §3.4 | ACCEPTED |
 | **DSP-015** | 2026-10-23T19:08:00Z | `architect-agent` | `failure-mode-specialist` | M3 FMEA sweep, S3 purge failure, ONNX fallback, Lua credit compensation | `_documentation/planning/registers/failure-mode-register.md` (FM-301..FM-308) | ACCEPTED |
+| **DSP-016** | 2026-10-26T14:30:00Z | `pm-agent` | `architect-agent` | M4 design blueprint, graph persistence, OpenAPI node/edge/scoped-search contract | `_documentation/planning/architecture/05-m4-notebook-workspace-and-domain-graph.md` | ACCEPTED |
+| **DSP-017** | 2026-10-26T14:35:00Z | `architect-agent` | `data-architect` | `notebook_nodes` / `notebook_edges` schema, composite `(user_id, notebook_id)` indexes, expand migration | `_documentation/planning/architecture/05-m4-notebook-workspace-and-domain-graph.md` §3.7 | ACCEPTED |
+| **DSP-018** | 2026-10-26T14:40:00Z | `architect-agent` | `security-architect` | Cross-tenant isolation, ownership pre-check ordering before debit, edge-type validation surface | `_documentation/planning/architecture/05-m4-notebook-workspace-and-domain-graph.md` §5.2 | ACCEPTED |
+| **DSP-019** | 2026-10-26T14:45:00Z | `architect-agent` | `failure-mode-specialist` | M4 FMEA: orphaned edges, card resolution latency breach, debit-before-ownership race | `_documentation/planning/registers/failure-mode-register.md` (FM-401..FM-404) | ACCEPTED |
+| **DSP-020** | 2026-10-26T15:05:00Z | `pm-agent` | `sprint-agent` | M4 board authoring: atomic stories with frozen Change Matrices and developer handoff | `_documentation/planning/milestones/m4-notebook-workspace/sprint-status.yaml` | ACCEPTED |
 
 ---
 
@@ -295,5 +300,93 @@ graph TD
 - **How Supported (Deliverables & Recommendations):**
   - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-301..FM-308, FT-03)
   - Recommendations: In-process ONNX embedding fallback on Google 429; atomic `refund-credits.lua` script restoring 1.0 credit on terminal failure; non-debiting retry flow (`FR-040`); secondary hourly orphan S3 sweeper.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-016: M4 Notebook Workspace & Domain Graph Design Blueprint
+- **Timestamp:** 2026-10-26T14:30:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `architect-agent`
+- **Architectural Dimension:** System Design & Interface Contracts
+- **Why Invoked (Rationale):**
+  > Design the M4 graph persistence and workspace surface so `developer-agent` can implement each unit against explicit outcomes: `notebook_nodes` / `notebook_edges` tables, typed `cites` | `related` edge validation, document-card resolution under 10ms, and scoped retrieval whose ownership check precedes any credit debit.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m4-notebook-workspace/milestone.md` (revised 2026-10-26)
+  - `_documentation/planning/epics/epic-004-notebook-workspace-graph.md`
+  - `_documentation/planning/prd.md` (FR-031..FR-034)
+  - `_documentation/planning/contracts/api-contract.openapi.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/architecture/05-m4-notebook-workspace-and-domain-graph.md`
+  - Recommendations: repository contract over Kysely for all graph reads; composite index `(user_id, notebook_id)` as the tenant-scope guard; expand-only migration (no contract change, backward-compatible minor bump).
+- **Status:** ACCEPTED
+
+---
+
+### DSP-017: Graph Relational Schema, Tenant Indexes & Expand Migration
+- **Timestamp:** 2026-10-26T14:35:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `data-architect`
+- **Architectural Dimension:** Data Architecture & Persistence Governance
+- **Why Invoked (Rationale):**
+  > Design `notebook_nodes` and `notebook_edges` with foreign keys back to the M1 `notebooks` table, composite `(user_id, notebook_id)` indexes for scoped traversal, an edge-type CHECK constraint mirroring the `FR-032` union, and a zero-downtime expand migration sequence.
+- **Inputs Provided:**
+  - `packages/db/src/schema.ts`, `packages/db/src/migrations/001_initial_auth_and_notebooks.ts`
+  - `_documentation/planning/registers/raw-sql-exceptions.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m4-notebook-workspace-and-domain-graph.md` §3.7
+  - Recommendations: CHECK constraint `edge_type IN ('cites','related')` as defence-in-depth beneath the API validator; `ON DELETE CASCADE` from `notebooks` so cascade purge stays whole (`BR-039`); no raw SQL — schema change stays inside Kysely migration builder, register remains at 0 exceptions.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-018: Tenant Isolation & Ownership-Before-Debit Verification Review
+- **Timestamp:** 2026-10-26T14:40:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `security-architect`
+- **Architectural Dimension:** Security & Perimeter Integrity
+- **Why Invoked (Rationale):**
+  > Validate that scoped retrieval rejects foreign or unowned notebook scopes before the metering debit is issued, that the 404-vs-403 posture sealed in `M4-PM-001` holds, and that no graph query can be coerced into cross-tenant row disclosure.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m4-notebook-workspace/milestone.md` §4 (AC-4.3, AC-4.4)
+  - `_documentation/planning/contracts/api-contract.openapi.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m4-notebook-workspace-and-domain-graph.md` §5.2
+  - Recommendations: enforce ownership as a `WHERE user_id = ?` predicate inside the repository rather than a pre-query existence check (single round trip, no TOCTOU window); return 404 `notebook-not-found` for unowned scopes; assert 0 debit in the same test that asserts the 404.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-019: M4 Failure Modes & Latency-Budget FMEA
+- **Timestamp:** 2026-10-26T14:45:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `failure-mode-specialist`
+- **Architectural Dimension:** Reliability & Fault Tolerance
+- **Why Invoked (Rationale):**
+  > Sweep failure modes for orphaned edges after node deletion, document-card resolution breaching the 10ms budget, a debit issued before ownership validation, and graph writes racing cascade purge.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m4-notebook-workspace/milestone.md` §5 (WU-M4-6)
+  - `_documentation/planning/architecture/05-m4-notebook-workspace-and-domain-graph.md` §9
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-401..FM-404)
+  - Recommendations: single-statement cascade deletes for edges before nodes; measure card latency at p95 not mean; treat debit-before-ownership as an AP=H defect with a hard precondition gate; guard writes against `deleted_at IS NOT NULL` notebooks.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-020: M4 Sprint Board Authoring & Developer Handoff
+- **Timestamp:** 2026-10-26T15:05:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `sprint-agent`
+- **Architectural Dimension:** Tactical Decomposition & Board Governance
+- **Why Invoked (Rationale):**
+  > Decompose `EPIC-004` into single-session atomic stories with frozen Change Matrices (`new_files`, `allowed_files`, `forbidden_files`), bind verification hooks to AC-4.1..AC-4.4, and author the milestone sprint board for clean-session execution by `developer-agent`.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m4-notebook-workspace/milestone.md` §5 (WU-M4-1..WU-M4-7)
+  - `_documentation/planning/architecture/05-m4-notebook-workspace-and-domain-graph.md`
+  - `_documentation/planning/conventions.md` §3.1 (branch model)
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/milestones/m4-notebook-workspace/sprint-status.yaml` + `stories/`
+  - Recommendations: implementation starts at S4.1 and proceeds in dependency order; no story may open a root-level file (Two-Floor boundary); every story closes on unified `bun test` evidence, never on assertion.
 - **Status:** ACCEPTED
 

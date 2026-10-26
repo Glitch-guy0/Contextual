@@ -265,5 +265,16 @@ Contextual is an open, enterprise-grade conversational knowledge platform that e
 - **Landing Page Architecture ([Q-001]):** Ratified unified Next.js 15 App Router architecture (`apps/platform`) for the public marketing landing page, deploying under a single Vercel Hobby project and sharing `@repo/ui` component tokens.
 - **Authentication Perimeter ([Q-002]):** Ratified strictly Google and GitHub social OAuth via Clerk, disabling passwordless email magic link flows and email credential handling.
 
+### Dated Delta Update: 2026-10-26 (M4 Planning — Charter Grounding Correction & Missed Baseline Defect)
+- **Trace ID:** `M4-PM-001`, `M4-PM-002`, `M4-PM-003`, `DRIFT-AUDIT-002`
+- **Charter Grounding Corrected (`M4-PM-003`):** `m4-notebook-workspace/milestone.md` previously grounded M4 in `FR-013` (a M9 benchmark requirement), `FR-019`/`FR-020` (M6 memory-store requirements), and mislabelled `BR-021`/`BR-022`/`BR-038`/`BR-039`/`NFR-015`. Corrected to the authoritative set **FR-031..FR-034, BR-002, BR-036, NFR-007**, matching `EPIC-004` and §5 of this PRD. No scope was added or removed — only the traceability was repaired.
+- **Acceptance Conflict Sealed (`M4-PM-001`):** `milestone.md` AC-4.4 required HTTP 404 while `epic-004` AC-3 required HTTP 403 for the same foreign-notebook condition. Sealed on 404 `notebook-not-found` with 0 credits debited, because `/notebooks/{notebookId}` already answers 404 and a 403 would act as an existence oracle against `BR-002`/`NFR-007`. 403 `FORBIDDEN_TENANT_ACCESS` is retained for tenant-scope violations that carry no resource identifier. `epic-004` AC-3 updated to match.
+- **Missed Defect Captured (`DRIFT-AUDIT-002`):** while verifying M4 readiness, `pm-agent` found the repository baseline **red**, contradicting the `PASS` recorded at M3 close-out (`6/6 build; 6/6 typecheck` in `milestone-status.yaml`). Introduced by commit `ebba973`:
+  - **B-1:** `packages/contracts/src/ingestion.js` and `metering.js` are stale build artifacts **committed to git**, shadowing their `.ts` sources → `tests/package-exports.test.ts` fails (`error: Unexpected type`).
+  - **B-2:** `@repo/ingestion` carries 187 TypeScript errors (unresolved type imports, `import type` used as a value, duplicate `buildVectorPointId`, and error keys outside the closed 17-member RFC 9457 union) → `bun run build` and `bun run typecheck` exit 1 workspace-wide.
+- **Impact on M4:** M4 planning itself is unaffected (documentation-only changes; 7/7 plan checks PASS). Implementation is gated on precondition **P-1** — repair B-1/B-2 and re-record real M3 evidence — because a non-zero exit code unrelated to M4 would make every M4 story's verification unattributable.
+- **Evidence:** `bun run typecheck` → 187 errors in `@repo/ingestion`; `bun run build` → `Failed: @repo/ingestion#build`; `bun test tests/package-exports.test.ts` → 0 pass/1 fail. Full `bun test` run and `npx dbw doctor` recorded `NOT_VERIFIED` (300s timeout; `dbw` CLI not installed).
+- **Corrective Action:** precondition P-1 assigned to `developer-agent` in `handoff-012-sprint-to-developer-m4.md`; M3 evidence rows in `milestone-status.yaml` flagged for re-verification.
+
 ---
 *Authored and sealed by pm-agent at Checkpoint 2; updated by architect-agent at Checkpoint 3 (Gate G4); reconciled and updated by pm-agent on questionnaire ratification.*

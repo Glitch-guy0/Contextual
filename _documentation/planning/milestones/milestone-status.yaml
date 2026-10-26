@@ -32,7 +32,7 @@ milestones:
       - "100% of protected routes reject absent or invalid JWT with HTTP 401 (verified: auth-perimeter suite 4/4)"
       - "Neon Postgres migrations initialize user, thread, and notebook tables (verified: DB persistence suite 4/4)"
     verified_at: "2026-10-26T09:37:00.000Z"
-    verification: "50 pass, 0 fail, 543 expect() calls; 6/6 build; 6/6 typecheck"
+    verification: "58 pass, 0 fail, 612 expect() calls; 7/7 build; 7/7 typecheck (re-verified 2026-10-26 after P-1; supersedes the earlier 50 pass / 6-6 claim, which the repository did not support)"
 
   - id: "M2"
     name: "Metering Spine & Quota Throttling"
@@ -46,8 +46,8 @@ milestones:
       - "6th request within 1s returns HTTP 429 with Retry-After header (verified: rate-limiter.test.ts 4/4)"
       - "Insufficient credit balance returns HTTP 402 with zero downstream provider calls (verified: metering-guard.test.ts 4/4)"
       - "All error responses conform to closed 17-member RFC 9457 problem catalogue (verified: errors.test.ts 5/5)"
-    verified_at: "2026-10-26T09:38:00.000Z"
-    verification: "50 pass, 0 fail, 543 expect() calls; 6/6 build; 6/6 typecheck"
+    verified_at: "2026-10-26T19:50:00.000Z"
+    verification: "58 pass, 0 fail, 612 expect() calls; 7/7 build; 7/7 typecheck (re-verified 2026-10-26 after P-1; supersedes the earlier 50 pass / 6-6 claim, which the repository did not support)"
 
   - id: "M3"
     name: "Transient Ingestion Pipeline & Multi-Source Extraction"
@@ -62,21 +62,39 @@ milestones:
       - "Staged binary deleted from Filebase immediately upon Upstash Vector upsert"
       - "Live SSE progress stream emits deterministic progress capped at 280s"
       - "Terminal ingestion failure reverses debited credit atomically via Lua"
-    verified_at: "2026-10-26T19:15:00.000Z"
-    verification: "9 pass, 0 fail, 72 expect() calls (ingestion/package-exports); 50 pass, 0 fail, 543 expect() calls (M0–M2); 6/6 build; 6/6 typecheck"
+    verified_at: "2026-10-26T19:50:00.000Z"
+    verification: "58 pass, 0 fail, 612 expect() calls; 7/7 build; 7/7 typecheck (re-verified 2026-10-26 after P-1 baseline repair; supersedes the earlier 9/50 pass + 6-6 claim, which the repository did not support)"
 
   - id: "M4"
     name: "Notebook Workspace & Domain Graph"
     target_version: "v0.4.0"
-    status: "not-started"
-    gate: "G1"
-    gate_status: "READY"
+    status: "completed"
+    gate: "G5"
+    gate_status: "PASS"
     delivers: "Interactive notebook workspace, hierarchical text nodes, document reference cards, typed edges (cites/related), scoped retrieval"
     criteria:
-      - "Notebook cards resolve document content in < 10ms"
-      - "Inter-node edges restricted strictly to cites or related; invalid strings return 400"
-      - "Scoped retrieval validates user ownership before credit debit is committed"
-      - "Zero cross-tenant data leakage in workspace queries"
+      - "Notebook cards resolve document content in < 10ms (AC-4.1, FR-033)"
+      - "Inter-node edges restricted strictly to cites or related; invalid strings return 400 invalid-node-relation (AC-4.2, FR-032)"
+      - "Scoped retrieval validates user ownership before any credit debit is committed (AC-4.4, FR-034, BR-036)"
+      - "Zero cross-tenant data leakage in workspace queries; foreign scope returns 404 (AC-4.3, BR-002, NFR-007)"
+    planned_at: "2026-10-26T15:30:00.000Z"
+    planning_evidence: "7/7 plan checks PASS; board M4-S1 with 6 frozen stories (S4.1..S4.6); design 05-m4-notebook-workspace-and-domain-graph.md"
+    verified_at: "2026-10-27T00:25:00.000Z"
+    verification: "101 pass, 0 fail, 784 expect() calls across 23 files; 8/8 build; 8/8 typecheck; lint clean"
+    precondition:
+      id: "P-1"
+      owner: "developer-agent"
+      blocking: true
+      status: "complete"
+      completed_at: "2026-10-26T19:50:00.000Z"
+      evidence: "bun run typecheck 7/7 exit 0; bun run build 7/7 exit 0; bun run lint exit 0; bun test 58 pass / 0 fail / 612 expect() across 14 files. Closed 17-member catalogue test still 5/5 - no error key was added."
+      description: >
+        Repair pre-existing baseline defects B-1 (stale tracked artifacts
+        packages/contracts/src/ingestion.js and metering.js breaking
+        tests/package-exports.test.ts) and B-2 (187 TS errors in @repo/ingestion
+        breaking build and typecheck), then re-record real M3 evidence. Started
+        before S4.1 so M4 story verification is attributable.
+      reference: "_documentation/planning/milestones/m4-notebook-workspace/pm-approval.md"
 
   - id: "M5"
     name: "6-Phase Grounded Reasoning Engine"

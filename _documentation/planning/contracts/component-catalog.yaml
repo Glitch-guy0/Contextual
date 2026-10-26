@@ -2,7 +2,7 @@
 # Canonical software inventory, service boundaries, and dependency rules.
 # Owned by architect-agent.
 version: 1
-updated_at: "2026-10-23T10:10:00.000Z"
+updated_at: "2026-10-26T14:50:00.000Z"
 
 components:
   - id: "comp-auth"
@@ -221,6 +221,40 @@ components:
         severity: "FATAL"
         type: "internal_package"
 
+  - id: "comp-workspace"
+    name: "Notebook Workspace & Domain Graph"
+    package: "@repo/workspace"
+    owner: "architect-agent"
+    milestone: "M4"
+    responsibilities:
+      - "CRUD for hierarchical text nodes and document-backed reference nodes (FR-031)"
+      - "Validate typed edges against the closed union cites|related before any query (FR-032)"
+      - "Resolve document cards with source metadata under a 10ms p95 budget (FR-033)"
+      - "Gate scoped retrieval on an ownership predicate BEFORE the metering debit (FR-034, BR-036)"
+      - "Answer foreign or unowned scopes with HTTP 404 and zero credit debit (M4-PM-001)"
+    interfaces:
+      public_types:
+        - "EdgeType"
+        - "NodeDTO"
+        - "DocumentCard"
+        - "ScopedSearchRequest"
+        - "WorkspaceRepository"
+      methods:
+        - "createNode(ctx: TenantContext, input: CreateNodeInput): Promise<NodeDTO>"
+        - "createEdge(ctx: TenantContext, input: CreateEdgeInput): Promise<EdgeDTO>"
+        - "resolveCard(ctx: TenantContext, nodeId: string): Promise<DocumentCard>"
+        - "scopedSearch(ctx: TenantContext, req: ScopedSearchRequest): Promise<ScopedSearchResult>"
+    dependencies:
+      - target: "@repo/db"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "@repo/contracts"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "@repo/metering"
+        severity: "ERROR"
+        type: "internal_package"
+
   - id: "comp-config"
     name: "Environment Configuration & Diagnostic Doctor"
     package: "@repo/config"
@@ -263,6 +297,8 @@ components:
 
 rules:
   - "Domain packages must never import Next.js web transport libraries (next/server)"
+  - "Graph reads and writes must carry a user_id tenant predicate inside the repository; route handlers never issue their own SQL"
+  - "@repo/metering debit may only be invoked after the workspace ownership predicate has returned a row"
   - "Direct database connections must never be instantiated outside @repo/db"
   - "All external vector calls must route through @repo/contracts/VectorStore interface"
   - "All upstream error handling must map directly to RFC 9457 Problem Details"

@@ -1,0 +1,327 @@
+# Sprint Status — M4: Notebook Workspace & Domain Graph
+# Sprint Owner: sprint-agent
+# Planned Version: v0.4.0
+sprint:
+  id: M4-S1
+  milestone: M4
+  status: completed
+  phased_deployment_profile:
+    mode: expand
+    risk_tier: medium
+    target_version: "0.4.0"
+    release_model: feature-expand
+    expand_tier: "1-a"
+    expand_geometry_note: >-
+      M4 is an expand-phase, backward-compatible release: migration 002 only adds
+      notebook_nodes and notebook_edges, and the HTTP surface only adds paths.
+      No existing column, request shape, config key, or dependency pin changes,
+      so no BREAKING CHANGE footer is carried.
+  target_end: 2026-11-14
+  start_on: "manual"
+  stories:
+    - S4.1
+    - S4.2
+    - S4.3
+    - S4.4
+    - S4.5
+    - S4.6
+
+stories:
+  - id: S4.1
+    title: Graph contracts, schema types, and expand migration
+    status: complete
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M4-1
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — custom domain union over an existing Kysely/Neon stack (ADR-0002); no graph DB bought (design §4 option 2 rejected)."
+    acceptance:
+      - "EdgeType exported from @repo/contracts as the closed union 'cites' | 'related'"
+      - "Kysely table types for notebook_nodes and notebook_edges added to packages/db/src/schema.ts"
+      - "Migration 002 creates both tables with composite (user_id, notebook_id) indexes, CHECK edge_type constraint, CHECK source<>target, and ON DELETE CASCADE FKs"
+      - "Migration applies cleanly on a fresh database and on a database already migrated through 001"
+      - "raw-sql-exceptions.md remains at 0 rows (expressed via the Kysely migration builder)"
+    tests:
+      - "tests/workspace/migration.test.ts — migrator runs 001→002, tables and indexes exist, invalid edge_type rejected by CHECK"
+      - "bun run typecheck passes across the workspace"
+    observability:
+      - "Migration completion logged by the existing migrator at INFO with migration id"
+    verified: true
+    depends_on: []
+    change_matrix:
+      new_files:
+        - "packages/contracts/src/workspace.ts"
+        - "packages/db/src/migrations/002_notebook_graph.ts"
+        - "tests/workspace/migration.test.ts"
+      allowed_files:
+        - "packages/contracts/src/**"
+        - "packages/db/src/**"
+        - "tests/workspace/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S4.2
+    title: Workspace package, tenant repository, and node CRUD
+    status: complete
+    phase: Expand
+    priority: p0
+    owner: developer-agent
+    effort: 5
+    work_unit: WU-M4-3
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — repository over the shipped Kysely client (@repo/db); no ORM or graph library introduced."
+    acceptance:
+      - "@repo/workspace scaffolded under workspace conventions (package.json, tsconfig, src/index.ts)"
+      - "WorkspaceRepository exposes list/create/read/delete for nodes, every statement carrying WHERE user_id = ?"
+      - "Reading a node or notebook that belongs to another tenant returns the typed not-found result (HTTP 404 mapping, M4-PM-001) and zero rows"
+      - "Creating a document node without document_id is rejected; creating a text node without content is rejected"
+      - "Deleting a node removes its edges in the same transaction (no orphan edge, FM-401)"
+    tests:
+      - "tests/workspace/node-crud.test.ts — cross-tenant read/write both return not-found; cascade delete leaves 0 edges"
+      - "tests/workspace/node-validation.test.ts — kind/document_id and kind/content invariants enforced"
+    observability:
+      - "Structured INFO log on node create/delete with user_id, notebook_id, node id"
+      - "Structured WARN log on a 0-row tenant predicate with user_id and scope_kind (never a foreign tenant id)"
+    verified: true
+    depends_on: S4.1
+    change_matrix:
+      new_files:
+        - "packages/workspace/package.json"
+        - "packages/workspace/tsconfig.json"
+        - "packages/workspace/src/index.ts"
+        - "packages/workspace/src/repository.ts"
+        - "packages/workspace/src/nodes.ts"
+        - "packages/workspace/src/types.ts"
+        - "tests/workspace/node-crud.test.ts"
+        - "tests/workspace/node-validation.test.ts"
+      allowed_files:
+        - "packages/workspace/**"
+        - "packages/db/src/**"
+        - "packages/contracts/src/**"
+        - "tests/workspace/**"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S4.3
+    title: Typed edge write path and relation validation
+    status: complete
+    phase: Expand
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M4-4
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — in-process Zod/TS union validation plus a DB CHECK; no graph validation library."
+    acceptance:
+      - "Creating an edge with relation_type 'author_of' returns HTTP 400 with RFC 9457 type invalid-node-relation (AC-4.2)"
+      - "Validation executes before any database round trip (0 queries issued for an invalid type)"
+      - "Both endpoints must belong to the caller's notebook and user_id; a foreign endpoint returns not-found (404) with 0 credits debited"
+      - "Self-edges and duplicate (source, target, type) pairs are rejected"
+      - "Listing edges for another user's notebook returns 404 with zero rows (AC-4.3)"
+    tests:
+      - "tests/workspace/edge-validation.test.ts — invalid type → 400 invalid-node-relation, query counter stays 0"
+      - "tests/workspace/edge-tenant.test.ts — foreign endpoint and foreign notebook → 404, no rows, no debit"
+    observability:
+      - "INFO log on accepted edge with relation_type; INFO log on rejection with the truncated submitted value (max 64 chars)"
+    verified: true
+    depends_on: S4.2
+    change_matrix:
+      new_files:
+        - "packages/workspace/src/edges.ts"
+        - "tests/workspace/edge-validation.test.ts"
+        - "tests/workspace/edge-tenant.test.ts"
+      allowed_files:
+        - "packages/workspace/**"
+        - "tests/workspace/**"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/db/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S4.4
+    title: Document card resolution under the 10ms budget
+    status: complete
+    phase: Expand
+    priority: p1
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M4-5
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — denormalized preview read from Postgres rather than a second hop to Upstash Vector (design §3.6)."
+    acceptance:
+      - "resolveCard returns title, page_count, status, source_type, and a preview chunk for a document-backed node"
+      - "p95 latency over >= 100 samples against local compose is < 10ms (AC-4.1)"
+      - "A single indexed statement is issued per card — no second round trip to the vector service"
+      - "Resolving a card for a foreign node returns 404 with zero rows"
+    tests:
+      - "tests/workspace/card-latency.test.ts — p95 asserted over >= 100 fixtures, not a mean"
+      - "tests/workspace/card-tenant.test.ts — foreign node → 404"
+    observability:
+      - "WARN log when elapsed_ms exceeds 10, carrying user_id, notebook_id, elapsed_ms (FM-402)"
+    verified: true
+    depends_on: S4.2
+    change_matrix:
+      new_files:
+        - "packages/workspace/src/cards.ts"
+        - "tests/workspace/card-latency.test.ts"
+        - "tests/workspace/card-tenant.test.ts"
+      allowed_files:
+        - "packages/workspace/**"
+        - "packages/db/src/**"
+        - "tests/workspace/**"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S4.5
+    title: Scoped retrieval with ownership checked before debit
+    status: complete
+    phase: Expand
+    priority: p0
+    owner: developer-agent
+    effort: 5
+    work_unit: WU-M4-6
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUILD — sequencing guard inside the existing metering contract; no new dependency."
+    precondition:
+      - "S4.2 repository contract is merged and the ownership predicate is reachable from the search service"
+      - "debitCredits is only callable from the code path gated by a successful ownership predicate (single call site)"
+    recovery_plan:
+      - "If a debit succeeds and the vector call throws, restore the credit through the existing atomic refund-credits.lua (M3 compensation), then surface HTTP 503"
+    stop_condition:
+      - "Any test that observes credits_balance changing on an unowned scope halts the story and returns it to architect-agent (FM-403, AP=H)"
+    acceptance:
+      - "scope_kind ∈ {node, branch, notebook} is validated before any other work; a malformed scope returns HTTP 400"
+      - "An unowned scope returns HTTP 404 notebook-not-found with credits_balance unchanged and zero vector client invocations (AC-4.4)"
+      - "Ownership is evaluated as a WHERE user_id = ? predicate on the reading statement, not a separate existence probe"
+      - "A successful scope debits exactly once, then queries Upstash Vector with the mandatory user_id filter (NFR-007)"
+      - "Debit with insufficient balance returns HTTP 402 and issues zero vector calls"
+    tests:
+      - "tests/workspace/scoped-search-ownership.test.ts — asserts 404 AND unchanged credits_balance AND vector call count 0"
+      - "tests/workspace/scoped-search-metering.test.ts — owned scope debits once; insufficient balance → 402 with 0 vector calls"
+    observability:
+      - "WARN log on rejected scope (user_id, scope_kind) with no foreign tenant identifiers"
+      - "INFO log on accepted scope with user_id, notebook_id, elapsed_ms"
+    verified: true
+    depends_on: S4.2
+    change_matrix:
+      new_files:
+        - "packages/workspace/src/search.ts"
+        - "tests/workspace/scoped-search-ownership.test.ts"
+        - "tests/workspace/scoped-search-metering.test.ts"
+      allowed_files:
+        - "packages/workspace/**"
+        - "tests/workspace/**"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/db/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S4.6
+    title: M4 verification evidence and contract/catalog synchronization
+    status: complete
+    phase: Verify
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M4-7
+    risk_tier: LOW
+    build_vs_buy_ref: "N/A — documentation and evidence synchronization, no library decision."
+    acceptance:
+      - "AC-4.1..AC-4.4 each carry named passing evidence (command + output), never an assertion"
+      - "api-contract.openapi.yaml, component-catalog.yaml, and 05-m4 design doc agree with the implemented surface"
+      - "failure-mode-register FM-401..FM-404 remain present and mapped to stories"
+      - "bun test, bun run build, and bun run typecheck all exit 0"
+      - "npx --no-install dbw doctor reports no OUTSTANDING documentation row"
+    tests:
+      - "Full unified suite: bun test (M0–M4)"
+      - "bun run build && bun run typecheck (6/6 packages + workspace)"
+    observability:
+      - "No new telemetry; evidence recorded in the milestone dev-log and sprint-status rows"
+    verified: true
+    depends_on: [S4.3, S4.4, S4.5]
+    change_matrix:
+      new_files:
+        - "tests/workspace/**"
+        - "_documentation/planning/milestones/m4-notebook-workspace/dev-log.md"
+      allowed_files:
+        - "tests/workspace/**"
+        - "_documentation/planning/milestones/m4-notebook-workspace/**"
+        - "_documentation/planning/milestones/milestone-status.yaml"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+        - "_documentation/planning/contracts/component-catalog.yaml"
+        - "_documentation/planning/architecture/05-m4-notebook-workspace-and-domain-graph.md"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/db/**"
+        - "packages/contracts/**"
+        - "packages/workspace/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+
+sprint_board:
+  todo: []
+  in_progress: []
+  done:
+    - S4.1
+    - S4.2
+    - S4.3
+    - S4.4
+    - S4.5
+    - S4.6
+  verification_gate:
+    command: "bun test && bun run build && bun run typecheck"
+    order: "S4.1 → S4.2 → (S4.3, S4.4, S4.5 in any order) → S4.6"
+    notes: >-
+      Dependency graph is a DAG: S4.1 → S4.2 → {S4.3, S4.4, S4.5} → S4.6.
+      Story closure requires passing evidence certified by test-agent; PM approval
+      of this plan does not substitute for story-level verification.

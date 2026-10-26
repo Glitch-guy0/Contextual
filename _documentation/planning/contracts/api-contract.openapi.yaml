@@ -209,6 +209,209 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /notebooks/{notebookId}/nodes:
+    parameters:
+      - $ref: '#/components/parameters/NotebookId'
+    get:
+      summary: List Notebook Nodes
+      operationId: listNotebookNodes
+      tags: [NotebookGraph]
+      parameters:
+        - name: parent_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Filter to direct children of a parent node (branch scope)
+      responses:
+        '200':
+          description: Tenant-scoped nodes for the notebook
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotebookNode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Create Notebook Node
+      operationId: createNotebookNode
+      tags: [NotebookGraph]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNodeRequest'
+      responses:
+        '201':
+          description: Node created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookNode'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /notebooks/{notebookId}/nodes/{nodeId}:
+    parameters:
+      - $ref: '#/components/parameters/NotebookId'
+      - $ref: '#/components/parameters/NodeId'
+    get:
+      summary: Resolve Document Card (Node Detail)
+      operationId: getNotebookNode
+      description: >
+        Resolves node metadata and, for document-backed nodes, the card preview
+        with source metadata. SLO: p95 < 10ms (FR-033, AC-4.1).
+      tags: [NotebookGraph]
+      responses:
+        '200':
+          description: Node detail with card payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookNode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete Node (Cascades to Its Edges)
+      operationId: deleteNotebookNode
+      tags: [NotebookGraph]
+      responses:
+        '204':
+          description: Node and dependent edges removed in one transaction
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /notebooks/{notebookId}/edges:
+    parameters:
+      - $ref: '#/components/parameters/NotebookId'
+    get:
+      summary: List Typed Edges
+      operationId: listNotebookEdges
+      tags: [NotebookGraph]
+      responses:
+        '200':
+          description: Tenant-scoped typed edges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotebookEdge'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Create Typed Edge
+      operationId: createNotebookEdge
+      description: >
+        relation_type is restricted to the closed union [cites, related]; any other
+        value returns HTTP 400 invalid-node-relation (FR-032, AC-4.2) before any
+        database round trip.
+      tags: [NotebookGraph]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEdgeRequest'
+      responses:
+        '201':
+          description: Edge created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookEdge'
+        '400':
+          description: >
+            invalid-node-relation (unsupported relation_type), self-edge, or
+            endpoints outside the caller's tenant
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Duplicate edge (source_id, target_id, edge_type)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /notebooks/{notebookId}/edges/{edgeId}:
+    parameters:
+      - $ref: '#/components/parameters/NotebookId'
+      - $ref: '#/components/parameters/EdgeId'
+    delete:
+      summary: Delete Typed Edge
+      operationId: deleteNotebookEdge
+      tags: [NotebookGraph]
+      responses:
+        '204':
+          description: Edge removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /notebooks/{notebookId}/search:
+    parameters:
+      - $ref: '#/components/parameters/NotebookId'
+    post:
+      summary: Scoped Cross-Note Retrieval
+      operationId: scopedNotebookSearch
+      description: >
+        Ownership of the declared scope is validated BEFORE any credit debit is
+        committed (FR-034, BR-036, AC-4.4). An unowned scope answers 404 with
+        zero credits debited and zero upstream vector calls issued.
+      tags: [NotebookGraph]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScopedSearchRequest'
+      responses:
+        '200':
+          description: Scoped retrieval results (tenant-filtered)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScopedSearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/InsufficientCredits'
+        '404':
+          description: >
+            notebook-not-found — scope is unowned or does not exist. Returned
+            before debit; debits 0 credits (M4-PM-001).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
   /ingestions/presign:
     post:
       summary: Generate Pre-signed S3 Upload URL (Filebase)
@@ -378,7 +581,207 @@ components:
       bearerFormat: JWT
       description: Clerk OAuth RS256 JWT session token
 
+  parameters:
+    NotebookId:
+      name: notebookId
+      in: path
+      required: true
+      description: Notebook identifier, always evaluated against the caller's user_id
+      schema:
+        type: string
+        format: uuid
+    NodeId:
+      name: nodeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EdgeId:
+      name: edgeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
   schemas:
+    CreateNodeRequest:
+      type: object
+      required: [title, kind]
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        kind:
+          type: string
+          enum: [text, document]
+        content:
+          type: string
+          description: Markdown body; required when kind=text
+          maxLength: 20000
+        parent_id:
+          type: string
+          format: uuid
+          description: Omit for a root node; otherwise the parent within the same notebook
+        document_id:
+          type: string
+          format: uuid
+          description: Required when kind=document; must belong to the caller's tenant
+        position:
+          type: integer
+          minimum: 0
+
+    NotebookNode:
+      type: object
+      required: [id, notebook_id, kind, title, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        notebook_id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        kind:
+          type: string
+          enum: [text, document]
+        title:
+          type: string
+        content:
+          type: string
+        document_id:
+          type: string
+          format: uuid
+          nullable: true
+        card:
+          $ref: '#/components/schemas/DocumentCard'
+        position:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DocumentCard:
+      type: object
+      description: Document-backed card payload resolved in < 10ms (FR-033, AC-4.1)
+      required: [title, page_count, status, preview]
+      properties:
+        title:
+          type: string
+        page_count:
+          type: integer
+        status:
+          type: string
+          enum: [queued, processing, indexed, failed]
+        source_type:
+          type: string
+          enum: [pdf, youtube, web]
+        preview:
+          type: string
+          maxLength: 500
+        chunk_index:
+          type: integer
+
+    CreateEdgeRequest:
+      type: object
+      required: [source_id, target_id, relation_type]
+      properties:
+        source_id:
+          type: string
+          format: uuid
+        target_id:
+          type: string
+          format: uuid
+        relation_type:
+          type: string
+          enum: [cites, related]
+          description: >
+            Closed union. Any other value is rejected with HTTP 400
+            invalid-node-relation before any database round trip (FR-032, AC-4.2).
+
+    NotebookEdge:
+      type: object
+      required: [id, notebook_id, source_id, target_id, relation_type, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        notebook_id:
+          type: string
+          format: uuid
+        source_id:
+          type: string
+          format: uuid
+        target_id:
+          type: string
+          format: uuid
+        relation_type:
+          type: string
+          enum: [cites, related]
+        created_at:
+          type: string
+          format: date-time
+
+    ScopedSearchRequest:
+      type: object
+      required: [scope_kind, scope_id, query]
+      properties:
+        scope_kind:
+          type: string
+          enum: [node, branch, notebook]
+        scope_id:
+          type: string
+          format: uuid
+          description: Node, branch root, or notebook id — ownership validated before debit
+        query:
+          type: string
+          maxLength: 2000
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 10
+
+    ScopedSearchResponse:
+      type: object
+      required: [scope, results, credits_debited]
+      properties:
+        scope:
+          type: object
+          properties:
+            scope_kind:
+              type: string
+              enum: [node, branch, notebook]
+            scope_id:
+              type: string
+              format: uuid
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              node_id:
+                type: string
+                format: uuid
+              document_id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              snippet:
+                type: string
+              score:
+                type: number
+        credits_debited:
+          type: number
+          description: Always 0.0 when the scope was unowned (never reached — 404 is returned instead)
     UserProfileResponse:
       type: object
       required: [id, email, created_at]
@@ -683,6 +1086,15 @@ components:
             $ref: '#/components/schemas/ProblemDetails'
     Unauthorized:
       description: Authentication Required or Invalid JWT
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: >
+        Forbidden Tenant Access (HTTP 403) — reserved for tenant-scope violations
+        that carry no resource identifier, e.g. an edge payload referencing a
+        foreign document_id. Resource-level foreign access answers 404 instead (M4-PM-001).
       content:
         application/problem+json:
           schema:

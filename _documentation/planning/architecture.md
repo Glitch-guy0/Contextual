@@ -205,8 +205,9 @@ graph TD
 7. **`@repo/reasoning`**: Coordinates query decomposition into 2–5 sub-questions, generates HyDE summaries, queries Upstash Vector, and streams grounded citations via Gemini Flash or Groq fallback.
 8. **`@repo/memory`**: Implements `MemoryStore` interface using in-process Mem0 backed by Upstash Redis and Upstash Vector.
 9. **`@repo/contracts`**: Exports shared Zod schemas, OpenAPI types, and the closed 17-member RFC 9457 problem catalogue.
+10. **`@repo/workspace`** *(M4, `v0.4.0`)*: Owns the notebook domain graph — node and typed-edge (`cites` | `related`) services, document-card resolution inside the 10ms budget, and scoped retrieval whose ownership predicate gates the metering debit. Depends on `@repo/db` (repository) and `@repo/contracts`; calls `@repo/metering` only after ownership succeeds.
 
-Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalog.yaml) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/architecture/05-m2-metering-spine-and-quota-throttling.md`](architecture/05-m2-metering-spine-and-quota-throttling.md) · [`planning/architecture/05-m3-transient-ingestion-pipeline.md`](architecture/05-m3-transient-ingestion-pipeline.md)
+Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalog.yaml) · [`planning/architecture/05-m1-developer-golden-path-and-auth.md`](architecture/05-m1-developer-golden-path-and-auth.md) · [`planning/architecture/05-m2-metering-spine-and-quota-throttling.md`](architecture/05-m2-metering-spine-and-quota-throttling.md) · [`planning/architecture/05-m3-transient-ingestion-pipeline.md`](architecture/05-m3-transient-ingestion-pipeline.md) · [`planning/architecture/05-m4-notebook-workspace-and-domain-graph.md`](architecture/05-m4-notebook-workspace-and-domain-graph.md)
 
 ---
 
@@ -266,6 +267,17 @@ Detail: [`planning/contracts/component-catalog.yaml`](contracts/component-catalo
 12. Worker emits final SSE progress event (`status: completed, percentage: 100%`).
 13. If parsing or embedding terminally fails, `CompensationService` triggers `refund-credits.lua` in Redis, restoring 1.0 credit atomically and purging the S3 object (`FR-037`, `BR-033`).
 14. Subsequent retries via `POST /api/v1/ingestions/{jobId}/retry` reuse the failed job state without debiting credits a second time (`FR-040`).
+
+### Primary Scenario 3: Scoped Graph Retrieval with Ownership-First Metering Flow (M4)
+1. Client sends a scoped retrieval request declaring `{ scope_kind: node|branch|notebook, scope_id, query }` to `/api/v1/notebooks/{notebookId}/search`.
+2. Edge middleware authenticates the Bearer JWT and injects `TenantContext.userId` (`FR-003`).
+3. `WorkspaceRepository` executes a **single** statement whose predicate is `user_id = ? AND notebook_id = ?` — ownership is the predicate, not a separate probe (no TOCTOU window).
+4. If the predicate returns 0 rows: respond HTTP 404 `NOTEBOOK_NOT_FOUND`, debit **0 credits**, issue **0** vector calls (`BR-036`, AC-4.4). Log at `WARN` without the foreign tenant's identifiers.
+5. If ownership succeeds: `CreditLedgerService` executes `debit-credits.lua` via `EVALSHA`.
+   - Balance below cost → HTTP 402 `INSUFFICIENT_CREDITS`, downstream vector client receives 0 invocations.
+6. `Upstash Vector` query runs with the mandatory tenant filter `{ user_id }` (`NFR-007`).
+7. Results are assembled into scoped DTOs and returned; a structured `INFO` log records `user_id`, `notebook_id`, and elapsed time.
+8. If the vector call throws after a successful debit, `refund-credits.lua` restores the credit atomically (compensation reused from M3).
 
 ---
 
@@ -341,6 +353,8 @@ Detail: [`planning/quality/verification.md`](quality/verification.md)
 | Upstash QStash 500 msgs/day free limit | Medium | `architect-agent` | Ingestion jobs batch pages into single task payloads; crons run daily/weekly. |
 | Google AI Studio content training terms | High | `pm-agent` | Prominent un-dismissible frontend training disclosure banner (`FR-030`, `CV-041`). |
 | Upstash Vector 1,536 dimension ceiling | Low | `data-architect` | Bounded to Google 768-dim embeddings or BGE-small 384-dim embeddings. |
+| Document card resolution breaching the 10ms budget (`FR-033`, M4) | Medium | `architect-agent` | Single indexed statement with column-limited projection and denormalized preview; p95 measured, not mean (FM-402). |
+| Debit issued before ownership validation on scoped retrieval (M4) | High | `architect-agent` | Ownership predicate structurally gates the debit call; AC-4.4 asserts unchanged `credits_balance` alongside the 404 (FM-403, AP=H). |
 
 ---
 

@@ -18,6 +18,10 @@ pinned: false
 # EPIC-004: Notebook Workspace & Typed Domain Graph
 
 > **Milestone:** M4 (`v0.4.0`) · **Status:** Planned · **Risk Tier:** MEDIUM  
+> **Delta 2026-10-26 (`M4-PM-001`):** AC-3 status code corrected from 403 to 404 to match the
+> shipped `/notebooks/{notebookId}` contract and the enumeration-resistance posture of `BR-002`.
+> 403 `forbidden-tenant-access` is retained only for tenant-scope violations without a resource id.
+
 > **Business Outcome:** Users can organize knowledge into personal notebooks with hierarchical cards and typed relations (`cites` and `related`), enabling scoped cross-note semantic discovery with sub-10ms card resolution.  
 
 ```mermaid
@@ -57,4 +61,4 @@ graph TD
 ## 4. Acceptance Criteria
 1. Creating a node relationship with type `author_of` returns HTTP 400 with RFC 9457 error `invalid-node-relation`.
 2. Attaching a document to a node allows title, page count, and status resolution in < 10 ms.
-3. Submitting a scoped search pointing to another user's notebook fails with HTTP 403 `forbidden-tenant-access` and debits 0 credits.
+3. Submitting a scoped search pointing to another user's notebook fails with HTTP 404 `notebook-not-found` and debits 0 credits (ownership validated before debit, `BR-036`).
