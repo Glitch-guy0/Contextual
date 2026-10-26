@@ -10,8 +10,8 @@ last_verified: 2026-10-23
 # Developer Log — Milestone M1: Developer Golden Path & Core Authentication
 
 > **Milestone:** M1 (Developer Golden Path & Core Authentication) · **Target Version:** `v0.1.0`  
-> **Author:** developer-agent · **Status:** Verify-Ready for Checkpoint 4 (CP4) Sign-off · **Risk Tier:** MEDIUM  
-> **Conventions:** `_documentation/planning/conventions.md` · **Design Ref:** `_documentation/planning/architecture/05-m1-developer-golden-path-and-auth.md`
+> **Author:** developer-agent · **Status:** Verified ✅ (Checkpoint 4 / Gate G5–G6 PASS) · **Risk Tier:** MEDIUM  
+> **Verified:** 2026-10-26 · **Conventions:** `_documentation/planning/conventions.md` · **Design Ref:** `_documentation/planning/architecture/05-m1-developer-golden-path-and-auth.md`
 
 ```mermaid
 graph TD
@@ -83,14 +83,14 @@ graph TD
 
 | Story ID | Scenario | Command | Result | Gate |
 |:---:|---|---|---|:---:|
-| **S1.1** | TC-1.1.1, TC-1.1.2, TC-1.1.3 (Infra & Config) | `bun test tests/infra-compose.test.ts` | 3 pass, 0 fail (0.32ms) | CP4 |
-| **S1.2** | TC-1.2.1, TC-1.2.2, TC-1.2.3, TC-1.2.4 (Dev Doctor) | `bun test tests/dev-doctor.test.ts` | 4 pass, 0 fail (45.60ms) | CP4 |
-| **S1.3** | TC-1.3.1, TC-1.3.2, TC-1.3.3, TC-1.3.4 (Persistence) | `bun test tests/database-persistence.test.ts` | 4 pass, 0 fail (2.38ms) | CP4 |
-| **S1.4** | TC-1.4.1, TC-1.4.2, TC-1.4.3, TC-1.4.4 (Auth Perimeter) | `bun test tests/auth-perimeter.test.ts` | 4 pass, 0 fail (1.32ms) | CP4 |
-| **Integrated** | Full Monorepo Test Suite Execution | `bun test` | **25 pass, 0 fail, 193 expect() calls (936ms)** | CP4 |
-| **Integrated** | Monorepo Turbo Build (All 5 Packages) | `bun run build` | **Tasks: 5 successful, 5 total (0 errors)** | CP4 |
-| **Integrated** | Monorepo Strict Typecheck (All 5 Packages) | `bun run typecheck` | **Tasks: 5 successful, 5 total (0 errors)** | CP4 |
-| **Integrated** | Full 8-Layer Doctor Diagnostic Probe | `bun run dev:doctor` | **Status: PASS (76ms)** | CP4 |
+| **S1.1** | TC-1.1.1, TC-1.1.2, TC-1.1.3 (Infra & Config) | `bun test tests/infra-compose.test.ts` | 3 pass, 0 fail (0.30ms) | CP4 |
+| **S1.2** | TC-1.2.1, TC-1.2.2, TC-1.2.3, TC-1.2.4 (Dev Doctor) | `bun test tests/dev-doctor.test.ts` | 4 pass, 0 fail (274.00ms total suite) | CP4 |
+| **S1.3** | TC-1.3.1, TC-1.3.2, TC-1.3.3, TC-1.3.4 (Persistence) | `bun test tests/database-persistence.test.ts` | 4 pass, 0 fail (4.51ms) | CP4 |
+| **S1.4** | TC-1.4.1, TC-1.4.2, TC-1.4.3, TC-1.4.4 (Auth Perimeter) | `bun test tests/auth-perimeter.test.ts` | 4 pass, 0 fail (826.48ms) | CP4 |
+| **Integrated** | Full Monorepo Test Suite Execution | `bun test` | **50 pass, 0 fail, 543 expect() calls (1.65s)** | CP4 |
+| **Integrated** | Monorepo Turbo Build (All 6 Packages) | `bun run build` | **Tasks: 6 successful, 6 total (0 errors)** | CP4 |
+| **Integrated** | Monorepo Strict Typecheck (All 6 Packages) | `bun run typecheck` | **Tasks: 6 successful, 6 total (0 errors)** | CP4 |
+| **Integrated** | Full 8-Layer Doctor Diagnostic Probe | `bun run dev:doctor` | **Status: PASS** (diagnostic engine healthy; 8 layers reporting) | CP4 |
 
 ---
 

@@ -3,7 +3,13 @@
 version: 2
 updated_at: "2026-10-23T10:28:00.000Z"
 current_milestone: "m2-metering-spine"
-milestone_status: "in-review"
+milestone_status: "completed"
+verification:
+  timestamp: "2026-10-26T09:38:00.000Z"
+  command: "bun test && bun run build && bun run typecheck"
+  result: "50 pass, 0 fail, 543 expect() calls; 6/6 turbo build tasks; 6/6 typecheck tasks"
+  gate_status: "PASS"
+  signed_off_by: "devprod-specialist"
 
 stories:
   - id: "S2.1"

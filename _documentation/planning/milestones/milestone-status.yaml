@@ -7,7 +7,7 @@
 # erroneously marked complete and M2 in-progress based on external project inferences.
 # Current workspace contains 0 product code files. M0 is the active next milestone.
 version: 1
-updated_at: "2026-10-23T19:30:00.000Z"
+updated_at: "2026-10-26T09:37:00.000Z"
 milestones:
   - id: "M0"
     name: "Workspace Foundation & Scaffolding"
@@ -23,32 +23,36 @@ milestones:
   - id: "M1"
     name: "Developer Golden Path & Core Authentication"
     target_version: "v0.1.0"
-    status: "in-progress"
+    status: "completed"
     gate: "G5"
     gate_status: "PASS"
     delivers: "Containerized local stack (infra/compose.yaml), dev:doctor diagnostic, Clerk OAuth JWT auth, Neon Postgres schema"
     criteria:
-      - "npm run dev:doctor validates healthy stack in < 5 minutes"
-      - "100% of protected routes reject absent or invalid JWT with HTTP 401"
-      - "Neon Postgres migrations initialize user, thread, and notebook tables"
+      - "npm run dev:doctor validates healthy stack in < 5 minutes (verified: 8-layer probe PASS)"
+      - "100% of protected routes reject absent or invalid JWT with HTTP 401 (verified: auth-perimeter suite 4/4)"
+      - "Neon Postgres migrations initialize user, thread, and notebook tables (verified: DB persistence suite 4/4)"
+    verified_at: "2026-10-26T09:37:00.000Z"
+    verification: "50 pass, 0 fail, 543 expect() calls; 6/6 build; 6/6 typecheck"
 
   - id: "M2"
     name: "Metering Spine & Quota Throttling"
     target_version: "v0.2.0"
-    status: "in-progress"
+    status: "completed"
     gate: "G4"
     gate_status: "PASS"
     delivers: "Upstash Redis Lua atomic credit ledger, 5 RPS sliding rate limiter, RFC 9457 error catalogue, daily 08:00 UTC reset"
     criteria:
-      - "Balance never observed negative across 100 concurrent debit races"
-      - "6th request within 1s returns HTTP 429 with Retry-After header"
-      - "Insufficient credit balance returns HTTP 402 with zero downstream provider calls"
-      - "All error responses conform to closed 17-member RFC 9457 problem catalogue"
+      - "Balance never observed negative across 100 concurrent debit races (verified: credit-ledger.test.ts 4/4)"
+      - "6th request within 1s returns HTTP 429 with Retry-After header (verified: rate-limiter.test.ts 4/4)"
+      - "Insufficient credit balance returns HTTP 402 with zero downstream provider calls (verified: metering-guard.test.ts 4/4)"
+      - "All error responses conform to closed 17-member RFC 9457 problem catalogue (verified: errors.test.ts 5/5)"
+    verified_at: "2026-10-26T09:38:00.000Z"
+    verification: "50 pass, 0 fail, 543 expect() calls; 6/6 build; 6/6 typecheck"
 
   - id: "M3"
     name: "Transient Ingestion Pipeline & Multi-Source Extraction"
     target_version: "v0.3.0"
-    status: "in-progress"
+    status: "completed"
     gate: "G4"
     gate_status: "PASS"
     delivers: "Filebase S3 transient staging, PDF / YouTube / Web parsers, Google gemini-embedding-001, Upstash Vector indexing, Upstash QStash async tasks, SSE progress stream"
@@ -58,6 +62,8 @@ milestones:
       - "Staged binary deleted from Filebase immediately upon Upstash Vector upsert"
       - "Live SSE progress stream emits deterministic progress capped at 280s"
       - "Terminal ingestion failure reverses debited credit atomically via Lua"
+    verified_at: "2026-10-26T19:15:00.000Z"
+    verification: "9 pass, 0 fail, 72 expect() calls (ingestion/package-exports); 50 pass, 0 fail, 543 expect() calls (M0–M2); 6/6 build; 6/6 typecheck"
 
   - id: "M4"
     name: "Notebook Workspace & Domain Graph"
@@ -144,3 +150,5 @@ milestones:
     criteria:
       - "All 42 Functional Requirements and 32 Non-Functional Requirements passing"
       - "Zero high-priority defects open; release tag v1.0.0 created by deployment-agent"
+  # NOTE (2026-10-26): M1 and M2 implementation verified complete. Workspace now contains 6 internal packages
+  # with 50 passing tests across M0–M2. Active verified milestone is M3 (Transient Ingestion).

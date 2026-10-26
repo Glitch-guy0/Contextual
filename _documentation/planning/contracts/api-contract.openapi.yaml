@@ -543,6 +543,8 @@ components:
           enum: [pdf_staging_key, youtube_url, web_url]
         source_value:
           type: string
+        title:
+          type: string
 
     IngestionJobAccepted:
       type: object
@@ -576,7 +578,7 @@ components:
 
     IngestionProcessRequest:
       type: object
-      required: [job_id, tenant_id, notebook_id, source_type]
+      required: [job_id, tenant_id, notebook_id, source_type, staging_key]
       properties:
         job_id:
           type: string
@@ -590,6 +592,10 @@ components:
           type: string
           enum: [pdf_staging_key, youtube_url, web_url]
         source_value:
+          type: string
+        staging_key:
+          type: string
+        title:
           type: string
 
     IngestionProcessResponse:

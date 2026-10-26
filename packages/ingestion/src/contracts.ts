@@ -1,0 +1,22 @@
+// Local contract facade for @repo/ingestion.
+import type {
+  SourceType,
+  PresignedUploadRequest,
+  SubmitIngestionRequest,
+  IngestionJobAccepted,
+  IngestionJobPayload,
+  IngestionResult,
+  IngestionChunkPayload,
+  ProgressState,
+  ProgressEvent,
+  RefundResult,
+  FailureReason,
+  PdfExtractOptions,
+  ExtractedPdfResult,
+  ExtractedYouTubeResult,
+  TranscriptSegment,
+  ExtractedWebResult,
+  EmbeddingResult,
+  VectorUpsertResult,
+  FormattedVectorPoint,
+} from "@repo/contracts/ingestion";

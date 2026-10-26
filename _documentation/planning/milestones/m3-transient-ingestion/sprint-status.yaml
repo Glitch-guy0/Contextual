@@ -1,0 +1,234 @@
+# Sprint Status — M3: Transient Ingestion Pipeline & Multi-Source Extraction
+# Sprint Owner: sprint-agent
+# Planned Version: v0.3.0
+sprint:
+  id: M3-S1
+  milestone: M3
+  status: completed
+  phased_deployment_profile:
+    mode: expand
+    risk_tier: high
+    target_version: "0.3.0"
+    release_model: feature-expand
+    expand_tier: "1-b"
+    expand_geometry_note: >
+      M3 is expand-phase, non-breaking release per ADR-0004 posture.
+      No version bump mechanics in current workspace yet; release tag and
+      bump cadence are owned downstream by versioning-specialist once code exists.
+  target_end: 2026-11-06
+  start_on: "manual"
+  stories:
+    - S3.1
+    - S3.2
+    - S3.3
+    - S3.4
+    - S3.5
+    - S3.6
+
+stories:
+  - id: S3.1
+    title: M3 contracts, package scaffolding, and config plumbing
+    status: done
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    acceptance:
+      - "@repo/ingestion package scaffolded under workspace conventions"
+      - "OpenAPI ingestion endpoints added/updated in api-contract.openapi.yaml"
+      - "config-schema.yaml and component-catalog.yaml updated for Filebase, QStash, Vector, Google AI Studio"
+    verified: true
+    change_matrix:
+      new_files:
+        - "packages/ingestion/package.json"
+        - "packages/ingestion/src/index.ts"
+        - "packages/ingestion/tsconfig.json"
+      allowed_files:
+        - "packages/ingestion/**"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+        - "_documentation/planning/contracts/config-schema.yaml"
+        - "_documentation/planning/contracts/component-catalog.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/db/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "tests/**"
+        - "infra/**"
+        - "apps/**"
+
+  - id: S3.2
+    title: Credit debit, presign, and QStash job dispatch handlers
+    status: done
+    phase: Contracting
+    priority: p0
+    owner: developer-agent
+    effort: 5
+    acceptance:
+      - "POST /api/v1/ingestions debits 1.0 credit and enqueues QStash signed task"
+      - "GET /api/v1/ingestions/presign returns Filebase pre-signed PUT URL for <=5MB payload"
+      - "M3 route handlers use existing metering contract; no new metering logic in this story"
+    verified: true
+    depends_on: S3.1
+    change_matrix:
+      new_files:
+        - "packages/ingestion/src/handlers/ingestions.ts"
+        - "packages/ingestion/src/handlers/presign.ts"
+        - "packages/ingestion/src/queue/dispatch.ts"
+      allowed_files:
+        - "packages/ingestion/**"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/db/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "tests/**"
+        - "infra/**"
+        - "apps/**"
+
+  - id: S3.3
+    title: PDF, YouTube, and web extractors
+    status: done
+    phase: Contracting
+    priority: p0
+    owner: developer-agent
+    effort: 8
+    acceptance:
+      - "PDF extractor parses text PDFs with target throughput"
+      - "YouTube extractor extracts transcript via subtitles path"
+      - "Web extractor cleans DOM with readability-style extraction"
+      - "Extractor error model consistent with RFC 9457 catalogue"
+    verified: true
+    depends_on: S3.1
+    change_matrix:
+      new_files:
+        - "packages/ingestion/src/extractors/pdf.ts"
+        - "packages/ingestion/src/extractors/youtube.ts"
+        - "packages/ingestion/src/extractors/web.ts"
+        - "packages/ingestion/src/extractors/index.ts"
+      allowed_files:
+        - "packages/ingestion/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/db/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "tests/**"
+        - "infra/**"
+        - "apps/**"
+
+  - id: S3.4
+    title: QStash process webhook, embedding, and Upstash Vector upsert
+    status: done
+    phase: Expand
+    priority: p0
+    owner: developer-agent
+    effort: 8
+    acceptance:
+      - "QStash signed webhook verified and dispatched to worker handler"
+      - "Google gemini-embedding-001 used with in-process fallback embedding"
+      - "Upstash Vector upserted with tenant payload userId, documentId, notebookId"
+      - "Staged S3 object deleted on vector commit"
+    verified: true
+    depends_on: [S3.2, S3.3]
+    change_matrix:
+      new_files:
+        - "packages/ingestion/src/workers/process.ts"
+        - "packages/ingestion/src/embedding/index.ts"
+        - "packages/ingestion/src/vector/upsert.ts"
+        - "packages/ingestion/src/storage/purge.ts"
+      allowed_files:
+        - "packages/ingestion/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/db/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "tests/**"
+        - "infra/**"
+        - "apps/**"
+
+  - id: S3.5
+    title: SSE progress streaming
+    status: done
+    phase: Expand
+    priority: p1
+    owner: developer-agent
+    effort: 4
+    acceptance:
+      - "Live SSE stream emits deterministic progress 0% to 100%"
+      - "Stream capped at 280s with Last-Event-ID recovery semantics"
+      - "Progress model documented in OpenAPI where relevant"
+    verified: true
+    depends_on: S3.4
+    change_matrix:
+      new_files:
+        - "packages/ingestion/src/progress/sse.ts"
+        - "packages/ingestion/src/progress/index.ts"
+      allowed_files:
+        - "packages/ingestion/**"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/db/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "tests/**"
+        - "infra/**"
+        - "apps/**"
+
+  - id: S3.6
+    title: Credit refund compensation and M3 verification evidence
+    status: done
+    phase: Verify
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    acceptance:
+      - "Terminal ingestion failure refunds 1.0 credit via atomic Lua script"
+      - "M3 verification evidence present for acceptance criteria AC-3.1..AC-3.5"
+      - "M3 evidence folded into unified monorepo gate"
+    verified: true
+    depends_on: S3.4
+    change_matrix:
+      new_files:
+        - "packages/ingestion/src/compensation/refund.ts"
+        - "tests/ingestion/**"
+      allowed_files:
+        - "packages/ingestion/**"
+        - "tests/ingestion/**"
+        - "_documentation/planning/milestones/m3-transient-ingestion/milestone.md"
+        - "_documentation/planning/milestones/milestone-status.yaml"
+        - "_documentation/planning/milestones/m3-transient-ingestion/sprint-status.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/db/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "tests/**"
+        - "infra/**"
+        - "apps/**"
+
+sprint_board:
+  todo: []
+  in_progress: []
+  done:
+    - S3.1
+    - S3.2
+    - S3.3
+    - S3.4
+    - S3.5
+    - S3.6
+  verification_gate:
+    command: "bun test"
+    notes: >
+      M3 evidence is reported as part of the unified monorepo test suite.
+      After S3.6, reconcile sprint_status.status and milestone_status per the
+      same verification rules as M1/M2.

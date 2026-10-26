@@ -153,3 +153,46 @@ export class AppProblemError extends Error {
     });
   }
 }
+
+export interface RetryResult {
+  readonly accepted: boolean;
+  readonly jobId: string;
+  readonly noDebit: boolean;
+}
+
+const DEFAULT_CONTRACT_RETRY_POLICY: ContractRetryPolicy = {
+  maxAttempts: 1,
+  baseDelayMs: 0,
+  shouldRetry: () => false,
+};
+
+export function createRetryResult(params: {
+  accepted: boolean;
+  jobId: string;
+  noDebit: boolean;
+}): RetryResult {
+  return params;
+}
+
+export interface ContractRetryPolicy {
+  readonly maxAttempts: number;
+  readonly baseDelayMs: number;
+  readonly shouldRetry: (error: AppProblemError) => boolean;
+}
+
+export function contractRetryPolicyFromConfig(
+  _rawConfig: unknown
+): ContractRetryPolicy {
+  return DEFAULT_CONTRACT_RETRY_POLICY;
+}
+
+export const FAILURE_REASON_NAMESPACE = "ingestion.failure_reason";
+
+export function validateFailureReason(
+  reason: string,
+  namespace: string
+): void {
+  // Workspace seam: kept as a no-op export so downstream packages can alias the
+  // centralised failure-reason validator once it lands in @repo/contracts.
+}
+

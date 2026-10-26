@@ -47,14 +47,14 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [m0-workspace-foundation/sprint-status.yaml](planning/milestones/m0-workspace-foundation/sprint-status.yaml) | Milestone M0 Sprint Board (Completed) | B | `sprint-agent` |
 | [m0-workspace-foundation/git-plan.md](planning/milestones/m0-workspace-foundation/git-plan.md) | Milestone M0 Git & Branching Plan | A | `git-planner-agent` |
 | [m0-workspace-foundation/dev-log.md](planning/milestones/m0-workspace-foundation/dev-log.md) | Milestone M0 Developer Execution Log | C | `developer-agent` |
-| [m1-developer-golden-path/milestone.md](planning/milestones/m1-developer-golden-path/milestone.md) | Milestone M1 Charter (In-Progress) | A | `pm-agent` |
+| [m1-developer-golden-path/milestone.md](planning/milestones/m1-developer-golden-path/milestone.md) | Milestone M1 Charter (Completed) | A | `pm-agent` |
 | [05-m1-developer-golden-path-and-auth.md](planning/architecture/05-m1-developer-golden-path-and-auth.md) | Milestone M1 Architectural Blueprint | A | `architect-agent` |
 | [05-m2-metering-spine-and-quota-throttling.md](planning/architecture/05-m2-metering-spine-and-quota-throttling.md) | Milestone M2 Architectural Blueprint | A | `architect-agent` |
 | [05-m3-transient-ingestion-pipeline.md](planning/architecture/05-m3-transient-ingestion-pipeline.md) | Milestone M3 Architectural Blueprint | A | `architect-agent` |
-| [m1-developer-golden-path/sprint-status.yaml](planning/milestones/m1-developer-golden-path/sprint-status.yaml) | Milestone M1 Sprint Board (Active) | B | `sprint-agent` |
+| [m1-developer-golden-path/sprint-status.yaml](planning/milestones/m1-developer-golden-path/sprint-status.yaml) | Milestone M1 Sprint Board (Completed) | B | `sprint-agent` |
 | [m1-developer-golden-path/dev-log.md](planning/milestones/m1-developer-golden-path/dev-log.md) | Milestone M1 Developer Execution Log | C | `developer-agent` |
-| [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Planned) | A | `pm-agent` |
-| [m2-metering-spine/sprint-status.yaml](planning/milestones/m2-metering-spine/sprint-status.yaml) | Milestone M2 Sprint Board | B | `sprint-agent` |
+| [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Completed) | A | `pm-agent` |
+| [m2-metering-spine/sprint-status.yaml](planning/milestones/m2-metering-spine/sprint-status.yaml) | Milestone M2 Sprint Board (Completed) | B | `sprint-agent` |
 | [m2-metering-spine/git-plan.md](planning/milestones/m2-metering-spine/git-plan.md) | Milestone M2 Git & Branching Plan | A | `git-planner-agent` |
 | [m2-metering-spine/dev-log.md](planning/milestones/m2-metering-spine/dev-log.md) | Milestone M2 Developer Execution Log | C | `developer-agent` |
 | [m3-transient-ingestion/milestone.md](planning/milestones/m3-transient-ingestion/milestone.md) | Milestone M3 Charter (Architecture Finalized) | A | `pm-agent` |
@@ -100,6 +100,8 @@ Records in `logs/` are history, never a description of the current system. A pat
 ## 3. Closed Milestones
 
 - **M0: Workspace Foundation & Scaffolding (`v0.1.0-alpha.1`)** — Closed 2026-10-23. Established Turborepo monorepo layout, Bun toolchain, and core shared packages (`@repo/config`, `@repo/contracts`, `@repo/db`, `@repo/ui`). Verified with 10 unit and build tests across 3 suites. Gate G6 PASS. Certified by `test-agent`.
+- **M1: Developer Golden Path & Core Authentication (`v0.1.0`)** — Closed 2026-10-26. Delivered containerized local stack (`infra/compose.yaml`), 8-layer `dev:doctor` diagnostic, Clerk OAuth RS256 JWT auth middleware, and Kysely Neon Postgres schemas for users/threads/notebooks. Verified with full suite 50/50 passing, 543 assertions, 6/6 build, 6/6 typecheck. Gates G5 & G6 PASS. Verified by `devprod-specialist`.
+- **M2: Metering Spine & Quota Throttling (`v0.2.0`)** — Closed 2026-10-26. Delivered atomic Upstash Redis Lua credit ledger, 5 RPS sliding window rate limiter, HTTP 402 short-circuit ingress guard, upstream quota classifier with IETF rate-limit headers, closed 17-member RFC 9457 error catalogue, and idempotent daily 08:00 UTC reset. Verified with full suite 50/50 passing, 543 assertions, 6/6 build, 6/6 typecheck. Gate G4 PASS. Verified by `devprod-specialist`.
 
 ## 4. Open Questions & Roadmap Gaps
 

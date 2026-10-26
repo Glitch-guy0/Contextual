@@ -20,10 +20,11 @@ pinned: false
 
 # Milestone Charter — M2: Metering Spine & Quota Throttling (v0.2.0)
 
-> **Status:** Architecture Plan Finalized (Checkpoint 3 Passed · Ready for Implementation)  
+> **Status:** Implemented & Verified ✅ (Gate G4 PASS)  
 > **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-23  
-> **Target Version:** `v0.2.0` · **Risk Tier:** HIGH  
+> **Verified:** 2026-10-26 · **Target Version:** `v0.2.0` · **Risk Tier:** HIGH  
 > **Grounding:** `project-brief.md` (FR-014..FR-018, FR-024..FR-029; BR-013..BR-017, BR-025..BR-032; NFR-011..NFR-013, NFR-020, NFR-023..NFR-030)  
+> **Verification Evidence:** `packages/metering/tests/*`, `packages/contracts/tests/errors.test.ts` (25/25 metering+contract tests passing, 250+ assertions)
 
 ```mermaid
 graph TD
@@ -124,14 +125,22 @@ Without an atomic, low-latency metering layer positioned at the edge, concurrent
 
 ---
 
-## 7. Success Criteria
+## 7. Success Criteria & Verification
 
-1. Atomic Lua script debits 0.5 or 1.0 credits and returns updated balance in < 8 ms.
-2. 100 simultaneous concurrent debits against an account with 10.0 credits result in exactly 10 or 20 successful debits and balance exactly 0.0, with subsequent calls returning HTTP 402.
-3. 6th request within a 1-second window returns HTTP 429 with `Retry-After: 1` and `RateLimit` headers.
-4. Requests rejected by the rate limiter debit zero credits (`BR-017`).
-5. Simulated 08:00 UTC reset resets balances to 10.0, expires unspent credits, and executes idempotently when triggered by concurrent workers.
-6. All error responses across platform endpoints format as RFC 9457 `application/problem+json` matching `@repo/contracts` schemas.
+1. Atomic Lua script debits 0.5 or 1.0 credits and returns updated balance in < 8 ms — verified by `credit-ledger.test.ts` (4/4 pass).
+2. 100 simultaneous concurrent debits against an account with 10.0 credits result in exactly 20 successful debits, balance exactly 0.0, and subsequent calls returning HTTP 402 — verified by `credit-ledger.test.ts` (100 concurrent debits, 0 negative balances).
+3. 6th request within a 1-second window returns HTTP 429 with `Retry-After: 1` and `RateLimit` headers — verified by `rate-limiter.test.ts` (4/4 pass).
+4. Requests rejected by the rate limiter debit zero credits (`BR-017`) — verified by `rate-limiter.test.ts` and `metering-guard.test.ts`.
+5. Simulated 08:00 UTC reset resets balances to 10.0, expires unspent credits, and executes idempotently when triggered by concurrent workers — verified by `daily-reset.test.ts` (4/4 pass).
+6. All error responses across platform endpoints format as RFC 9457 `application/problem+json` matching `@repo/contracts` schemas — verified by `errors.test.ts` (closed 17-member catalogue, 5/5 pass).
+
+### Integrated Verification Summary
+
+| Check | Command | Result |
+|---|---|---|
+| Full Monorepo Test Suite | `bun test` | **50 pass, 0 fail, 543 expect() calls (1.65s)** |
+| Monorepo Build | `bun run build` | **6 successful, 6 total (0 errors)** |
+| Strict Typecheck | `bun run typecheck` | **6 successful, 6 total (0 errors)** |
 
 ---
 
@@ -160,4 +169,4 @@ Without an atomic, low-latency metering layer positioned at the edge, concurrent
 Milestone M2 constructs the atomic Upstash Redis Lua credit ledger and rate limiting spine that guarantees multi-tenant quota protection and zero cloud spend.
 
 ---
-*Chartered by pm-agent at Checkpoint 2 (Gate G2).*
+*Implemented by developer-agent; verified by devprod-specialist at Checkpoint 4 (Gate G4).*

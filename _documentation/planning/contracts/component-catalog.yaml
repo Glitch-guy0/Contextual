@@ -84,6 +84,7 @@ components:
     name: "Transient Ingestion & Extraction Worker"
     package: "@repo/ingestion"
     owner: "architect-agent"
+    status: implemented-scaffold
     responsibilities:
       - "Issue pre-signed Filebase S3 upload URLs (<= 5MB ceiling)"
       - "Parse PDF documents, YouTube transcripts, and web URLs"
@@ -97,15 +98,24 @@ components:
       - "Support non-debiting retries using existing failed job IDs"
     interfaces:
       public_types:
-        - "PresignedUrlResult"
+        - "SourceType"
+        - "PresignedUploadRequest"
+        - "PresignedUploadResponse"
+        - "SubmitIngestionRequest"
+        - "IngestionJobAccepted"
         - "IngestionJobPayload"
-        - "ExtractedDocument"
+        - "IngestionResult"
         - "TextChunk"
+        - "IngestionChunkPayload"
+        - "ProgressState"
         - "ProgressEvent"
         - "FailureReason"
+        - "RefundResult"
+        - "RetryResult"
       methods:
-        - "createPresignedUploadUrl(userId: string, filename: string, fileSizeBytes: number): Promise<PresignedUrlResult>"
-        - "processIngestionJob(jobId: string, payload: IngestionJobPayload): Promise<IngestionResult>"
+        - "createPresignedUploadUrl(userId: string, filename: string, fileSizeBytes: number): Promise<PresignedUploadResponse>"
+        - "submitIngestionJob(payload: SubmitIngestionRequest): Promise<IngestionJobAccepted>"
+        - "processIngestionJob(payload: IngestionJobPayload): Promise<IngestionResult>"
         - "subscribeProgressStream(jobId: string, lastEventId?: string): AsyncIterable<ProgressEvent>"
         - "refundCreditsOnFailure(jobId: string, userId: string, reason: FailureReason): Promise<RefundResult>"
         - "retryIngestionJob(jobId: string, userId: string, newStagingKey?: string): Promise<RetryResult>"

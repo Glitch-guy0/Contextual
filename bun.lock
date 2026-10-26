@@ -47,6 +47,19 @@
         "typescript": "^5.7.3",
       },
     },
+    "packages/ingestion": {
+      "name": "@repo/ingestion",
+      "version": "0.1.0",
+      "dependencies": {
+        "@repo/config": "workspace:*",
+        "@repo/contracts": "workspace:*",
+        "@upstash/redis": "^1.39.0",
+      },
+      "devDependencies": {
+        "@repo/config": "workspace:*",
+        "typescript": "^5.7.3",
+      },
+    },
     "packages/metering": {
       "name": "@repo/metering",
       "version": "0.1.0",
@@ -83,6 +96,8 @@
     "@repo/contracts": ["@repo/contracts@workspace:packages/contracts"],
 
     "@repo/db": ["@repo/db@workspace:packages/db"],
+
+    "@repo/ingestion": ["@repo/ingestion@workspace:packages/ingestion"],
 
     "@repo/metering": ["@repo/metering@workspace:packages/metering"],
 
