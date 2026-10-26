@@ -1,5 +1,5 @@
-import type { FailureReason } from "@repo/contracts/ingestion";
-import type { AppProblemError } from "@repo/contracts/errors";
+import type { FailureReason, ExtractedYouTubeResult, TranscriptSegment } from "@repo/contracts/ingestion";
+import { AppProblemError } from "@repo/contracts/errors";
 
 export type { ExtractedYouTubeResult, TranscriptSegment } from "@repo/contracts/ingestion";
 
@@ -7,7 +7,7 @@ export class YouTubeExtractionError extends AppProblemError {
   public readonly reason: FailureReason;
 
   constructor(reason: FailureReason, message: string, instance: string) {
-    super("transcript-disabled", { detail: message, instance });
+    super("DOCUMENT_PARSING_FAILED", { detail: message, instance });
     this.name = "YouTubeExtractionError";
     this.reason = reason;
   }

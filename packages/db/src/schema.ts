@@ -52,10 +52,36 @@ export interface NotebooksTable {
   readonly updated_at: Generated<string>;
 }
 
+export interface NotebookNodesTable {
+  readonly id: Generated<string>; // UUID PRIMARY KEY DEFAULT gen_random_uuid()
+  readonly user_id: string; // Denormalized tenant guard (M4-PM-001 / AC-4.3)
+  readonly notebook_id: string; // FK -> notebooks.id ON DELETE CASCADE
+  readonly parent_id: string | null; // Self-reference for branch scope
+  readonly kind: "text" | "document";
+  readonly title: string;
+  readonly content: string | null;
+  readonly document_id: string | null; // Required when kind = 'document' (CHECK enforced)
+  readonly position: ColumnType<number, number | undefined, number>;
+  readonly created_at: Generated<string>;
+  readonly updated_at: Generated<string>;
+}
+
+export interface NotebookEdgesTable {
+  readonly id: Generated<string>; // UUID PRIMARY KEY DEFAULT gen_random_uuid()
+  readonly user_id: string; // Denormalized tenant guard (AC-4.3)
+  readonly notebook_id: string; // FK -> notebooks.id ON DELETE CASCADE
+  readonly source_id: string; // FK -> notebook_nodes.id ON DELETE CASCADE
+  readonly target_id: string; // FK -> notebook_nodes.id ON DELETE CASCADE
+  readonly edge_type: "cites" | "related"; // CHECK constraint mirrors this union (FR-032)
+  readonly created_at: Generated<string>;
+}
+
 export interface Database {
   readonly users: UsersTable;
   readonly conversation_threads: ConversationThreadsTable;
   readonly threads: ConversationThreadsTable; // Alias for backward compatibility
   readonly conversation_messages: ConversationMessagesTable;
   readonly notebooks: NotebooksTable;
+  readonly notebook_nodes: NotebookNodesTable;
+  readonly notebook_edges: NotebookEdgesTable;
 }

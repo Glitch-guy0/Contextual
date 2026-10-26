@@ -1,6 +1,7 @@
 export * from "./error-catalog.js";
 export * from "./errors.js";
 export * from "./metering.js";
+export * from "./workspace.js";
 export { AppProblemError } from "./errors.js";
 export type {
   SourceType,

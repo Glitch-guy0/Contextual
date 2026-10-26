@@ -10,12 +10,14 @@ import * as path from "node:path";
 import { promises as fs } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as migration001 from "./migrations/001_initial_auth_and_notebooks.js";
+import * as migration002 from "./migrations/002_notebook_graph.js";
 
 /**
  * Static migration registry for deterministic environments and bundlers
  */
 export const STATIC_MIGRATIONS: Record<string, Migration> = {
   "001_initial_auth_and_notebooks": migration001,
+  "002_notebook_graph": migration002,
 };
 
 export class StaticMigrationProvider implements MigrationProvider {

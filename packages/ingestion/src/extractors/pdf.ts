@@ -1,5 +1,5 @@
-import type { FailureReason, PdfExtractOptions } from "@repo/contracts/ingestion";
-import type { AppProblemError } from "@repo/contracts/errors";
+import type { FailureReason, PdfExtractOptions, ExtractedPdfResult } from "@repo/contracts/ingestion";
+import { AppProblemError } from "@repo/contracts/errors";
 
 export type { ExtractedPdfResult, PdfExtractOptions } from "@repo/contracts/ingestion";
 
@@ -7,8 +7,9 @@ export class PdfExtractionError extends AppProblemError {
   public readonly reason: FailureReason;
 
   constructor(reason: FailureReason, message: string, instance: string) {
-    super("no-text-layer-pdf", { detail: message, instance });
+    super("NO_TEXT_LAYER_PDF", { detail: message, instance });
     this.name = "PdfExtractionError";
+    this.reason = reason;
   }
 }
 

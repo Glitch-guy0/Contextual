@@ -47,7 +47,7 @@ export function createCompensationError(
   message: string,
   instance = "/api/v1/ingestions/process"
 ): AppProblemError {
-  return new AppProblemError("compensation-failed", { detail: message, instance });
+  return new AppProblemError("INTERNAL_SERVER_ERROR", { detail: message, instance });
 }
 
 export interface RefundOptions {

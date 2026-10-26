@@ -1,6 +1,6 @@
 // Local alias keeps this package's typecheck stable during monorepo bootstrap.
 import type { EmbeddingResult } from "@repo/contracts/ingestion";
-import type { AppProblemError } from "@repo/contracts/errors";
+import { AppProblemError } from "@repo/contracts/errors";
 
 export type { EmbeddingResult } from "@repo/contracts/ingestion";
 
@@ -99,7 +99,7 @@ export function padEmbeddingVectorTo(source: number[], targetDimensions: number)
 
 export class EmbeddingError extends AppProblemError {
   constructor(message: string, instance = "/api/v1/ingestions/process") {
-    super("embedding-provider-unavailable", { detail: message, instance });
+    super("UPSTREAM_PROVIDER_UNAVAILABLE", { detail: message, instance });
     this.name = "EmbeddingError";
   }
 }

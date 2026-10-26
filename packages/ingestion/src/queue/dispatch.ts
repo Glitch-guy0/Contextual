@@ -1,6 +1,6 @@
 // Local alias keeps this package's typecheck stable during monorepo bootstrap.
 import type { IngestionJobAccepted, IngestionJobPayload } from "@repo/contracts/ingestion";
-import type { AppProblemError } from "@repo/contracts/errors";
+import { AppProblemError } from "@repo/contracts/errors";
 
 // S3.2 seam: real QStash signature verification will be wired against the live
 // Upstash signing key once the webhook handler is attached to the process route.
@@ -10,7 +10,7 @@ export function verifyQstashSignature(
   _signingKey: string
 ): void {
   throw new AppProblemError(
-    "queue-dispatch-failed",
+    "UPSTREAM_PROVIDER_UNAVAILABLE",
     { detail: "QStash signature verification is not wired in this workspace yet.", instance: "/api/v1/ingestions/process" }
   );
 }
@@ -27,15 +27,6 @@ export function createIngestionJobAccepted(
 }
 
 export interface QueueDispatchOptions {
-  qstashToken: string;
-  qstashUrl: string;
-  processEndpoint: string;
-}
-
-export async function dispatchIngestionTask(
-  payload: IngestionJobPayload,
-  options: QueueDispatchOptions
-): Promise<IngestionJobAccepted> {
   qstashToken: string;
   qstashUrl: string;
   processEndpoint: string;
@@ -91,7 +82,7 @@ async function publishQStashTask(
   if (!qStashResponse.ok) {
     logDispatchFailed({ jobId: payload.jobId, status: qStashResponse.status });
     throw new AppProblemError(
-      "queue-dispatch-failed",
+      "UPSTREAM_PROVIDER_UNAVAILABLE",
       {
         detail: `QStash task publish failed with status ${qStashResponse.status}.`,
         instance: "/api/v1/ingestions",
@@ -124,20 +115,9 @@ export function buildProcessWebhookPayload(payload: IngestionJobPayload): string
 
 export class QueueDispatchError extends AppProblemError {
   constructor(message: string, instance = "/api/v1/ingestions") {
-    super("queue-dispatch-failed", { detail: message, instance });
+    super("UPSTREAM_PROVIDER_UNAVAILABLE", { detail: message, instance });
     this.name = "QueueDispatchError";
   }
-}
-
-export function createIngestionJobAccepted(
-  jobId: string,
-  baseUrl: string
-): IngestionJobAccepted {
-  return {
-    jobId,
-    progressStreamUrl: `${baseUrl}/api/v1/ingestions/${jobId}/progress`,
-    status: "accepted",
-  };
 }
 
 // S3.2 seam: the real QStash webhook handler will validate the signature, resolve
@@ -150,7 +130,7 @@ export function createQstashWebhookHandler(
 ): (requestBody: string, signatureHeader: string) => Promise<void> {
   return async (_requestBody, _signatureHeader) => {
     throw new AppProblemError(
-      "queue-dispatch-failed",
+      "UPSTREAM_PROVIDER_UNAVAILABLE",
       { detail: "QStash webhook handling is not wired in this workspace yet.", instance: "/api/v1/ingestions/process" }
     );
   };

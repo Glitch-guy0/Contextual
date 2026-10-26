@@ -1,6 +1,6 @@
 // Local alias keeps this package's typecheck stable during monorepo bootstrap.
 import type { ProgressEvent, ProgressState } from "@repo/contracts/ingestion";
-import type { AppProblemError } from "@repo/contracts/errors";
+import { AppProblemError } from "@repo/contracts/errors";
 
 export type { ProgressEvent, ProgressState } from "@repo/contracts/ingestion";
 
@@ -126,7 +126,7 @@ export function createProgressState(params: {
 
 export class ProgressStreamError extends AppProblemError {
   constructor(message: string, instance = "/api/v1/ingestions/process") {
-    super("progress-stream-unavailable", { detail: message, instance });
+    super("PROGRESS_STREAM_UNAVAILABLE", { detail: message, instance });
     this.name = "ProgressStreamError";
   }
 }

@@ -1,4 +1,5 @@
-import { sanitizeSensitiveData, type AppProblemError } from "@repo/contracts/errors";
+import { sanitizeSensitiveData, AppProblemError } from "@repo/contracts/errors";
+import type { ErrorCatalogueKey } from "@repo/contracts/error-catalog";
 import type { PresignedUploadResponse } from "@repo/contracts/ingestion";
 
 export type { PresignedUploadResponse } from "@repo/contracts/ingestion";
@@ -60,7 +61,7 @@ export async function createPresignedUploadUrl({
   if (fileSizeBytes > FIVE_MB_BYTES) {
     logPresignValidationFailed({ fileSizeBytes, contentType });
     throw new S3StagingError(
-      "upload-size-exceeded",
+      "UPLOAD_SIZE_EXCEEDED",
       `File exceeds 5 MB ceiling. Provided ${fileSizeBytes} bytes.`,
       "/api/v1/ingestions/presign"
     );
@@ -68,7 +69,7 @@ export async function createPresignedUploadUrl({
 
   if (contentType !== "application/pdf") {
     throw new S3StagingError(
-      "unsupported-media-type",
+      "UNSUPPORTED_MEDIA_TYPE",
       `Ingestion staging only supports application/pdf. Received ${contentType}.`,
       "/api/v1/ingestions/presign"
     );
@@ -122,8 +123,8 @@ function sanitizeFilename(filename: string): string {
 }
 
 export class S3StagingError extends AppProblemError {
-  constructor(message: string, instance = "/api/v1/ingestions/presign") {
-    super("upload-size-exceeded", { detail: message, instance });
+  constructor(key: ErrorCatalogueKey, message: string, instance = "/api/v1/ingestions/presign") {
+    super(key, { detail: message, instance });
     this.name = "S3StagingError";
   }
 }
