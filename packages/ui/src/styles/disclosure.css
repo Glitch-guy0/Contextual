@@ -1,0 +1,184 @@
+/**
+ * Stylesheet: AI Provider Data Training Disclosure Banner & Prompt Wrapper
+ * Grounding: FR-030, BR-030, CV-041, NFR-019 (WCAG 2.1 AA)
+ */
+
+.disclosure-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 8px);
+  padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
+  background-color: var(--color-warning-bg, #FEF7E0);
+  border: 1px solid var(--color-warning-border, #B06000);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-warning-text, #7A4D00);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  line-height: 1.5;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+  /* Un-dismissible invariant: permanently mounted without close handles */
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.disclosure-banner-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  flex-wrap: wrap;
+}
+
+.disclosure-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background-color: var(--color-warning-border, #B06000);
+  color: #FFFFFF;
+  font-size: var(--spacing-md, 12px);
+  font-weight: 600;
+  border-radius: var(--radius-sm, 4px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.disclosure-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-warning-text, #7A4D00);
+}
+
+.disclosure-body {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-warning-text, #7A4D00);
+  max-width: 900px;
+}
+
+.disclosure-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 4px);
+  font-size: 13px;
+}
+
+.disclosure-link {
+  color: var(--color-warning-text, #7A4D00);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.disclosure-link:hover {
+  color: #5C3800;
+  text-decoration-thickness: 2px;
+}
+
+.disclosure-link:focus-visible {
+  outline: 2px solid var(--color-border-focus, #4285F4);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs, 2px);
+}
+
+/* Prompt Disclosure Notice (compact bar anchored directly above textarea) */
+.prompt-disclosure-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm, 8px);
+  padding: 6px 12px;
+  background-color: var(--color-warning-bg, #FEF7E0);
+  border: 1px solid var(--color-warning-border, #B06000);
+  border-bottom: none;
+  border-radius: var(--radius-md, 8px) var(--radius-md, 8px) 0 0;
+  color: var(--color-warning-text, #7A4D00);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.prompt-disclosure-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prompt-disclosure-badge {
+  display: inline-flex;
+  padding: 1px 6px;
+  background-color: var(--color-warning-border, #B06000);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--radius-xs, 2px);
+  text-transform: uppercase;
+}
+
+.prompt-disclosure-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prompt-disclosure-link {
+  color: var(--color-warning-text, #7A4D00);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  flex-shrink: 0;
+}
+
+.prompt-disclosure-link:hover {
+  color: #5C3800;
+}
+
+.prompt-disclosure-link:focus-visible {
+  outline: 2px solid var(--color-border-focus, #4285F4);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs, 2px);
+}
+
+/* Dark mode compatibility with WCAG 2.1 AA text contrast (>= 4.5:1) */
+@media (prefers-color-scheme: dark) {
+  .disclosure-banner {
+    background-color: #2D2411;
+    border-color: #F9AB00;
+    color: #FEEFC3;
+  }
+
+  .disclosure-title {
+    color: #FEEFC3;
+  }
+
+  .disclosure-body {
+    color: #FEEFC3;
+  }
+
+  .disclosure-link {
+    color: #FEEFC3;
+  }
+
+  .disclosure-link:hover {
+    color: #FFFFFF;
+  }
+
+  .prompt-disclosure-notice {
+    background-color: #2D2411;
+    border-color: #F9AB00;
+    color: #FEEFC3;
+  }
+
+  .prompt-disclosure-link {
+    color: #FEEFC3;
+  }
+
+  .prompt-disclosure-link:hover {
+    color: #FFFFFF;
+  }
+}
