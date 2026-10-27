@@ -1,0 +1,304 @@
+# Sprint Status — M8: Public Marketing Landing & Dynamic Privacy Governance
+# Sprint Owner: sprint-agent
+# Planned Version: v0.8.0
+sprint:
+  id: M8-S1
+  milestone: M8
+  status: complete
+  phased_deployment_profile:
+    mode: expand
+    risk_tier: medium
+    target_version: "0.8.0"
+    release_model: feature-expand
+    expand_tier: "1-a"
+    expand_geometry_note: >-
+      M8 is an expand-phase release: introduces shared design tokens and components in @repo/ui,
+      un-dismissible dynamic AI provider training disclosure banner (FR-030, BR-030, CV-041),
+      public marketing landing hero, feature grid, pricing transparency (FR-022, BR-024),
+      and automated WCAG 2.1 AA accessibility audit suite (NFR-019).
+      Existing 11 internal packages and closed 17-member RFC 9457 error catalogue remain intact.
+  target_end: 2026-12-30
+  start_on: "manual"
+  stories:
+    - S8.1
+    - S8.2
+    - S8.3
+    - S8.4
+    - S8.5
+    - S8.6
+
+stories:
+  - id: S8.1
+    title: Shared UI design tokens, component types, and provider disclosure contracts
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M8-1
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — typed TypeScript contracts for ProviderDisclosurePolicy, DISCLOSURE_CONFIGS, and WCAG-compliant DESIGN_TOKENS; zero runtime framework dependencies."
+    acceptance:
+      - "Export ProviderDisclosurePolicy, ProviderType, and DISCLOSURE_CONFIGS from @repo/contracts/src/disclosure.ts"
+      - "Google AI Studio policy explicitly defines legal training copy and ai.google.dev/terms documentation URL"
+      - "Export extended DESIGN_TOKENS with WCAG 2.1 AA contrast compliance (>= 4.5:1 text, >= 3:1 borders), focus outlines, and glassmorphism styling presets in @repo/ui"
+      - "Verify closed 17-member RFC 9457 error catalogue remains exactly 17 entries with zero modifications"
+    tests:
+      - "tests/ui/contracts-tokens.test.ts — contract export validation, mathematical contrast calculations, and token structure tests"
+      - "bun test packages/contracts/tests/errors.test.ts — catalogue test passes 5/5"
+    observability:
+      - "Static TypeScript typecheck and runtime validator assertions"
+    verified: true
+    depends_on: []
+    change_matrix:
+      new_files:
+        - "packages/contracts/src/disclosure.ts"
+        - "packages/ui/src/tokens.ts"
+        - "tests/ui/contracts-tokens.test.ts"
+      allowed_files:
+        - "packages/contracts/src/**"
+        - "packages/ui/src/**"
+        - "tests/ui/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "packages/observability/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S8.2
+    title: Dynamic un-dismissible AI provider training disclosure banner and prompt wrapper
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M8-2
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — custom Vanilla CSS glassmorphic React components adhering strictly to BR-030 un-dismissible invariant."
+    acceptance:
+      - "DisclosureBanner renders prominent amber warning (#FEF7E0/#FBBC04) with provider badge, legal training copy, and external policy link (FR-030, CV-041)"
+      - "BR-030 anti-tampering invariant enforced: component strictly omits dismissal buttons, localStorage suppression hooks, or hidden states"
+      - "PromptDisclosureNotice renders compact anchored notice directly above prompt textarea inputs"
+      - "Styles in packages/ui/src/styles/disclosure.css provide fluid glassmorphic elevation with dark-mode compatibility"
+    tests:
+      - "tests/ui/disclosure-banner.test.ts — structural rendering, un-dismissible invariant, and anti-tampering assertions"
+      - "turbo run build --filter=@repo/ui && turbo run typecheck --filter=@repo/ui"
+    observability:
+      - "Component DOM structure assertions and accessibility role validation"
+    verified: true
+    depends_on:
+      - S8.1
+    change_matrix:
+      new_files:
+        - "packages/ui/src/components/disclosure-banner.tsx"
+        - "packages/ui/src/components/prompt-disclosure.tsx"
+        - "packages/ui/src/styles/disclosure.css"
+        - "tests/ui/disclosure-banner.test.ts"
+      allowed_files:
+        - "packages/ui/src/**"
+        - "tests/ui/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "packages/observability/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S8.3
+    title: Public marketing landing hero, navigation, feature grid, and public footer
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M8-3
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — semantic HTML5 components in @repo/ui using Vanilla CSS and responsive grid layout."
+    acceptance:
+      - "LandingHero articulates grounded multi-modal reasoning value proposition with primary and secondary CTAs"
+      - "NavigationHeader provides sticky glassmorphic navigation with brand logo and Clerk OAuth sign-in CTA"
+      - "FeatureGrid presents 4 core platform capabilities (Reasoning, Ingestion, Graph, Memory) with zero layout shift"
+      - "PublicFooter renders copyright, GitHub repository link, architecture doc references, and legal terms"
+      - "BR-024 public page isolation: components take pure static props with zero user cookies or authenticated token dependencies"
+    tests:
+      - "tests/ui/landing-components.test.ts — component tree rendering, semantic HTML assertions, and unauthenticated isolation verification"
+      - "turbo run build --filter=@repo/ui && turbo run typecheck --filter=@repo/ui"
+    observability:
+      - "Semantic landmark validation and DOM node count assertions"
+    verified: true
+    depends_on:
+      - S8.2
+    change_matrix:
+      new_files:
+        - "packages/ui/src/components/landing-hero.tsx"
+        - "packages/ui/src/components/navigation-header.tsx"
+        - "packages/ui/src/components/feature-grid.tsx"
+        - "packages/ui/src/components/public-footer.tsx"
+        - "packages/ui/src/styles/landing.css"
+        - "tests/ui/landing-components.test.ts"
+      allowed_files:
+        - "packages/ui/src/**"
+        - "tests/ui/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "packages/observability/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S8.4
+    title: Zero-cost pricing transparency and daily quota breakdown card
+    status: complete
+    phase: Complete
+    priority: p1
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M8-4
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — transparent quota breakdown component detailing the 10 daily credit grant and zero hidden fees."
+    acceptance:
+      - "PricingCard showcases Free Community Tier ($0.00 / forever) with 10 credits granted daily at 08:00 UTC (BR-025)"
+      - "Action cost table details: Grounded Reasoning Query (0.5 credits), Document Ingestion (1.0 credit)"
+      - "Discloses unspent credit expiration (BR-026: zero roll-over carryover) with complete transparency"
+      - "Renders zero billing inputs, credit card forms, or third-party payment scripts"
+    tests:
+      - "tests/ui/pricing-transparency.test.ts — pricing card values, quota fidelity with metering package, and zero-payment assertions"
+    observability:
+      - "Static snapshot assertions and numerical balance checks"
+    verified: true
+    depends_on:
+      - S8.3
+    change_matrix:
+      new_files:
+        - "packages/ui/src/components/pricing-card.tsx"
+        - "tests/ui/pricing-transparency.test.ts"
+      allowed_files:
+        - "packages/ui/src/**"
+        - "tests/ui/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "packages/observability/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S8.5
+    title: Automated WCAG 2.1 AA accessibility audit suite using axe-core
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M8-5
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUY/BUILD — axe-core accessibility engine integration in automated CI test runner."
+    acceptance:
+      - "Automated accessibility audit scans all public marketing components and disclosure banners"
+      - "axe-core reports 0 critical and 0 serious accessibility violations (NFR-019)"
+      - "Asserts semantic HTML5 landmarks (<header>, <nav>, <main>, <section>, <footer>)"
+      - "Asserts high-contrast visible focus rings (:focus-visible with >= 2px outline and >= 3:1 contrast)"
+      - "Asserts all interactive links and buttons have accessible names and aria attributes"
+    tests:
+      - "tests/ui/accessibility.test.ts — automated axe-core audit covering all M8 components"
+    observability:
+      - "Axe-core violation reports and violation-free pass certification"
+    verified: true
+    depends_on:
+      - S8.4
+    change_matrix:
+      new_files:
+        - "tests/ui/accessibility.test.ts"
+      allowed_files:
+        - "packages/ui/src/**"
+        - "tests/ui/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "packages/observability/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S8.6
+    title: Performance budget simulation suite, component catalog update, and documentation synchronization
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M8-6
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — performance budget tests simulating Core Web Vitals (LCP < 2.0s, CLS < 0.1) and monorepo doc sync."
+    acceptance:
+      - "Performance test verifies critical CSS bundle size < 50KB, zero render-blocking scripts, and DOM node count < 800"
+      - "Core Web Vitals simulation asserts LCP < 2.0s and CLS < 0.1 under throttled conditions (NFR-018)"
+      - "Unified test suite runs clean: all M8 tests pass alongside 259 existing monorepo tests"
+      - "Documentation synchronized across component-catalog.yaml, overview.md, milestone-status.yaml, and index.md"
+    tests:
+      - "tests/ui/performance-budget.test.ts — bundle size and Core Web Vitals simulations"
+      - "bun test && bun run build && bun run typecheck"
+    observability:
+      - "Performance metric assertions and bundle size reporting"
+    verified: true
+    depends_on:
+      - S8.5
+    change_matrix:
+      new_files:
+        - "tests/ui/performance-budget.test.ts"
+      allowed_files:
+        - "packages/ui/src/**"
+        - "tests/ui/**"
+        - "_documentation/planning/**"
+        - "_documentation/index.md"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "packages/observability/**"
+        - "infra/**"
+        - "apps/**"

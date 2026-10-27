@@ -406,6 +406,39 @@ components:
         severity: "FATAL"
         type: "external_service"
 
+  - id: "comp-ui"
+    name: "Design System, Landing Surface & Disclosure Components"
+    package: "@repo/ui"
+    owner: "architect-agent"
+    milestone: "M8"
+    responsibilities:
+      - "Provide canonical design tokens (DESIGN_TOKENS) adhering to WCAG 2.1 AA contrast requirements"
+      - "Render un-dismissible AI provider data training disclosure banner on landing and prompt views (FR-030, BR-030)"
+      - "Render public marketing landing page hero, navigation header, feature grid, and public footer (FR-022, BR-024)"
+      - "Render transparent zero-cost community tier pricing and daily quota breakdown (FR-022, BR-025, BR-026)"
+      - "Enforce zero runtime CSS dependencies using pure Vanilla CSS stylesheets"
+    interfaces:
+      public_types:
+        - "DesignTokens"
+        - "DisclosureBannerProps"
+        - "LandingHeroProps"
+        - "NavigationHeaderProps"
+        - "FeatureGridProps"
+        - "PricingCardProps"
+        - "PublicFooterProps"
+      components:
+        - "DisclosureBanner"
+        - "PromptDisclosureNotice"
+        - "LandingHero"
+        - "NavigationHeader"
+        - "FeatureGrid"
+        - "PricingCard"
+        - "PublicFooter"
+    dependencies:
+      - target: "@repo/contracts"
+        severity: "FATAL"
+        type: "internal_package"
+
 rules:
   - "Domain packages must never import Next.js web transport libraries (next/server)"
   - "Graph reads and writes must carry a user_id tenant predicate inside the repository; route handlers never issue their own SQL"
@@ -416,5 +449,9 @@ rules:
   - "100% of protected API endpoints (/api/v1/*) must sit behind comp-middleware guard"
   - "All cron endpoints must verify cryptographic Upstash-Signature headers before execution"
   - "Zero un-redacted credentials, tokens, or connection strings may be emitted to logs or traces"
+  - "Public marketing routes and components must never require or consume authenticated session state or cookies (BR-024)"
+  - "The AI provider training disclosure banner must be rendered permanently without dismissal controls (BR-030, FR-030)"
+  - "All public components must comply with WCAG 2.1 AA accessibility standards (NFR-019)"
+
 
 

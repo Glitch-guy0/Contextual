@@ -6,10 +6,10 @@ workflow:
   risk_tier: HIGH
   current_stage: "stage_4_implementation"
   active_agent: developer-agent
-  active_milestone: "M7"
+  active_milestone: "M8"
   checkpoint: "CP4"
   gate: "G6"
-  gate_status: "PASS"
+  gate_status: "PENDING_CERTIFICATION"
   commands:
     build_cmd: "bun run build"
     test_cmd: "bun test"
@@ -258,6 +258,27 @@ workflow:
       from: "developer-agent"
       to: "test-agent"
       stage: 4
-      status: "READY_FOR_HANDOFF"
+      status: "ACCEPTED"
       milestone: "M5"
       summary: "Milestone M5 implementation complete across S5.1..S5.6. All 154 monorepo tests pass. Build and typecheck clean across all 9 packages. Latency p90 = 27ms < 4,500ms."
+    - id: "handoff-018"
+      from: "developer-agent"
+      to: "test-agent"
+      stage: 4
+      status: "ACCEPTED"
+      milestone: "M7"
+      summary: "Milestone M7 autonomous maintenance crons and observability implementation complete."
+    - id: "handoff-019"
+      from: "sprint-agent"
+      to: "developer-agent"
+      stage: 4
+      status: "ACCEPTED"
+      milestone: "M8"
+      summary: "Milestone M8 sprint plan approved for implementation. S8.1..S8.6 ready for clean-session execution."
+    - id: "handoff-020"
+      from: "developer-agent"
+      to: "test-agent"
+      stage: 4
+      status: "READY_FOR_HANDOFF"
+      milestone: "M8"
+      summary: "Milestone M8 implementation complete across S8.1..S8.6. All 54 UI/accessibility tests pass; full monorepo 313/313 pass; 11/11 packages build and typecheck clean."

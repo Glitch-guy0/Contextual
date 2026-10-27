@@ -510,4 +510,126 @@ This is a DBW documentation and coordination record. All approvals are represent
 ## Implementation note
 This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
 
+---
+
+# Session 6 — M8 Planning Round-Table: Public Marketing Landing & Dynamic Privacy Governance (PM · Architect · Sprint)
+
+## Session Meta
+- **Date:** 2026-10-27T11:30:00.000Z
+- **State:** Phase 4 (Milestone Detail) → Phase 5 (Implementation Planning)
+- **Task:** Plan M8 Public Marketing Landing & Dynamic Privacy Governance (`v0.8.0`) for implementation; author architecture blueprint, contracts, component catalog updates, and sprint board with frozen Change Matrices; then verify and seal PM approval.
+- **Mode:** Planning → Design → Board → Approval
+- **Session Chairs:** `pm-agent` (Stage 2 Owner), `architect-agent` (Stage 3 Owner), `sprint-agent` (Board Owner)
+- **Log:** this file · **Dispatches:** DSP-037..DSP-041 · **Handoff:** `handoff-019-sprint-to-developer-m8`
+
+## Participants
+- `pm-agent` — requirements governance, grounding validation, risk-tier classification, approval authority
+- `architect-agent` — public landing architecture, component contracts, design token governance, dynamic privacy disclosure component, and performance/accessibility architecture
+- `sprint-agent` — epic slicing, frozen Change Matrices, sprint board authoring (`sprint-status.yaml`), story cards (S8.1 to S8.6)
+- `ux-specialist` & `frontend-browser-specialist` — glanceable information architecture, WCAG 2.1 AA contrast requirements, dark-mode glassmorphism design tokens, keyboard focus states, zero-layout-shift (CLS < 0.1), and Core Web Vitals budgets
+- `security-architect` — unauthenticated public page isolation (`BR-024`), un-dismissible AI provider training disclosure invariant (`BR-030`, `FR-030`), and anti-tampering verification
+- `failure-mode-specialist` — FMEA sweep for CSS render blocking, layout shifts, client-side disclosure hiding, and accessibility regressions (FM-801..FM-804)
+
+## Round 1: Positions
+- **PM Agent position:**
+  - Milestone M8 delivers the public entry point and mandatory regulatory data governance transparency layer (`v0.8.0`).
+  - Grounding is anchored in `project-brief.md` (`FR-022`, `FR-030`, `BR-024`, `BR-028..BR-030`, `CV-041..CV-044`, `NFR-018`, `NFR-019`) and `epic-008-landing-and-disclosure.md`.
+  - Non-negotiable requirements:
+    1. **Public Marketing Landing Surface (`FR-022`, `BR-024`):** An unauthenticated, SEO-indexable marketing landing page returning HTTP 200 with zero authenticated user data or cookies, articulating the value proposition, grounded reasoning with inline citations, and zero-cost serverless architecture.
+    2. **Dynamic Un-dismissible AI Provider Training Disclosure Banner (`FR-030`, `BR-030`, `CV-041`):** Mandatory, prominent warning component rendered on both the public landing surface and directly above all workspace prompt input views, transparently disclosing that user queries and documents travel to Google AI Studio under free-tier training policies.
+    3. **Un-dismissible Invariant (`BR-030`):** The banner cannot be closed, hidden, dismissed, or bypassed via `localStorage`, session storage, or UI controls.
+    4. **Zero-Cost Pricing Transparency (`FR-022`, `BR-025`, `BR-026`):** Dedicated community tier breakdown showing 10 credits granted daily at 08:00 UTC, itemized action debits (0.5 LLM, 1.0 Ingest), and zero roll-over carryover.
+    5. **Performance SLA (`NFR-018`):** Google Lighthouse Performance score ≥ 90 and LCP < 2.0s on simulated 4G profile.
+    6. **Accessibility SLA (`NFR-019`):** WCAG 2.1 AA compliance with automated `axe-core` scan reporting zero critical or serious violations.
+  - Baseline health: Monorepo test suite has 259 pass, 0 fail across 47 files; 11/11 packages build and typecheck cleanly. No blocking precondition needed.
+- **Architect Agent position:**
+  - Marketing landing and privacy governance capabilities are encapsulated cleanly within `@repo/ui` and `@repo/contracts`:
+    1. **Shared Contracts (`@repo/contracts/src/disclosure.ts`):** Canonical `ProviderDisclosurePolicy`, `ProviderType`, and immutable `DISCLOSURE_CONFIGS` mapping Google AI Studio and Groq fallback training terms.
+    2. **Design Tokens (`@repo/ui/src/tokens.ts`):** Extended `DESIGN_TOKENS` defining color palettes adhering to WCAG 2.1 AA contrast ratios (≥ 4.5:1 for normal text, ≥ 3:1 for large text and interactive boundaries), spacing scales, border radii, focus outlines, and glassmorphic elevations.
+    3. **Un-dismissible Disclosure Banner (`@repo/ui/src/components/disclosure-banner.tsx`):** Renders high-contrast warning with provider badge, explicit training terms copy, and link to Google AI Studio terms. Contains zero close buttons or dismissal state hooks (`BR-030`).
+    4. **Prompt Disclosure Notice (`@repo/ui/src/components/prompt-disclosure.tsx`):** Compact anchored variant rendered above all prompt textarea inputs.
+    5. **Public Marketing Components (`@repo/ui/src/components/`):** `LandingHero`, `NavigationHeader`, `FeatureGrid`, `PricingCard`, `PublicFooter`, and responsive Vanilla CSS stylesheets.
+    6. **Zero-Cost Serverless Delivery:** High-speed static generation (SSG) with zero runtime bundle bloat, zero Tailwind runtime overhead, and zero blocking third-party ad/tracking scripts.
+- **UX & Frontend Browser Specialists position:**
+  - Establish a glanceable, premium design system using Vanilla CSS custom properties (`tokens.ts` & CSS stylesheets).
+  - Enforce high-contrast dark-mode glassmorphic styling: `#202124` text on light `#FFFFFF`/`#F8F9FA` surfaces, `#FBBC04` / `#FEF7E0` warning tone for privacy disclosures, and `#4285F4` primary accent.
+  - Implement visible keyboard focus rings (`:focus-visible` with 2px solid `#4285F4` and 2px offset).
+  - Ensure zero cumulative layout shift (CLS < 0.1) by reserving explicit dimensions on images and cards.
+- **Security Architect position:**
+  - `BR-024` Public Page Isolation: Public marketing components must be pure functional components accepting static props; must never attempt to access Clerk tokens, session cookies, or user database records.
+  - `BR-030` Anti-Tampering Invariant: Banner must not read from `localStorage` to check if a user has "dismissed" it. Any attempt to pass a dismissal callback or inject hidden styles is rejected.
+- **Failure Mode Specialist position:**
+  - Enumerate failure modes FM-801..FM-804:
+    - `FM-801`: Client attempts to suppress or hide disclosure banner via DOM manipulation or client script.
+    - `FM-802`: Large uncompressed assets or font loading waterfall causing LCP > 2.0s or CLS > 0.1 on 4G connections (`NFR-018`).
+    - `FM-803`: Insufficient color contrast on secondary copy or interactive button borders failing WCAG 2.1 AA (`NFR-019`).
+    - `FM-804`: Accidental leakage of authenticated state or Clerk session cookies onto public marketing routes (`BR-024`).
+- **Sprint Agent position:**
+  - EPIC-008 decomposes into six atomic, single-session stories (S8.1 to S8.6):
+    - `S8.1`: Shared UI design tokens, component types, and provider disclosure contracts in `@repo/contracts` and `@repo/ui`.
+    - `S8.2`: Dynamic un-dismissible AI provider training disclosure banner and prompt wrapper in `@repo/ui`.
+    - `S8.3`: Public marketing landing hero, navigation, feature grid, and public footer in `@repo/ui`.
+    - `S8.4`: Zero-cost pricing transparency and daily quota breakdown card in `@repo/ui`.
+    - `S8.5`: Automated WCAG 2.1 AA accessibility audit suite using `axe-core` in `tests/ui/`.
+    - `S8.6`: Performance budget & Core Web Vitals simulation suite, component catalog update, and documentation synchronization.
+  - Clean sequential DAG: `S8.1 → S8.2 → S8.3 → S8.4 → S8.5 → S8.6`.
+
+## Round 2: Trade-offs & Deliberation
+- **Trade-off 1: Marketing Surface Architecture & Hosting — Next.js App Router Shared Route vs Separate Astro Application**
+  - *Option A (Separate `apps/landing` using Astro):* Fast static SSG site generator. *Cost:* Introduces a second runtime framework, separate deployment pipelines on Vercel, duplicate package dependencies, and cross-domain authentication hand-offs.
+  - *Option B (Shared `@repo/ui` Components in Next.js 15 App Router):* Encapsulate all landing components in `@repo/ui` with static generation (SSG) in Next.js App Router (`/`).
+  - *Synthesis & Consensus:* Option B adopted per `ADR-0001` and `milestone.md`. Deploys under a single Vercel Hobby project with zero cross-domain auth redirects, shares design tokens directly, and eliminates multi-app deployment overhead while easily achieving Lighthouse ≥ 90.
+- **Trade-off 2: CSS & Design System Architecture — Vanilla CSS with Design Tokens vs TailwindCSS vs CSS-in-JS**
+  - *Option A (TailwindCSS):* Utility classes. *Cost:* Requires postcss tooling and configuration overhead, potential class clutter, and conflicts with repo's clean Vanilla CSS standards (`CV-023`).
+  - *Option B (CSS-in-JS like styled-components / emotion):* Dynamic styling. *Cost:* Heavy runtime overhead in React 19, hydration penalties, and negative impact on LCP and FID metrics.
+  - *Option C (Vanilla CSS Design System with CSS Custom Properties & Typed Design Tokens):* Pure Vanilla CSS stylesheets in `@repo/ui/src/styles/` coupled with typed `DESIGN_TOKENS` in `@repo/ui/src/tokens.ts`.
+  - *Synthesis & Consensus:* Option C adopted. Zero runtime overhead, instant browser evaluation, seamless dark-mode glassmorphism, and guaranteed 100/100 Lighthouse performance compatibility.
+- **Trade-off 3: Disclosure Banner Implementation & Anti-Dismissal Invariant — Un-dismissible Component vs Dismissible Banner with Persistent Storage**
+  - *Option A (Dismissible Banner with "I Understand" button):* Stores dismissal in `localStorage`. *Cost:* Directly violates `BR-030` and `FR-030`. Regulatory terms dictate that free-tier Google AI Studio data training risks must be continuously visible to users whenever prompt inputs are submitted.
+  - *Option B (Structural Un-dismissible Component):* The component omits any close button or dismissal handler. Renders permanently as a layout anchor in the public landing view and directly attached above prompt textareas.
+  - *Synthesis & Consensus:* Option B adopted. Strictly satisfies `FR-030`, `CV-041`, and `BR-030`. Automated test asserts that banner cannot be hidden or dismissed.
+- **Trade-off 4: Accessibility Verification Strategy — Automated `axe-core` CI Test Suite vs Manual Checklist Audit**
+  - *Option A (Manual Checklist Audit):* Inspecting elements manually. *Cost:* Error-prone, lacks continuous regression protection in CI, and fails to satisfy evidence-based gate verification.
+  - *Option B (Automated axe-core Scan in Test Suite):* Programmatic evaluation of rendered DOM nodes against WCAG 2.1 AA rules in `tests/ui/accessibility.test.ts`.
+  - *Synthesis & Consensus:* Option B adopted. Provides repeatable, automated proof of zero critical/serious violations (`NFR-019`) before any PR merge.
+- **Trade-off 5: Dynamic Provider Training Policy Configuration — Centralized Policy Registry vs Hardcoded Component Strings**
+  - *Option A (Hardcoded Copy in JSX):* Direct strings in component files. *Cost:* Fragile when provider models or fallback conditions switch (e.g. Gemini 429 falling back to Groq Llama-3.3); violates DRY.
+  - *Option B (Centralized Policy Registry in `@repo/contracts`):* Typed `ProviderDisclosurePolicy` definitions in `packages/contracts/src/disclosure.ts` passed via props to `DisclosureBanner`.
+  - *Synthesis & Consensus:* Option B adopted. Decouples provider legal copy from visual presentation, enabling dynamic disclosure switching based on active model provider.
+
+## Round 3: Consensus & Decisions
+1. **Charter & Grounding Confirmed:** Milestone M8 scope encompasses `FR-022`, `FR-030`, `BR-024`, `BR-028..BR-030`, `CV-041..CV-044`, `NFR-018`, `NFR-019`. Risk tier classified as **MEDIUM** (public marketing surface, WCAG accessibility, and un-dismissible privacy governance).
+2. **Architecture Blueprint Sealed:** `05-m8-public-marketing-landing-and-privacy-governance.md` authored and approved, detailing design tokens, un-dismissible disclosure banner, marketing landing components, pricing transparency, and axe-core accessibility audit strategy.
+3. **Sprint Board Certified:** Board `M8-S1` authored in `m8-landing-disclosure/sprint-status.yaml` with six stories (`S8.1` to `S8.6`), explicit Change Matrices, and verified DAG.
+4. **PM Approval Granted:** `pm-agent` approves the M8 sprint plan for developer handoff. Because the workspace baseline is 100% green (259/259 pass across 47 test files, 11/11 build/typecheck clean), approval is **unconditional**.
+
+## Sealed Decision Register
+
+| Decision ID | Summary | Owner | Sealed State |
+|---|---|---|---|
+| **M8-PM-001** | Scope grounded in FR-022, FR-030, BR-024, BR-028..030, CV-041..044, NFR-018, NFR-019; classified MEDIUM risk tier | `pm-agent` | Sealed |
+| **M8-PM-002** | Unconditional PM approval for M8 sprint plan handoff to developer-agent | `pm-agent` | Sealed |
+| **M8-ARCH-001** | Public marketing and privacy governance components encapsulated in `@repo/ui` with zero runtime CSS overhead | `architect-agent` | Sealed |
+| **M8-ARCH-002** | Pure Vanilla CSS design tokens adhering strictly to WCAG 2.1 AA contrast ratios (≥ 4.5:1 text, ≥ 3:1 borders) and dark-mode glassmorphic aesthetics | `architect-agent` | Sealed |
+| **M8-ARCH-003** | Structural anti-tampering enforcement for dynamic AI provider training disclosure banner (`BR-030`, `FR-030`); zero dismissal controls | `architect-agent` | Sealed |
+| **M8-ARCH-004** | Centralized provider disclosure policy registry in `@repo/contracts/src/disclosure.ts` mapping Google AI Studio and Groq fallback training terms | `architect-agent` | Sealed |
+| **M8-SPR-001** | Six single-session stories `S8.1 → S8.2 → S8.3 → S8.4 → S8.5 → S8.6` with frozen Change Matrices | `sprint-agent` | Sealed |
+| **M8-SPR-002** | Automated test verification harness covering contracts, component rendering, anti-dismissal invariants, WCAG 2.1 AA axe-core audits, and performance budgets | `sprint-agent` | Sealed |
+
+## Rejected Alternatives (strongest argument, and why it lost)
+- **Standalone Astro Application (`apps/landing`)** — offers isolated SSG tooling; lost because it duplicates deployment pipelines on Vercel, introduces cross-domain cookie/auth complexities, and fractures monorepo component sharing.
+- **TailwindCSS for Styling** — rapid utility classes; lost because Vanilla CSS with CSS custom properties delivers zero build-time postcss dependencies, smaller runtime footprint, and seamless adherence to `CV-023`.
+- **Dismissible Banner with localStorage Cookie** — provides cleaner UI for returning visitors; lost because explicit legal and architectural invariants (`BR-030`, `FR-030`) strictly mandate that free-tier Google AI Studio model training risks remain continuously visible.
+- **Manual Accessibility Checklist** — simpler initial setup; lost because automated `axe-core` CI scans provide deterministic, regression-proof verification for Gate G5 and G6 certification.
+
+## Handoff & Next Steps
+1. Hand off to `developer-agent` via `handoff-019-sprint-to-developer-m8.md`.
+2. `developer-agent` starts with **S8.1** (shared UI tokens and disclosure contracts) and proceeds sequentially through **S8.6**.
+3. `test-agent` verifies each story against acceptance criteria and certifies closure.
+4. `sprint-agent` maintains board progress in `m8-landing-disclosure/sprint-status.yaml`.
+
+## Implementation note
+This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
+
+
 

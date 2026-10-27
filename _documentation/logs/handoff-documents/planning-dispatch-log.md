@@ -682,3 +682,92 @@ graph TD
   - Delivered artifact: `packages/observability/` (8 modules), `packages/contracts/src/observability.ts`, `packages/db/src/retention.ts`, `tests/observability/` (6 test suites).
   - Recommendations: 55/55 observability tests pass, 259/259 monorepo tests pass (0 fail across 47 files); 11/11 packages build and typecheck clean; Gate G6 PASS certified.
 - **Status:** ACCEPTED
+
+---
+
+### DSP-037: M8 Public Marketing Landing & Privacy Governance Architecture Blueprint
+- **Timestamp:** 2026-10-27T11:32:00Z
+- **Calling Agent:** `pm-agent` (Stage 2 Owner)
+- **Target Specialist:** `architect-agent` (Stage 3 Owner)
+- **Architectural Dimension:** Architecture & UI Systems
+- **Why Invoked (Rationale):**
+  > Design Milestone M8 public marketing landing page, shared UI tokens, un-dismissible AI provider training disclosure banner, and pricing transparency components adhering to FR-022, FR-030, BR-024, BR-030, NFR-018, NFR-019.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m8-landing-disclosure/milestone.md`
+  - `_documentation/planning/epics/epic-008-landing-and-disclosure.md`
+  - `_documentation/planning/prd.md` (FR-022, FR-030)
+  - `_documentation/planning/conventions.md` (CV-041..CV-044)
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/architecture/05-m8-public-marketing-landing-and-privacy-governance.md`
+  - Recommendations: Encapsulate shared components in `@repo/ui`; define canonical disclosure policy contracts in `@repo/contracts/src/disclosure.ts`; enforce un-dismissible banner invariant structurally with zero close buttons or storage bypasses (`BR-030`); employ pure Vanilla CSS design tokens with zero runtime overhead for Lighthouse performance ≥ 90.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-038: UX Glassmorphic Design System, Accessibility & Core Web Vitals
+- **Timestamp:** 2026-10-27T11:34:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `ux-specialist` & `frontend-browser-specialist`
+- **Architectural Dimension:** UX Design, Motion & Client Runtime
+- **Why Invoked (Rationale):**
+  > Establish WCAG 2.1 AA compliant design tokens (contrast ≥ 4.5:1 text, ≥ 3:1 borders), focus indicators, responsive layouts, and performance budgets (LCP < 2.0s, CLS < 0.1).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m8-public-marketing-landing-and-privacy-governance.md` §3, §4
+  - `packages/ui/src/index.ts`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m8-public-marketing-landing-and-privacy-governance.md` §3, §4
+  - Recommendations: Extend `DESIGN_TOKENS` with high-contrast text `#202124` on `#FFFFFF`/`#F8F9FA`, warning amber `#FBBC04`/`#FEF7E0`, and primary `#4285F4`; specify `:focus-visible` outline 2px solid; reserve card/hero dimensions to eliminate layout shifts (CLS < 0.1).
+- **Status:** ACCEPTED
+
+---
+
+### DSP-039: Public Surface Isolation & Anti-Tampering Security Review
+- **Timestamp:** 2026-10-27T11:36:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `security-architect`
+- **Architectural Dimension:** Security, Data Privacy & Egress Governance
+- **Why Invoked (Rationale):**
+  > Validate public page unauthenticated isolation (BR-024: zero cookies, zero tenant data) and anti-tampering enforcement for the un-dismissible AI provider training disclosure banner (BR-030).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m8-public-marketing-landing-and-privacy-governance.md` §5
+  - `_documentation/planning/epics/epic-008-landing-and-disclosure.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m8-public-marketing-landing-and-privacy-governance.md` §5
+  - Recommendations: Public marketing components must accept pure props with zero side-effects; forbid any access to auth tokens or Clerk cookies; banner component must strictly omit dismissal controls or localStorage suppressions; automate anti-dismissal assertion in tests.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-040: M8 Failure Modes & Effects Analysis (FMEA)
+- **Timestamp:** 2026-10-27T11:38:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `failure-mode-specialist`
+- **Architectural Dimension:** Reliability & Fault Tolerance
+- **Why Invoked (Rationale):**
+  > Bottom-up FMEA sweep for disclosure suppression, font layout shifts, contrast failures, and session leakage (FM-801..FM-804).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m8-public-marketing-landing-and-privacy-governance.md` §7
+  - `_documentation/planning/registers/failure-mode-register.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-801..FM-804)
+  - Recommendations: Ensure permanent DOM mounting of disclosure elements; restrict external font blocking; assert contrast in automated test suite; verify public routes return HTTP 200 without `Set-Cookie`.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-041: M8 Sprint Board Authoring & Developer Handoff
+- **Timestamp:** 2026-10-27T11:40:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `sprint-agent`
+- **Architectural Dimension:** Tactical Decomposition & Board Governance
+- **Why Invoked (Rationale):**
+  > Decompose EPIC-008 into six single-session atomic stories with frozen Change Matrices (`new_files`, `allowed_files`, `forbidden_files`), bind verification hooks to AC-8.1..AC-8.4, and author the sprint board for developer execution.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m8-landing-disclosure/milestone.md`
+  - `_documentation/planning/architecture/05-m8-public-marketing-landing-and-privacy-governance.md`
+  - `_documentation/planning/contracts/component-catalog.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/milestones/m8-landing-disclosure/sprint-status.yaml` + `stories/` (S8.1..S8.6)
+  - Recommendations: S8.1 design tokens & disclosure contracts; S8.2 un-dismissible disclosure banner & prompt wrapper; S8.3 landing hero, navigation & value propositions; S8.4 pricing transparency card; S8.5 automated axe-core WCAG 2.1 AA audit suite; S8.6 Lighthouse performance simulation & doc sync. Sequential DAG: `S8.1 → S8.2 → S8.3 → S8.4 → S8.5 → S8.6`.
+- **Status:** ACCEPTED
+

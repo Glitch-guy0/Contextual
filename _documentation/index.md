@@ -55,6 +55,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [05-m5-grounded-reasoning-engine.md](planning/architecture/05-m5-grounded-reasoning-engine.md) | Milestone M5 Architectural Blueprint | A | `architect-agent` |
 | [05-m6-pluggable-long-term-memory-store.md](planning/architecture/05-m6-pluggable-long-term-memory-store.md) | Milestone M6 Architectural Blueprint | A | `architect-agent` |
 | [05-m7-autonomous-maintenance-and-observability.md](planning/architecture/05-m7-autonomous-maintenance-and-observability.md) | Milestone M7 Architectural Blueprint | A | `architect-agent` |
+| [05-m8-public-marketing-landing-and-privacy-governance.md](planning/architecture/05-m8-public-marketing-landing-and-privacy-governance.md) | Milestone M8 Architectural Blueprint | A | `architect-agent` |
 | [m1-developer-golden-path/sprint-status.yaml](planning/milestones/m1-developer-golden-path/sprint-status.yaml) | Milestone M1 Sprint Board (Completed) | B | `sprint-agent` |
 | [m1-developer-golden-path/dev-log.md](planning/milestones/m1-developer-golden-path/dev-log.md) | Milestone M1 Developer Execution Log | C | `developer-agent` |
 | [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Completed) | A | `pm-agent` |
@@ -74,7 +75,9 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [m7-maintenance-observability/milestone.md](planning/milestones/m7-maintenance-observability/milestone.md) | Milestone M7 Charter (Ready for Implementation) | A | `pm-agent` |
 | [m7-maintenance-observability/sprint-status.yaml](planning/milestones/m7-maintenance-observability/sprint-status.yaml) | Milestone M7 Sprint Board (Ready for Dev) | B | `sprint-agent` |
 | [m7-maintenance-observability/pm-approval.md](planning/milestones/m7-maintenance-observability/pm-approval.md) | M7 PM Verification & Approval Record | A | `pm-agent` |
-| [m8-landing-disclosure/milestone.md](planning/milestones/m8-landing-disclosure/milestone.md) | Milestone M8 Charter (Planned) | A | `pm-agent` |
+| [m8-landing-disclosure/milestone.md](planning/milestones/m8-landing-disclosure/milestone.md) | Milestone M8 Charter (Approved for Implementation) | A | `pm-agent` |
+| [m8-landing-disclosure/sprint-status.yaml](planning/milestones/m8-landing-disclosure/sprint-status.yaml) | Milestone M8 Sprint Board (Ready for Dev) | B | `sprint-agent` |
+| [m8-landing-disclosure/pm-approval.md](planning/milestones/m8-landing-disclosure/pm-approval.md) | M8 PM Verification & Approval Record | A | `pm-agent` |
 | [m9-hardening-benchmark/milestone.md](planning/milestones/m9-hardening-benchmark/milestone.md) | Milestone M9 Charter (Planned) | A | `pm-agent` |
 | [ga-production-release/milestone.md](planning/milestones/ga-production-release/milestone.md) | Milestone GA Charter (Planned) | A | `pm-agent` |
 | [quality/verification.md](planning/quality/verification.md) | M2 Verification Plan & Truth Tables | A | `test-agent` |
@@ -111,9 +114,13 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [handoff-015](logs/handoff-documents/handoff-015-developer-to-test-m5.md) | Stage 4 M5 Implementation to Test Gate Handoff | C | `developer-agent` |
 | [handoff-016](logs/handoff-documents/handoff-016-sprint-to-developer-m6.md) | Stage 4 M6 Sprint Breakdown to Implementation Handoff | C | `sprint-agent` |
 | [handoff-017](logs/handoff-documents/handoff-017-sprint-to-developer-m7.md) | Stage 4 M7 Sprint Breakdown to Implementation Handoff | C | `sprint-agent` |
+| [handoff-018](logs/handoff-documents/handoff-018-developer-to-test-m7.md) | Stage 4 M7 Implementation to Test Gate Handoff | C | `developer-agent` |
+| [handoff-019](logs/handoff-documents/handoff-019-sprint-to-developer-m8.md) | Stage 4 M8 Sprint Breakdown to Implementation Handoff | C | `sprint-agent` |
+| [handoff-020](logs/handoff-documents/handoff-020-developer-to-test-m8.md) | Stage 4 M8 Implementation to Test Gate Handoff | C | `developer-agent` |
 | [m5-dev-log.md](planning/milestones/m5-reasoning-engine/dev-log.md) | Milestone M5 Developer Execution Log | C | `developer-agent` |
 | [m6-dev-log.md](planning/milestones/m6-pluggable-memory/dev-log.md) | Milestone M6 Developer Execution Log | C | `developer-agent` |
 | [m7-dev-log.md](planning/milestones/m7-maintenance-observability/dev-log.md) | Milestone M7 Developer Execution Log | C | `developer-agent` |
+| [m8-dev-log.md](planning/milestones/m8-landing-disclosure/dev-log.md) | Milestone M8 Developer Execution Log | C | `developer-agent` |
 | [questionnaire.yaml](planning/questionnaire.yaml) | Open questions for the user (0 pending) | user | user |
 | [delivery-strategy.yaml](system/delivery-strategy.yaml) | Process depth and artifact budget | B | `delivery-strategy-agent` |
 | [workflow-context.yaml](system/workflow-context.yaml) | Current workflow status | B | stage owners |
