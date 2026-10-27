@@ -73,6 +73,17 @@
         "typescript": "^5.7.3",
       },
     },
+    "packages/reasoning": {
+      "name": "@repo/reasoning",
+      "version": "0.1.0",
+      "dependencies": {
+        "@repo/contracts": "workspace:*",
+      },
+      "devDependencies": {
+        "@repo/config": "workspace:*",
+        "typescript": "^5.7.3",
+      },
+    },
     "packages/ui": {
       "name": "@repo/ui",
       "version": "0.1.0",
@@ -111,6 +122,8 @@
     "@repo/ingestion": ["@repo/ingestion@workspace:packages/ingestion"],
 
     "@repo/metering": ["@repo/metering@workspace:packages/metering"],
+
+    "@repo/reasoning": ["@repo/reasoning@workspace:packages/reasoning"],
 
     "@repo/ui": ["@repo/ui@workspace:packages/ui"],
 

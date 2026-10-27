@@ -32,6 +32,6 @@ describe("Milestone M0: Monorepo Build Pipeline & Typecheck Validation", () => {
       encoding: "utf-8",
     });
 
-    expect(output).toMatch(/(?:[4-8]) successful, ([4-8]) total/);
+    expect(output).toMatch(/(?:[4-9]) successful, ([4-9]) total/);
   });
 });
