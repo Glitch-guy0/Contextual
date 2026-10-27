@@ -6,6 +6,7 @@ export * from "./reasoning.js";
 export * from "./memory.js";
 export * from "./observability.js";
 export * from "./disclosure.js";
+export * from "./benchmarks.js";
 export { AppProblemError } from "./errors.js";
 export type {
   SourceType,
