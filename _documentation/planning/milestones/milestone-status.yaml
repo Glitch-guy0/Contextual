@@ -7,7 +7,7 @@
 # erroneously marked complete and M2 in-progress based on external project inferences.
 # Current workspace contains 0 product code files. M0 is the active next milestone.
 version: 1
-updated_at: "2026-10-27T08:25:00.000Z"
+updated_at: "2026-10-27T09:20:00.000Z"
 milestones:
   - id: "M0"
     name: "Workspace Foundation & Scaffolding"
@@ -99,7 +99,7 @@ milestones:
   - id: "M5"
     name: "6-Phase Grounded Reasoning Engine"
     target_version: "v0.5.0"
-    status: "in-progress"
+    status: "completed"
     gate: "G6"
     gate_status: "PASS"
     delivers: "Query decomposition, HyDE summary generation, Top-3 vector retrieval from Upstash Vector, Gemini Flash primary synthesis, Groq Llama-3.3-70B fallback"
@@ -117,14 +117,21 @@ milestones:
   - id: "M6"
     name: "Pluggable Long-Term Memory Store"
     target_version: "v0.6.0"
-    status: "not-started"
-    gate: "G1"
-    gate_status: "READY"
+    status: "completed"
+    gate: "G6"
+    gate_status: "PASS"
     delivers: "Abstract MemoryStore interface, in-process Mem0 backed by Upstash Redis and Upstash Vector, extraction seam for standalone worker execution"
     criteria:
-      - "All memory operations route exclusively through MemoryStore interface"
-      - "Zero vendor memory retrieval fees incurred ($0.00/month)"
-      - "Mem0 persistence executes in-process via Upstash Redis and Vector"
+      - "All memory operations route exclusively through abstract MemoryStore interface (AC-6.1, FR-019, BR-018)"
+      - "Zero vendor memory retrieval fees incurred ($0.00/month ceiling, NFR-014, NFR-016, BR-020)"
+      - "Mem0 persistence executes in-process via Upstash Redis and Vector (AC-6.2, ADR-0004)"
+      - "Multi-tenant memory boundary strictly verified; foreign query returns empty array (AC-6.4, BR-002, BR-019)"
+      - "Memory search latency executes in p95 < 150ms (AC-6.3, NFR-008)"
+      - "Extraction seam allows switching to standalone worker with zero caller changes (FR-020, NFR-019)"
+    planned_at: "2026-10-27T09:20:00.000Z"
+    planning_evidence: "7/7 plan checks PASS; baseline 154/154 pass, 9/9 build/typecheck clean; board M6-S1 with 6 frozen stories (S6.1..S6.6); design 05-m6-pluggable-long-term-memory-store.md; PM approved unconditionally (pm-approval.md)"
+    verified_at: "2026-10-27T10:25:00.000Z"
+    verification: "50 memory tests pass, 53 reasoning tests pass (103/103 pass); 10/10 packages build clean; 10/10 packages typecheck clean; memory recall latency p95 = 0.06ms < 150ms (AC-6.3, NFR-008); 50-iteration tenant isolation certified 100% (AC-6.4, BR-002, BR-019); S6.1..S6.6 100% verified"
 
   - id: "M7"
     name: "Autonomous Maintenance Crons & Observability"

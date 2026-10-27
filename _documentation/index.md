@@ -53,6 +53,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [05-m3-transient-ingestion-pipeline.md](planning/architecture/05-m3-transient-ingestion-pipeline.md) | Milestone M3 Architectural Blueprint | A | `architect-agent` |
 | [05-m4-notebook-workspace-and-domain-graph.md](planning/architecture/05-m4-notebook-workspace-and-domain-graph.md) | Milestone M4 Architectural Blueprint | A | `architect-agent` |
 | [05-m5-grounded-reasoning-engine.md](planning/architecture/05-m5-grounded-reasoning-engine.md) | Milestone M5 Architectural Blueprint | A | `architect-agent` |
+| [05-m6-pluggable-long-term-memory-store.md](planning/architecture/05-m6-pluggable-long-term-memory-store.md) | Milestone M6 Architectural Blueprint | A | `architect-agent` |
 | [m1-developer-golden-path/sprint-status.yaml](planning/milestones/m1-developer-golden-path/sprint-status.yaml) | Milestone M1 Sprint Board (Completed) | B | `sprint-agent` |
 | [m1-developer-golden-path/dev-log.md](planning/milestones/m1-developer-golden-path/dev-log.md) | Milestone M1 Developer Execution Log | C | `developer-agent` |
 | [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Completed) | A | `pm-agent` |
@@ -63,10 +64,12 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [m4-notebook-workspace/milestone.md](planning/milestones/m4-notebook-workspace/milestone.md) | Milestone M4 Charter (Approved with precondition P-1) | A | `pm-agent` |
 | [m4-notebook-workspace/sprint-status.yaml](planning/milestones/m4-notebook-workspace/sprint-status.yaml) | Milestone M4 Sprint Board (S4.1..S4.6) | B | `sprint-agent` |
 | [m4-notebook-workspace/pm-approval.md](planning/milestones/m4-notebook-workspace/pm-approval.md) | M4 PM Verification & Approval Record | A | `pm-agent` |
-| [m5-reasoning-engine/milestone.md](planning/milestones/m5-reasoning-engine/milestone.md) | Milestone M5 Charter (Ready for Implementation) | A | `pm-agent` |
-| [m5-reasoning-engine/sprint-status.yaml](planning/milestones/m5-reasoning-engine/sprint-status.yaml) | Milestone M5 Sprint Board (S5.1..S5.6) | B | `sprint-agent` |
+| [m5-reasoning-engine/milestone.md](planning/milestones/m5-reasoning-engine/milestone.md) | Milestone M5 Charter (Completed) | A | `pm-agent` |
+| [m5-reasoning-engine/sprint-status.yaml](planning/milestones/m5-reasoning-engine/sprint-status.yaml) | Milestone M5 Sprint Board (Completed) | B | `sprint-agent` |
 | [m5-reasoning-engine/pm-approval.md](planning/milestones/m5-reasoning-engine/pm-approval.md) | M5 PM Verification & Approval Record | A | `pm-agent` |
-| [m6-pluggable-memory/milestone.md](planning/milestones/m6-pluggable-memory/milestone.md) | Milestone M6 Charter (Planned) | A | `pm-agent` |
+| [m6-pluggable-memory/milestone.md](planning/milestones/m6-pluggable-memory/milestone.md) | Milestone M6 Charter (Completed) | A | `pm-agent` |
+| [m6-pluggable-memory/sprint-status.yaml](planning/milestones/m6-pluggable-memory/sprint-status.yaml) | Milestone M6 Sprint Board (Completed) | B | `sprint-agent` |
+| [m6-pluggable-memory/pm-approval.md](planning/milestones/m6-pluggable-memory/pm-approval.md) | M6 PM Verification & Approval Record | A | `pm-agent` |
 | [m7-maintenance-observability/milestone.md](planning/milestones/m7-maintenance-observability/milestone.md) | Milestone M7 Charter (Planned) | A | `pm-agent` |
 | [m8-landing-disclosure/milestone.md](planning/milestones/m8-landing-disclosure/milestone.md) | Milestone M8 Charter (Planned) | A | `pm-agent` |
 | [m9-hardening-benchmark/milestone.md](planning/milestones/m9-hardening-benchmark/milestone.md) | Milestone M9 Charter (Planned) | A | `pm-agent` |

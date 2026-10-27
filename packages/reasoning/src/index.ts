@@ -12,3 +12,4 @@ export * from "./providers/gemini.js";
 export * from "./providers/groq.js";
 export * from "./synthesis.js";
 export * from "./circuit-breaker.js";
+export * from "./memory-hook.js";
