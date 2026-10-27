@@ -286,3 +286,114 @@ This is a DBW documentation and coordination record. All approvals are represent
 
 ## Implementation note
 This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
+
+---
+
+# Session 4 — M6 Planning Round-Table: Pluggable Long-Term Memory Store (PM · Architect · Sprint)
+
+## Session Meta
+- **Date:** 2026-10-27T09:15:00.000Z
+- **State:** Phase 4 (Milestone Detail) → Phase 5 (Implementation Planning)
+- **Task:** Plan M6 Pluggable Long-Term Memory Store (`v0.6.0`) for implementation; author architecture blueprint, shared contracts, and sprint board with frozen Change Matrices; then verify and seal PM approval.
+- **Mode:** Planning → Design → Board → Approval
+- **Session Chairs:** `pm-agent` (Stage 2 Owner), `architect-agent` (Stage 3 Owner), `sprint-agent` (Board Owner)
+- **Log:** this file · **Dispatches:** DSP-026..DSP-030 · **Handoff:** `handoff-015-sprint-to-developer-m6`
+
+## Participants
+- `pm-agent` — requirements governance, grounding validation, risk-tier classification, approval authority
+- `architect-agent` — hexagonal MemoryStore architecture, in-process Mem0 adapter design, extraction seam, OpenAPI contract, component catalog
+- `sprint-agent` — epic slicing, frozen Change Matrices, sprint board authoring (`sprint-status.yaml`), story cards
+- `data-architect` — Upstash Redis key topology, Upstash Vector semantic memory payload and namespace filtering
+- `security-architect` — cross-tenant isolation enforcement (`BR-002`, `BR-019`), user memory purge cascades, prompt injection hygiene
+- `failure-mode-specialist` — FMEA sweep for memory store degradation, embedding latency, and cold-start fallback (FM-601..FM-604)
+
+## Round 1: Positions
+- **PM Agent position:**
+  - Milestone M6 introduces persistent cross-session memory (`v0.6.0`), allowing Contextual to remember salient user preferences, previous research themes, and domain constraints across sessions.
+  - Grounding is anchored in `project-brief.md` (`FR-019`, `FR-020`, `FR-023`, `BR-002`, `BR-018`, `BR-019`, `BR-020`, `NFR-008`, `NFR-014`, `NFR-016`, `NFR-019`) and `ADR-0004` (Unified Upstash Serverless Ecosystem).
+  - Non-negotiable requirements:
+    1. 100% of memory interactions route exclusively through abstract `MemoryStore` interface; domain modules MUST NEVER import vendor memory SDKs directly (`FR-019`, `BR-018`).
+    2. Strict multi-tenant isolation: User B must never retrieve or mutate User A's memories; foreign queries return empty set or 404 (`BR-002`, `BR-019`, `AC-6.4`).
+    3. Zero vendor memory fees: $0.00/month infrastructure ceiling strictly maintained with zero credit cards (`NFR-014`, `NFR-016`, `BR-020`).
+    4. Memory search latency SLA: p95 query latency < 150ms (`NFR-008`, `AC-6.3`).
+    5. Modular monolith extraction seam: caller routes interact with the identical `MemoryStore` interface regardless of whether running `in-process` or via a standalone worker (`FR-020`, `NFR-019`).
+    6. Complete user memory purge: `deleteUserMemories(userId)` purges all episodic vectors and entity graph keys idempotently.
+  - Baseline health: Green runway. 154/154 tests pass, 9/9 packages build and typecheck cleanly. No blocking precondition needed.
+- **Architect Agent position:**
+  - Memory capabilities belong in a new internal workspace package `@repo/memory`, consuming `@repo/contracts` and `@repo/config`.
+  - Core hexagonal architecture:
+    1. Port: `MemoryStore` interface exported from `@repo/contracts/src/memory.ts`.
+    2. Primary Adapter: `InProcessMem0Store` in `@repo/memory` combining `@upstash/redis` (for user entity graph and session KV associations) and `@upstash/vector` (for semantic vector similarity search).
+    3. Seam Adapter: `WorkerMemoryStore` in `@repo/memory` providing an HTTP-based seam client targeting a standalone worker endpoint without altering caller call sites (`FR-020`).
+    4. Factory: `createMemoryStore(config)` dynamically instantiates the appropriate adapter based on environment variable `MEMORY_STORE_MODE` (`"in-process"` vs `"worker"`).
+    5. Embeddings: Uses Google `gemini-embedding-001` (1,500 RPD free) with in-process `@huggingface/transformers` ONNX fallback, standardizing on 768-dim embeddings matching M3 and M5.
+    6. Integration Hook: `@repo/reasoning` consumes `MemoryStore` via a pre-synthesis recall hook, appending recalled memories into LLM prompt context as user preferences.
+  - OpenAPI & Catalog: Add `/users/me/memories` CRUD/search endpoints in `api-contract.openapi.yaml` and update `comp-memory` in `component-catalog.yaml`.
+- **Sprint Agent position:**
+  - EPIC-006 breaks into six atomic, single-session stories (S6.1 to S6.6):
+    - `S6.1`: Shared memory contracts, DTO types, and `MemoryStore` interface in `@repo/contracts`.
+    - `S6.2`: `@repo/memory` package scaffolding, configuration, and seam factory.
+    - `S6.3`: In-process Upstash Redis entity and working memory store adapter.
+    - `S6.4`: In-process Upstash Vector semantic memory retrieval adapter with tenant filtering.
+    - `S6.5`: Unified in-process Mem0 memory engine adapter and standalone worker HTTP extraction seam adapter.
+    - `S6.6`: Reasoning engine memory integration hook, multi-tenant isolation suite, and latency SLA benchmark.
+  - Clean sequential DAG: `S6.1 → S6.2 → S6.3 → S6.4 → S6.5 → S6.6`.
+  - All stories conform strictly to the Two-Floor boundary (no root files in `allowed_files`).
+
+## Round 2: Trade-offs & Deliberation
+- **Trade-off 1: Memory Persistence Engine — In-Process Upstash Stack vs Managed Mem0 Cloud SaaS vs Local SQLite**
+  - *Option A (Managed Mem0 Cloud SaaS):* Hosted managed platform. *Cost:* Incurs recurring monthly vendor fees ($19–$99/month), requiring credit cards and violating the $0.00/month infrastructure ceiling (`NFR-014`, `NFR-016`).
+  - *Option B (Local SQLite / LibSQL):* File-backed local storage. *Cost:* Serverless edge/ephemeral functions on Vercel Hobby lose local file storage on spin-down; cross-instance memory requires distributed storage.
+  - *Option C (In-Process Mem0 Adapter backed by Upstash Redis & Upstash Vector):* Unified serverless persistence using existing free Upstash infrastructure per `ADR-0004`.
+  - *Synthesis & Consensus:* Option C adopted. Strictly satisfies $0.00/month ceiling, serverless stateless runtime compatibility, and sub-150ms latency SLA.
+- **Trade-off 2: Extraction Seam Architecture — Dynamic Factory vs Compile-Time Hardcoded Import**
+  - *Option A (Hardcoded Monolith Import):* Directly instantiate `InProcessMem0Store` in callers. *Cost:* Violates `FR-020` and `NFR-019`, making extraction to a standalone worker require invasive refactoring across callers.
+  - *Option B (Polymorphic Factory with Seam Adapter):* `createMemoryStore()` instantiates either `InProcessMem0Store` or `WorkerMemoryStore` based on config.
+  - *Synthesis & Consensus:* Option B adopted. Callers only import `MemoryStore` interface from `@repo/contracts`, ensuring complete extraction seam portability with zero code changes (`AC-6.1`).
+- **Trade-off 3: Memory Semantic Embeddings — Reusing Gemini Embeddings vs Secondary Provider**
+  - *Option A (Separate Cloudflare Workers AI Embeddings):* Dedicated embedding endpoint. *Cost:* Re-introduces Cloudflare Workers AI free quota friction (10k Neurons/day) superseded by `ADR-0004`.
+  - *Option B (Google `gemini-embedding-001` with In-Process ONNX Fallback):* Unified embedding pipeline matching M3/M5.
+  - *Synthesis & Consensus:* Option B adopted. 768-dim embeddings integrate natively with Upstash Vector index without schema divergence.
+- **Trade-off 4: Reasoning Integration Lifecycle — Asynchronous Post-Synthesis Ingestion vs Synchronous In-Line Ingestion**
+  - *Option A (Synchronous In-Line Ingestion):* Extract and index memories during token generation stream. *Cost:* Incurs 500–1200ms of LLM extraction and vector upsert latency during user streaming, degrading TTFT and E2E latency.
+  - *Option B (Pre-Synthesis Recall + Asynchronous Post-Response Ingestion):* Query memory before synthesis (p95 < 150ms); dispatch memory extraction and upsert asynchronously post-response via non-blocking promise or QStash.
+  - *Synthesis & Consensus:* Option B adopted. Preserves streaming response responsiveness while guaranteeing cross-session persistence.
+- **Trade-off 5: Tenant Memory Deletion Cascade (`BR-002`, `BR-019`)**
+  - *Option A (Soft-Delete Flag Only):* Set `deleted: true` on Redis entities. *Cost:* Leaves vectors searchable in Upstash Vector unless complex filters are applied; risks data leakage.
+  - *Option B (Atomic Cascade Purge):* `deleteUserMemories(userId)` queries user vector IDs and issues parallel delete in Upstash Vector, while deleting Redis keys and index sets atomically.
+  - *Synthesis & Consensus:* Option B adopted. Guarantees complete data sanitization and verifiable multi-tenant isolation.
+
+## Round 3: Consensus & Decisions
+1. **Charter & Grounding Confirmed:** Milestone M6 scope encompasses `FR-019`, `FR-020`, `FR-023`, `BR-002`, `BR-018`, `BR-019`, `BR-020`, `NFR-008`, `NFR-014`, `NFR-016`, `NFR-019`. Risk tier classified as **MEDIUM**.
+2. **Architecture Blueprint Sealed:** `05-m6-pluggable-long-term-memory-store.md` authored and approved, detailing the hexagonal MemoryStore architecture, in-process Mem0 Upstash adapter, extraction seam, and reasoning integration.
+3. **Sprint Board Certified:** Board `M6-S1` authored in `m6-pluggable-memory/sprint-status.yaml` with six stories (`S6.1` to `S6.6`), explicit Change Matrices, and verified DAG.
+4. **PM Approval Granted:** `pm-agent` approves the M6 sprint plan for developer handoff. Because the workspace baseline is 100% green (154/154 pass, 9/9 build/typecheck pass), approval is **unconditional**.
+
+## Sealed Decision Register
+
+| Decision ID | Summary | Owner | Sealed State |
+|---|---|---|---|
+| **M6-PM-001** | Scope grounded in FR-019, FR-020, FR-023, BR-002, BR-018..020, NFR-008, NFR-014, NFR-016, NFR-019; classified MEDIUM risk | `pm-agent` | Sealed |
+| **M6-PM-002** | Unconditional PM approval for M6 sprint plan handoff to developer-agent | `pm-agent` | Sealed |
+| **M6-ARCH-001** | Hexagonal `MemoryStore` interface in `@repo/contracts` with in-process `@repo/memory` package | `architect-agent` | Sealed |
+| **M6-ARCH-002** | In-process Mem0 engine backed by Upstash Redis (entity graph/KV) and Upstash Vector (768-dim semantic search) | `architect-agent` | Sealed |
+| **M6-ARCH-003** | Configurable extraction seam: dynamic factory instantiating `InProcessMem0Store` or `WorkerMemoryStore` with zero caller changes | `architect-agent` | Sealed |
+| **M6-ARCH-004** | Pre-synthesis memory recall hook injecting user context into prompt + asynchronous post-response memory extraction | `architect-agent` | Sealed |
+| **M6-SPR-001** | Six single-session stories `S6.1 → S6.2 → S6.3 → S6.4 → S6.5 → S6.6` with frozen Change Matrices | `sprint-agent` | Sealed |
+| **M6-SPR-002** | Multi-tenant isolation test harness verifying zero cross-user memory leakage and p95 < 150ms search latency SLA | `sprint-agent` | Sealed |
+
+## Rejected Alternatives (strongest argument, and why it lost)
+- **Managed Mem0 Cloud SaaS** — effortless setup and fully hosted dashboard; lost because recurring monthly subscription fees ($19+/mo) violate the non-negotiable $0.00/month infrastructure ceiling (`NFR-014`, `NFR-016`).
+- **Hardcoded In-Process Monolith Imports** — faster initial implementation; lost because it violates modular extraction seam requirements (`FR-020`, `NFR-019`), creating severe technical debt for future worker decoupling.
+- **Synchronous In-Line Memory Upsert** — ensures immediate consistency before streaming starts; lost because it adds 500–1200ms latency to the user's chat response stream, violating interactive performance budgets.
+- **Soft-Delete Only for User Memories** — faster deletion operations; lost because leaving vectors in Upstash Vector introduces cross-tenant leakage risks and violates complete data erasure invariants (`BR-002`, `BR-019`).
+
+## Handoff & Next Steps
+1. Hand off to `developer-agent` via `handoff-015-sprint-to-developer-m6.md`.
+2. `developer-agent` starts with **S6.1** (shared memory contracts in `@repo/contracts`) and proceeds sequentially through **S6.6**.
+3. `test-agent` verifies each story against acceptance criteria and certifies closure.
+4. `sprint-agent` maintains board progress in `m6-pluggable-memory/sprint-status.yaml`.
+
+## Implementation note
+This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
+

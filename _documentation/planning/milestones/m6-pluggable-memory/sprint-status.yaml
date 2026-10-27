@@ -1,0 +1,298 @@
+# Sprint Status — M6: Pluggable Long-Term Memory Store
+# Sprint Owner: sprint-agent
+# Planned Version: v0.6.0
+sprint:
+  id: M6-S1
+  milestone: M6
+  status: completed
+  phased_deployment_profile:
+    mode: expand
+    risk_tier: medium
+    target_version: "0.6.0"
+    release_model: feature-expand
+    expand_tier: "1-a"
+    expand_geometry_note: >-
+      M6 is an expand-phase, backward-compatible release: introduces @repo/memory
+      package, MemoryStore contract, and /users/me/memories endpoints. No database
+      relational schema migration is required. Existing error catalogue remains intact.
+  target_end: 2026-12-15
+  start_on: "manual"
+  stories:
+    - S6.1
+    - S6.2
+    - S6.3
+    - S6.4
+    - S6.5
+    - S6.6
+
+stories:
+  - id: S6.1
+    title: Shared memory contracts, DTO types, and MemoryStore interface
+    status: complete
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M6-1
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — typed TypeScript contracts for MemoryStore port, memory items, and search options; no third-party framework."
+    acceptance:
+      - "MemoryStore, MemoryItem, MemorySearchOptions, MemoryAddResult, MemoryDeleteResult, MemoryCategory, MemoryStoreMode exported from @repo/contracts"
+      - "Assert and validation helpers for CreateMemoryRequest and MemorySearchOptions validate length and types"
+      - "Zero vendor memory SDK types exposed across @repo/contracts boundary (BR-018)"
+      - "Closed 17-member RFC 9457 error catalogue remains exactly 17 entries with zero modifications"
+    tests:
+      - "tests/memory/contracts.test.ts — contract export validation and DTO structure tests"
+      - "bun test packages/contracts/tests/errors.test.ts — catalogue test passes 5/5"
+    observability:
+      - "Static TypeScript typecheck and runtime DTO validator assertions"
+    verified: true
+    depends_on: []
+    change_matrix:
+      new_files:
+        - "packages/contracts/src/memory.ts"
+        - "tests/memory/contracts.test.ts"
+      allowed_files:
+        - "packages/contracts/src/**"
+        - "tests/memory/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S6.2
+    title: Package scaffolding @repo/memory, configuration, and seam factory
+    status: complete
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M6-2
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — standard Turborepo package scaffolding extending tsconfig.node.json with polymorphic factory seam."
+    acceptance:
+      - "packages/memory package.json, tsconfig.json, and src/index.ts build and typecheck cleanly"
+      - "createMemoryStore(config) factory instantiates MemoryStore based on MEMORY_STORE_MODE (in-process vs worker)"
+      - "Export memory package entry points cleanly without circular dependencies"
+    tests:
+      - "tests/memory/factory.test.ts — factory instantiation and configuration fallback tests"
+      - "turbo run build --filter=@repo/memory && turbo run typecheck --filter=@repo/memory"
+    observability:
+      - "Build artifact verification and type assertion tests"
+    verified: true
+    depends_on:
+      - S6.1
+    change_matrix:
+      new_files:
+        - "packages/memory/package.json"
+        - "packages/memory/tsconfig.json"
+        - "packages/memory/src/index.ts"
+        - "packages/memory/src/factory.ts"
+        - "tests/memory/factory.test.ts"
+      allowed_files:
+        - "packages/memory/**"
+        - "tests/memory/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S6.3
+    title: In-process Upstash Redis entity and working memory store adapter
+    status: complete
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M6-3
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — Redis key-value adapter wrapping @upstash/redis REST client for user memory index and entity payloads."
+    acceptance:
+      - "UpstashRedisMemoryStore implements add, get, list, delete, and deleteUserMemories operations"
+      - "Memory items stored under mem:entity:{userId}:{memoryId} with user set mem:user:{userId}:ids"
+      - "Multi-tenant key isolation strictly enforced: user_id scoping prevents cross-user access (BR-002, BR-018)"
+      - "deleteUserMemories purges all entity keys and removes the user id index set completely"
+    tests:
+      - "tests/memory/redis-memory.test.ts — CRUD operations, key namespacing, and user isolation tests"
+    observability:
+      - "Structured error logging with correlation_id on Redis connection degradation"
+    verified: true
+    depends_on:
+      - S6.2
+    change_matrix:
+      new_files:
+        - "packages/memory/src/redis-memory.ts"
+        - "tests/memory/redis-memory.test.ts"
+      allowed_files:
+        - "packages/memory/**"
+        - "tests/memory/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S6.4
+    title: In-process Upstash Vector semantic memory retrieval adapter with tenant filtering
+    status: complete
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M6-4
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — semantic vector adapter wrapping @upstash/vector REST client and 768-dim embeddings."
+    acceptance:
+      - "UpstashVectorMemoryStore generates dense embeddings and queries Upstash Vector with mandatory user_id filter"
+      - "Multi-tenant boundary verification: User B cannot retrieve memories seeded by User A (AC-6.4, BR-002, BR-019)"
+      - "deleteUserMemories purges vector points mem_{userId}_{memoryId} associated with user"
+      - "Query latency executes in p95 < 150ms adhering to SLA (AC-6.3, NFR-008)"
+    tests:
+      - "tests/memory/vector-memory.test.ts — semantic search, tenant filtering, and deletion cascade tests"
+    observability:
+      - "Search latency timing logs and upstream vector HTTP status telemetry"
+    verified: true
+    depends_on:
+      - S6.3
+    change_matrix:
+      new_files:
+        - "packages/memory/src/vector-memory.ts"
+        - "tests/memory/vector-memory.test.ts"
+      allowed_files:
+        - "packages/memory/**"
+        - "tests/memory/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S6.5
+    title: In-process Mem0 engine adapter and remote worker extraction seam
+    status: complete
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M6-5
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — in-process Mem0 coordinator combining Redis entity store + Vector semantic search with Worker HTTP seam adapter."
+    acceptance:
+      - "InProcessMem0Store coordinates fact extraction, semantic deduplication (similarity > 0.85), and unified search"
+      - "WorkerMemoryStore implements identical MemoryStore interface delegating to worker HTTP endpoint (FR-020, NFR-019)"
+      - "Switching between in-process and worker mode executes seamlessly without modifying caller contracts (AC-6.1)"
+      - "Zero external vendor memory subscription fees ($0.00/month ceiling, NFR-014, NFR-016)"
+    tests:
+      - "tests/memory/extraction-seam.test.ts — polymorphic store interface parity and mode toggle tests"
+      - "tests/memory/mem0-store.test.ts — deduplication and unified recall tests"
+    observability:
+      - "Extraction status telemetry (created vs updated vs deduplicated)"
+    verified: true
+    depends_on:
+      - S6.4
+    change_matrix:
+      new_files:
+        - "packages/memory/src/mem0-store.ts"
+        - "packages/memory/src/worker-store.ts"
+        - "tests/memory/mem0-store.test.ts"
+        - "tests/memory/extraction-seam.test.ts"
+      allowed_files:
+        - "packages/memory/**"
+        - "tests/memory/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S6.6
+    title: Reasoning pipeline memory recall hook, E2E isolation suite, and latency benchmark
+    status: complete
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M6-6
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — pre-synthesis memory recall hook in @repo/reasoning with comprehensive tenant isolation and latency benchmarks."
+    acceptance:
+      - "Pre-synthesis memory hook queries MemoryStore.search() and injects relevant user memories into LLM prompt"
+      - "Asynchronous post-response hook dispatches memory extraction without blocking streaming synthesis"
+      - "Multi-tenant isolation suite verifies User B receives empty array for User A memories across 50 iterations (AC-6.4)"
+      - "Benchmark suite certifies p95 memory retrieval latency < 150ms under concurrent load (AC-6.3, NFR-008)"
+      - "Monorepo builds and typechecks cleanly (10/10 packages) with 0 lint errors"
+    tests:
+      - "tests/memory/tenant-isolation.test.ts — comprehensive multi-tenant isolation suite"
+      - "tests/memory/latency-sla.test.ts — p95 < 150ms latency benchmark"
+      - "tests/memory/reasoning-memory.test.ts — integration test between memory hook and reasoning engine"
+      - "turbo run build && turbo run typecheck"
+    observability:
+      - "Pre-synthesis memory recall duration metrics and memory match count tags"
+    verified: true
+    depends_on:
+      - S6.5
+    change_matrix:
+      new_files:
+        - "packages/reasoning/src/memory-hook.ts"
+        - "tests/memory/tenant-isolation.test.ts"
+        - "tests/memory/latency-sla.test.ts"
+        - "tests/memory/reasoning-memory.test.ts"
+      allowed_files:
+        - "packages/reasoning/**"
+        - "tests/memory/**"
+        - "packages/memory/**"
+        - "packages/contracts/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"

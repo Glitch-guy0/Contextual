@@ -581,6 +581,137 @@ paths:
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
 
+  /users/me/memories:
+    post:
+      summary: Add or Extract User Memory
+      operationId: addMemory
+      tags: [Memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMemoryRequest'
+      responses:
+        '201':
+          description: Memory record stored or updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMemoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      summary: List User Long-Term Memories
+      operationId: listMemories
+      tags: [Memory]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: List of stored user memories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemoryItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      summary: Cascade Purge All User Memories (BR-002, BR-019)
+      operationId: deleteAllUserMemories
+      tags: [Memory]
+      responses:
+        '200':
+          description: User memories purged across vector and Redis stores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteMemoriesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/memories/search:
+    get:
+      summary: Semantic Similarity Search Over User Memories
+      operationId: searchMemories
+      tags: [Memory]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 5
+            maximum: 20
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [preference, fact, directive, context]
+      responses:
+        '200':
+          description: Ranked semantic memory hits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemoryItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/memories/{memoryId}:
+    get:
+      summary: Retrieve Single Memory by ID
+      operationId: getMemory
+      tags: [Memory]
+      parameters:
+        - $ref: '#/components/parameters/MemoryId'
+      responses:
+        '200':
+          description: Memory record details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete Specific Memory Item
+      operationId: deleteMemory
+      tags: [Memory]
+      parameters:
+        - $ref: '#/components/parameters/MemoryId'
+      responses:
+        '204':
+          description: Memory item deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -612,8 +743,79 @@ components:
       schema:
         type: string
         format: uuid
+    MemoryId:
+      name: memoryId
+      in: path
+      required: true
+      description: Unique identifier of the long-term memory item
+      schema:
+        type: string
 
   schemas:
+    CreateMemoryRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 3
+          maxLength: 5000
+          description: User memory, preference, or fact content
+        category:
+          type: string
+          enum: [preference, fact, directive, context]
+          default: preference
+        metadata:
+          type: object
+          additionalProperties: true
+
+    CreateMemoryResponse:
+      type: object
+      required: [memory_id, status, content]
+      properties:
+        memory_id:
+          type: string
+        status:
+          type: string
+          enum: [created, updated, deduplicated]
+        content:
+          type: string
+
+    MemoryItem:
+      type: object
+      required: [id, user_id, content, created_at, updated_at]
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+          enum: [preference, fact, directive, context]
+        score:
+          type: number
+          format: float
+          description: Cosine similarity score (populated in search results)
+        metadata:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DeleteMemoriesResponse:
+      type: object
+      required: [deleted_count]
+      properties:
+        deleted_count:
+          type: integer
+          minimum: 0
+
     CreateNodeRequest:
       type: object
       required: [title, kind]

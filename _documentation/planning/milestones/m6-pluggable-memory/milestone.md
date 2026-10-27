@@ -2,9 +2,9 @@
 doc_class: canonical
 owner: pm-agent
 milestone: M6
-status: planned
+status: ready-for-implementation
 created: 2026-10-23
-last_verified: 2026-10-23
+last_verified: 2026-10-27
 review_cadence_days: 90
 code_refs: []
 related:
@@ -13,6 +13,9 @@ related:
   - _documentation/planning/prd.md
   - _documentation/planning/conventions.md
   - _documentation/planning/milestones/overview.md
+  - _documentation/planning/milestones/m6-pluggable-memory/sprint-status.yaml
+  - _documentation/planning/milestones/m6-pluggable-memory/pm-approval.md
+  - _documentation/planning/architecture/05-m6-pluggable-long-term-memory-store.md
   - _documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md
   - _documentation/planning/epics/epic-006-pluggable-memory-store.md
 supersedes: []
@@ -22,10 +25,10 @@ pinned: false
 
 # Milestone Charter — M6: Pluggable Long-Term Memory Store (v0.6.0)
 
-> **Status:** Planned (Follows M5 Grounded Reasoning Engine)  
-> **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-23  
+> **Status:** Ready for Implementation (PM Approved Unconditionally)  
+> **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-27  
 > **Target Version:** `v0.6.0` · **Risk Tier:** MEDIUM  
-> **Grounding:** `project-brief.md` (FR-023; BR-018..BR-020; NFR-008, NFR-016; ADR-0004)  
+> **Grounding:** `project-brief.md` (FR-019, FR-020, FR-023; BR-002, BR-018..BR-020; NFR-008, NFR-014, NFR-016, NFR-019; ADR-0004)  
 
 ```mermaid
 graph TD
@@ -91,6 +94,7 @@ Milestone M6 introduces cross-session user memory without incurring external ven
 
 ## 5. Next Steps & Pipeline Handoff
 
-1. Follows completion and sign-off of Milestone M5 (Reasoning Engine).
-2. `sprint-agent` authors `m6-pluggable-memory/sprint-status.yaml` and story cards.
-3. Hands off to `developer-agent` for adapter and interface implementation.
+1. Milestone M5 (Reasoning Engine) verified complete (154/154 pass, 9/9 build/typecheck).
+2. `sprint-agent` authored `m6-pluggable-memory/sprint-status.yaml` and 6 story cards (`S6.1`..`S6.6`).
+3. `pm-agent` approved sprint plan unconditionally (`pm-approval.md`, Gate G5 PASS).
+4. Hands off to `developer-agent` starting with story **S6.1** in dependency order.
