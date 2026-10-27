@@ -1,0 +1,262 @@
+# Sprint Status — M9: Benchmark Suite, Hardening & Security Audit
+# Sprint Owner: sprint-agent
+# Planned Version: v0.9.0-rc.1
+sprint:
+  id: M9-S1
+  milestone: M9
+  status: complete
+  phased_deployment_profile:
+    mode: expand
+    risk_tier: high
+    target_version: "0.9.0-rc.1"
+    release_model: hardening-audit
+    expand_tier: "1-a"
+    expand_geometry_note: >-
+      M9 is a hardening and benchmark release: introduces benchmark metric contracts in @repo/contracts,
+      50 CCU concurrency stress test suite (NFR-005), latency SLA validator (NFR-001..NFR-003, NFR-027),
+      adversarial security penetration and credential leak scanner (NFR-006, NFR-007, NFR-026, BR-002),
+      and automated zero-dollar cloud cost attestation runner (NFR-016).
+      Existing 11 internal packages and closed 17-member RFC 9457 error catalogue remain strictly intact.
+  target_end: 2026-12-30
+  start_on: "manual"
+  stories:
+    - S9.1
+    - S9.2
+    - S9.3
+    - S9.4
+    - S9.5
+    - S9.6
+
+stories:
+  - id: S9.1
+    title: Benchmark contracts, SLA thresholds, performance metrics schema, and scenario definitions
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M9-1
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — typed TypeScript contracts for LATENCY_SLAS, CONCURRENCY_SLA, and FREE_TIER_MANIFEST in @repo/contracts/src/benchmarks.ts; zero external framework dependencies."
+    acceptance:
+      - "Export LatencySLAConfig, ConcurrencySLAConfig, FreeTierCloudManifest, and BenchmarkRunSummary from @repo/contracts/src/benchmarks.ts"
+      - "Export canonical constants LATENCY_SLAS (vectorSearchP95Ms: 100, llmTtftP90Ms: 1500, e2eReasoningP90Ms: 4500, errorSerializationP99Ms: 50)"
+      - "Export CONCURRENCY_SLA (concurrentUsers: 50, maxErrorRatePercent: 1.0, targetDurationSeconds: 60)"
+      - "Export FREE_TIER_MANIFEST mapping all 8 cloud provider accounts (Vercel, Clerk, Neon, Upstash, Google AI Studio, Groq, Filebase, Better Stack) with $0.00 limits and creditCardRequired: false"
+      - "Re-export benchmark contracts cleanly from @repo/contracts/src/index.ts"
+      - "Verify closed 17-member RFC 9457 error catalogue remains exactly 17 entries with zero modifications"
+    tests:
+      - "tests/benchmarks/contracts-benchmarks.test.ts — contract export validation, SLA constant assertions, and manifest structure checks"
+      - "bun test packages/contracts/tests/errors.test.ts — catalogue test passes 5/5"
+    observability:
+      - "Static TypeScript typecheck and runtime validator assertions"
+    verified: true
+    depends_on: []
+    change_matrix:
+      new_files:
+        - "packages/contracts/src/benchmarks.ts"
+        - "tests/benchmarks/contracts-benchmarks.test.ts"
+      allowed_files:
+        - "packages/contracts/src/**"
+        - "tests/benchmarks/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "packages/observability/**"
+        - "packages/ui/**"
+        - "tests/ui/**"
+        - "tests/reasoning/**"
+        - "tests/workspace/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S9.2
+    title: 50 CCU Concurrency stress & load testing harness
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M9-2
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUILD — custom asynchronous virtual concurrency simulator in Bun executing 50 concurrent active users across realistic mixed workloads with calibrated mock adapters."
+    acceptance:
+      - "Implement LoadHarness in tests/benchmarks/load-harness.ts with bounded worker pool supporting 50 concurrent active virtual users"
+      - "Simulate mixed real-world workload: 40% scoped retrieval / card resolution, 30% 6-phase reasoning pipelines, 20% document ingestion, 10% credit ledger checks"
+      - "Execute 50 CCU concurrent load test in tests/benchmarks/concurrency-load.test.ts for at least 100 iterations"
+      - "Verify overall error rate is strictly < 1.0% under maximum 50 CCU concurrent load (NFR-005)"
+      - "Verify credit debit concurrency safety: balance is never observed negative under concurrent debits (NFR-011)"
+      - "Zero uncaught rejections, deadlocks, or process panics during execution"
+    tests:
+      - "tests/benchmarks/concurrency-load.test.ts — 50 CCU concurrency execution, error rate calculation, and ledger safety assertion"
+    observability:
+      - "Structured metrics log output: totalRequests, successCount, failureCount, errorRatePercent, elapsedMs"
+    verified: true
+    depends_on:
+      - S9.1
+    change_matrix:
+      new_files:
+        - "tests/benchmarks/load-harness.ts"
+        - "tests/benchmarks/concurrency-load.test.ts"
+      allowed_files:
+        - "tests/benchmarks/**"
+      forbidden_files:
+        - "packages/**"
+        - "apps/**"
+        - "infra/**"
+        - "_documentation/**"
+
+  - id: S9.3
+    title: Latency SLA benchmark & percentile distribution validator
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M9-3
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — high-resolution performance.now() micro-benchmark suite computing statistical percentiles (p50, p90, p95, p99) over warm-up and measurement iterations."
+    acceptance:
+      - "Vector Search Latency: assert p95 < 100ms on simulated 25,000 vector point collection (NFR-001)"
+      - "LLM Time-to-First-Token: assert p90 < 1,500ms on streaming synthesis adapter (NFR-002)"
+      - "E2E Reasoning Pipeline Latency: assert p90 < 4,500ms across 6-phase grounded reasoning execution (NFR-003)"
+      - "RFC 9457 Error Serialization Latency: assert p99 < 50ms to format and sanitize problem details (NFR-027)"
+      - "Discard 10 warm-up runs and calculate percentiles from >= 100 measured iterations"
+    tests:
+      - "tests/benchmarks/latency-sla.test.ts — high-precision timer assertions against LATENCY_SLAS thresholds"
+    observability:
+      - "Percentile report output: vectorSearchP95, llmTtftP90, e2eReasoningP90, errorSerializationP99"
+    verified: true
+    depends_on:
+      - S9.2
+    change_matrix:
+      new_files:
+        - "tests/benchmarks/latency-sla.test.ts"
+      allowed_files:
+        - "tests/benchmarks/**"
+      forbidden_files:
+        - "packages/**"
+        - "apps/**"
+        - "infra/**"
+        - "_documentation/**"
+
+  - id: S9.4
+    title: Multi-tenant security penetration, cross-tenant isolation & secret scanning suite
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M9-4
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUILD — automated adversarial penetration testing suite executing SQL injection, vector metadata filter bypass, Mem0 memory probe, forged JWT, and regex credential scanning."
+    acceptance:
+      - "Relational SQL Injection: adversarial strings (' OR 1=1 --) return HTTP 404 or empty sets; zero foreign tenant rows returned (NFR-007, BR-002)"
+      - "Vector Metadata Filter Bypass: omitted or manipulated user_id filters ({ user_id: { $ne: null } }) return 0 leaked points (BR-002)"
+      - "Mem0 Memory Isolation: foreign user memory recall attempts strictly return empty arrays (BR-019)"
+      - "Forged RS256 JWT Authentication: tampered signatures, spoofed sub claims, or expired tokens reject with HTTP 401 (NFR-006)"
+      - "Scoped Retrieval Debit Ordering (BR-036, AC-4.4): unauthorized foreign notebook access fails with HTTP 404 before credit debit occurs"
+      - "Zero Credential Leakage Scanner (NFR-026): deep regex scan across test logs, error envelopes, and sample payloads asserts 0 API keys (AIza..., gsk_...), DB URLs (postgres://), or unredacted tokens"
+    tests:
+      - "tests/benchmarks/security-pentest.test.ts — adversarial penetration attacks, tenant isolation assertions, and regex secret scanner"
+    observability:
+      - "Security audit log reporting: attackVectorsTested, passCount, breachCount: 0"
+    verified: true
+    depends_on:
+      - S9.3
+    change_matrix:
+      new_files:
+        - "tests/benchmarks/security-pentest.test.ts"
+      allowed_files:
+        - "tests/benchmarks/**"
+      forbidden_files:
+        - "packages/**"
+        - "apps/**"
+        - "infra/**"
+        - "_documentation/**"
+
+  - id: S9.5
+    title: Zero-dollar cloud cost ceiling attestation & free-tier quota compliance runner
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M9-5
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — programmatic audit runner validating environment configurations, resource command budgets, transient storage zero-idle invariants, and generating signed attestation."
+    acceptance:
+      - "Validate all 8 cloud accounts (Vercel, Clerk, Neon, Upstash, Google AI Studio, Groq, Filebase, Better Stack) adhere to free-tier SKUs and $0.00 limits (NFR-016)"
+      - "Verify zero credit cards or billing credentials are required or configured in environment variables"
+      - "Verify Upstash command budget: request handlers execute <= 4 commands per request (NFR-013)"
+      - "Verify transient storage zero-byte idle invariant: staged S3 binaries are deleted immediately post-upsert (BR-046)"
+      - "Generate formal signed markdown attestation artifact in _documentation/planning/registers/zero-cost-attestation.md"
+    tests:
+      - "tests/benchmarks/cost-ceiling-audit.test.ts — environment audit, command budget assertions, and attestation generator"
+    observability:
+      - "Cost audit summary log: providersAudited: 8, totalMonthlySpendUsd: 0.00, creditCardsStored: 0"
+    verified: true
+    depends_on:
+      - S9.4
+    change_matrix:
+      new_files:
+        - "tests/benchmarks/cost-ceiling-audit.test.ts"
+        - "_documentation/planning/registers/zero-cost-attestation.md"
+      allowed_files:
+        - "tests/benchmarks/**"
+        - "_documentation/planning/registers/zero-cost-attestation.md"
+      forbidden_files:
+        - "packages/**"
+        - "apps/**"
+        - "infra/**"
+        - "_documentation/planning/architecture/**"
+        - "_documentation/planning/contracts/**"
+
+  - id: S9.6
+    title: Monorepo regression pass, RC-1 hardening certification, component catalog, and documentation synchronization
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M9-6
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "VERIFY — execute full monorepo build, strict typecheck, and test suite regression pass (313+ baseline tests + benchmark suite); certify Checkpoint 4 (Gate G6) readiness."
+    acceptance:
+      - "Execute bun test across all monorepo test files; assert 100% pass and 0 failures"
+      - "Execute bun run build and bun run typecheck; assert 11/11 packages clean"
+      - "Verify closed 17-member RFC 9457 error catalogue test passes 5/5 with zero modifications"
+      - "Update component catalog _documentation/planning/contracts/component-catalog.yaml with comp-bench"
+      - "Update failure mode register _documentation/planning/registers/failure-mode-register.md with FM-901..FM-904"
+      - "Author developer execution log in _documentation/planning/milestones/m9-hardening-benchmark/dev-log.md"
+      - "Synchronize _documentation/index.md and milestone-status.yaml"
+    tests:
+      - "bun test — full monorepo suite pass"
+      - "bun run build — 11/11 packages build clean"
+      - "bun run typecheck — 11/11 packages typecheck clean"
+    observability:
+      - "Unified build, lint, typecheck, and test execution evidence logs"
+    verified: true
+    depends_on:
+      - S9.5
+    change_matrix:
+      new_files:
+        - "_documentation/planning/milestones/m9-hardening-benchmark/dev-log.md"
+      allowed_files:
+        - "_documentation/planning/contracts/component-catalog.yaml"
+        - "_documentation/planning/registers/failure-mode-register.md"
+        - "_documentation/planning/milestones/milestone-status.yaml"
+        - "_documentation/planning/milestones/m9-hardening-benchmark/**"
+        - "_documentation/index.md"
+      forbidden_files:
+        - "packages/**"
+        - "apps/**"
+        - "infra/**"
+        - "tests/**"

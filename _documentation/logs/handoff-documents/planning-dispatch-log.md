@@ -771,3 +771,89 @@ graph TD
   - Recommendations: S8.1 design tokens & disclosure contracts; S8.2 un-dismissible disclosure banner & prompt wrapper; S8.3 landing hero, navigation & value propositions; S8.4 pricing transparency card; S8.5 automated axe-core WCAG 2.1 AA audit suite; S8.6 Lighthouse performance simulation & doc sync. Sequential DAG: `S8.1 → S8.2 → S8.3 → S8.4 → S8.5 → S8.6`.
 - **Status:** ACCEPTED
 
+---
+
+### DSP-042: M9 Latency SLA & Concurrency Sizing Architecture Review
+- **Timestamp:** 2026-10-27T12:26:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `site-reliability-architect`
+- **Architectural Dimension:** Concurrency Sizing & Latency Percentiles
+- **Why Invoked (Rationale):**
+  > Validate 50 CCU concurrency load test profile and high-resolution percentile distribution measurement standards (p50, p90, p95, p99) under simulated real-world workloads (NFR-001..NFR-003, NFR-005, NFR-027).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m9-benchmark-suite-hardening-and-security-audit.md` §3.2, §3.3
+  - `_documentation/planning/epics/epic-009-v1-hardening-and-benchmark.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m9-benchmark-suite-hardening-and-security-audit.md` §3.2, §3.3
+  - Recommendations: Discard 10 warm-up runs; evaluate percentiles over >= 100 measured iterations; bound async worker pool to prevent event loop starvation under 50 CCU; assert error rate strictly < 1.0%.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-043: Multi-Tenant Adversarial Penetration & Secret Leakage Review
+- **Timestamp:** 2026-10-27T12:28:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `security-architect`
+- **Architectural Dimension:** Security Perimeter & Data Isolation
+- **Why Invoked (Rationale):**
+  > Validate adversarial penetration test suite coverage across SQL queries, Upstash Vector tenant filters, Mem0 memory stores, and automated regex secret leak scanning (NFR-006, NFR-007, NFR-026, BR-002, BR-036).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m9-benchmark-suite-hardening-and-security-audit.md` §3.4
+  - `_documentation/planning/registers/failure-mode-register.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m9-benchmark-suite-hardening-and-security-audit.md` §3.4
+  - Recommendations: Verify relational SQL injection returns 404/empty; enforce Scoped Retrieval Debit Ordering (BR-036); assert vector filters strictly bind authenticated user; scan logs for Google/Groq API keys and DB connection strings.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-044: Zero-Dollar Cost Ceiling & Free-Tier Quota Audit Review
+- **Timestamp:** 2026-10-27T12:30:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `governance-specialist`
+- **Architectural Dimension:** Regulatory Governance & Cost Compliance
+- **Why Invoked (Rationale):**
+  > Validate automated verification of $0.00/month infrastructure spend, zero payment cards on file, and command budget compliance across all 8 cloud provider accounts (NFR-013, NFR-016, BR-046).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m9-benchmark-suite-hardening-and-security-audit.md` §3.1, §3.5
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m9-benchmark-suite-hardening-and-security-audit.md` §3.5
+  - Recommendations: Structure FREE_TIER_MANIFEST across all 8 vendors; verify zero billing keys or credit card requirements in environment configurations; assert <= 4 Upstash commands per request; generate signed markdown attestation artifact.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-045: M9 Failure Modes & Effects Analysis (FMEA)
+- **Timestamp:** 2026-10-27T12:32:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `failure-mode-specialist`
+- **Architectural Dimension:** Reliability & Fault Tolerance
+- **Why Invoked (Rationale):**
+  > Bottom-up FMEA sweep for benchmark harness OOM, mock jitter distortion, nested injection bypasses, and silent provider tier drift (FM-901..FM-904).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m9-benchmark-suite-hardening-and-security-audit.md` §4
+  - `_documentation/planning/registers/failure-mode-register.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-901..FM-904)
+  - Recommendations: Enforce bounded worker queues; profile Gaussian latency tails; validate UUID formats with Zod; automate free-tier SKU verification before release candidate ratification.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-046: M9 Sprint Board Authoring & Developer Handoff
+- **Timestamp:** 2026-10-27T12:34:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `sprint-agent`
+- **Architectural Dimension:** Tactical Decomposition & Board Governance
+- **Why Invoked (Rationale):**
+  > Decompose EPIC-009 into six single-session atomic stories with frozen Change Matrices (`new_files`, `allowed_files`, `forbidden_files`), bind verification hooks to AC-9.1..AC-9.4, and author the sprint board for developer execution.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m9-hardening-benchmark/milestone.md`
+  - `_documentation/planning/architecture/05-m9-benchmark-suite-hardening-and-security-audit.md`
+  - `_documentation/planning/contracts/component-catalog.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/milestones/m9-hardening-benchmark/sprint-status.yaml` + `stories/` (S9.1..S9.6)
+  - Recommendations: S9.1 benchmark contracts & SLA thresholds; S9.2 50 CCU concurrency load harness; S9.3 latency SLA percentile validator; S9.4 multi-tenant penetration & secret scanning; S9.5 zero-cost ceiling attestation runner; S9.6 monorepo hardening & doc sync. Sequential DAG: `S9.1 → S9.2 → S9.3 → S9.4 → S9.5 → S9.6`.
+- **Status:** ACCEPTED
+
+

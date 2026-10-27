@@ -439,6 +439,34 @@ components:
         severity: "FATAL"
         type: "internal_package"
 
+  - id: "comp-bench"
+    name: "Benchmark Suite, Hardening & Security Audit Module"
+    package: "@repo/contracts"
+    owner: "architect-agent"
+    milestone: "M9"
+    responsibilities:
+      - "Define canonical Latency SLA thresholds, Concurrency limits, and Free-Tier Cloud Manifest"
+      - "Orchestrate 50 CCU concurrency load tests simulating mixed workloads with error rate < 1.0% (NFR-005)"
+      - "Validate vector search p95 < 100ms, LLM TTFT p90 < 1,500ms, and E2E reasoning p90 < 4,500ms (NFR-001..003)"
+      - "Execute adversarial multi-tenant penetration tests certifying zero cross-tenant leakage in SQL/Vector/Mem0 (NFR-007, BR-002)"
+      - "Scan logs and payloads to enforce zero credential leakage of API keys, DB URLs, or JWT secrets (NFR-026)"
+      - "Formally attest $0.00/month infrastructure ceiling across all 8 cloud provider accounts (NFR-016)"
+    interfaces:
+      public_types:
+        - "LatencySLAConfig"
+        - "ConcurrencySLAConfig"
+        - "FreeTierCloudManifest"
+        - "BenchmarkScenario"
+        - "BenchmarkRunSummary"
+      constants:
+        - "LATENCY_SLAS"
+        - "CONCURRENCY_SLA"
+        - "FREE_TIER_MANIFEST"
+    dependencies:
+      - target: "@repo/contracts"
+        severity: "FATAL"
+        type: "internal_package"
+
 rules:
   - "Domain packages must never import Next.js web transport libraries (next/server)"
   - "Graph reads and writes must carry a user_id tenant predicate inside the repository; route handlers never issue their own SQL"
@@ -452,6 +480,11 @@ rules:
   - "Public marketing routes and components must never require or consume authenticated session state or cookies (BR-024)"
   - "The AI provider training disclosure banner must be rendered permanently without dismissal controls (BR-030, FR-030)"
   - "All public components must comply with WCAG 2.1 AA accessibility standards (NFR-019)"
+  - "Concurrency stress tests must support >= 50 CCU with an error rate strictly < 1.0% (NFR-005)"
+  - "Vector search queries must achieve p95 latency < 100ms on collections up to 25k points (NFR-001)"
+  - "End-to-end 6-phase reasoning pipelines must achieve p90 latency < 4,500ms (NFR-003)"
+  - "Cross-tenant penetration attempts must return HTTP 404/403 or empty sets with zero data leakage (NFR-007, BR-002)"
+  - "The platform must operate under a strict $0.00/month cloud infrastructure ceiling with zero stored credit cards (NFR-016)"
 
 
 

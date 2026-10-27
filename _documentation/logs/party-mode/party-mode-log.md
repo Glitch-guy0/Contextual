@@ -631,5 +631,125 @@ This is a DBW documentation and coordination record. All approvals are represent
 ## Implementation note
 This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
 
+---
+
+# Session 7 — M9 Planning Round-Table: Benchmark Suite, Hardening & Security Audit (PM · Architect · Sprint)
+
+## Session Meta
+- **Date:** 2026-10-27T12:25:00.000Z
+- **State:** Phase 4 (Milestone Detail) → Phase 5 (Implementation Planning)
+- **Task:** Plan M9 Benchmark Suite, Hardening & Security Audit (`v0.9.0-rc.1`) for implementation; author architecture blueprint, benchmark contracts, component catalog updates, failure modes, and sprint board with frozen Change Matrices; then verify and seal PM approval.
+- **Mode:** Planning → Design → Board → Approval
+- **Session Chairs:** `pm-agent` (Stage 2 Owner), `architect-agent` (Stage 3 Owner), `sprint-agent` (Board Owner)
+- **Log:** this file · **Dispatches:** DSP-042..DSP-046 · **Handoff:** `handoff-021-sprint-to-developer-m9`
+
+## Participants
+- `pm-agent` — requirements governance, grounding validation, risk-tier classification (HIGH), acceptance criteria (AC-9.1..AC-9.4), PM approval authority
+- `architect-agent` — technical architecture, benchmark harness design, load generation (50 CCU concurrency, < 1% error rate), mock provider vs live cluster strategy, latency SLA instrumentation (p95 vector < 100ms, p90 TTFT < 1,500ms, p90 E2E < 4,500ms), adversarial penetration test architecture, $0.00 cloud ceiling audit framework
+- `sprint-agent` — tactical epic slicing (EPIC-009), frozen Change Matrices, sprint board authoring (`sprint-status.yaml`), story cards (S9.1 to S9.6)
+- `site-reliability-architect` & `capacity-planning-specialist` — 50 CCU concurrency load profiles, error rate thresholds (< 1.0%), percentile measurement standards (p50, p90, p95, p99), resource limits, circuit breaker fallback verification under heavy load
+- `security-architect` — adversarial penetration vectors: relational SQL tenant injection, Upstash Vector tenant payload filter bypass, Mem0 memory boundary enforcement, forged RS256 JWT claims / expired signatures rejection, credential leak scanning across test artifacts and log emissions (`NFR-026`)
+- `governance-specialist` — $0.00/month infrastructure ceiling verification across all 8 cloud provider accounts (`NFR-016`), zero payment card attestation, free tier SKU drift guard
+- `failure-mode-specialist` — bottom-up FMEA sweep for benchmark harness OOM, mock jitter distortion, nested injection bypasses, and silent provider tier drift (FM-901..FM-904)
+
+## Round 1: Positions
+- **PM Agent position:**
+  - Milestone M9 delivers the pre-release hardening, performance benchmarking, and security attestation for Release Candidate `v0.9.0-rc.1`.
+  - Grounding is anchored in `project-brief.md` (`FR-013`, `NFR-001`..`NFR-005`, `NFR-007`, `NFR-016`, `BR-002`, `BR-036`, `NFR-026`, `NFR-027`) and `epic-009-v1-hardening-and-benchmark.md`.
+  - Non-negotiable requirements:
+    1. **Concurrency & Stress Testing (`FR-013`, `NFR-005`):** Automated load testing simulating 50 concurrent active users executing mixed workloads with error rate strictly < 1.0%.
+    2. **Latency SLA Compliance (`NFR-001`..`NFR-003`, `NFR-027`):** Vector search latency p95 < 100ms across 25,000 vectors; LLM Time-to-First-Token p90 < 1,500ms; E2E reasoning pipeline p90 < 4,500ms; RFC 9457 error serialization latency p99 < 50ms.
+    3. **Multi-Tenant Penetration & Zero Leakage (`NFR-006`, `NFR-007`, `BR-002`):** Adversarial security attacks attempting cross-tenant SQL injection, vector metadata filter bypass, or foreign memory recall must return HTTP 404/403 or empty sets with zero leaked content.
+    4. **Zero Credential Leakage (`NFR-026`):** Automated regex scanner certifies zero raw API keys, JWT secrets, database connection strings, or unredacted tokens in logs or HTTP envelopes.
+    5. **Strict $0.00/Month Cost Ceiling (`NFR-016`):** Attestation confirming zero payment cards stored and $0.00 billing across all 8 cloud provider accounts.
+  - Baseline health: Monorepo test suite has 313 pass, 0 fail across 53 test files; 11/11 packages build and typecheck cleanly. Closed 17-member RFC 9457 catalogue intact. No blocking precondition needed.
+- **Architect Agent position:**
+  - M9 is structured around a dedicated benchmark and hardening harness in `packages/contracts/src/benchmarks.ts` and `tests/benchmarks/`:
+    1. **Benchmark Contracts (`@repo/contracts/src/benchmarks.ts`):** Canonical latency SLA thresholds, concurrency parameters, provider quota limits, and zero-cost cloud manifest.
+    2. **50 CCU Concurrency Harness (`tests/benchmarks/load-harness.ts` & `concurrency-load.test.ts`):** Bun-native async concurrency worker pool generating 50 concurrent active virtual users with deterministic workload distribution (20 vector retrievals, 15 reasoning pipelines, 10 document ingestions, 5 credit checks).
+    3. **Latency SLA Benchmark Suite (`tests/benchmarks/latency-sla.test.ts`):** High-precision percentile measurement (p50, p90, p95, p99) with statistical warm-up verifying vector search (< 100ms p95), TTFT (< 1,500ms p90), E2E pipeline (< 4,500ms p90), and RFC 9457 error serialization (< 50ms p99).
+    4. **Adversarial Security Penetration Suite (`tests/benchmarks/security-pentest.test.ts`):** Exhaustive multi-tenant fuzzing across SQL queries, Upstash Vector tenant filters, Mem0 memory stores, forged JWTs, and deep regex scanning for secret leakage.
+    5. **Zero-Dollar Cost Ceiling Attestation (`tests/benchmarks/cost-ceiling-audit.test.ts` & `_documentation/planning/registers/zero-cost-attestation.md`):** Programmatic verification of free-tier SKUs, command budgets (≤ 4 cmds/req), transient storage guarantees, and signed audit report across all 8 vendors.
+- **Site Reliability & Capacity Planning Specialists position:**
+  - Sizing 50 CCU with < 1% error rate requires bounded async queues to prevent event-loop lag.
+  - Latency percentiles must be calculated from at least 100 measured iterations with warm-up cycles discarded.
+  - Failover circuit breaker behavior under 429 quota pressure must execute transparently without dropping connections.
+- **Security Architect position:**
+  - Adversarial attacks must include malformed tenant IDs, SQL injection vectors (`' OR '1'='1`), vector metadata bypass payloads (`{ user_id: { $ne: null } }`), and expired/tampered RS256 JWT signatures.
+  - Enforce Scoped Retrieval Debit Ordering (`BR-036`, `AC-4.4`): cross-tenant access attempts must fail before credit debit occurs.
+  - Deep secret scanning regexes must target Google AI keys (`AIza[0-9A-Za-z-_]{35}`), Groq keys (`gsk_[a-zA-Z0-9]{48}`), and connection strings (`postgres://`).
+- **Failure Mode Specialist position:**
+  - Enumerate failure modes FM-901..FM-904:
+    - `FM-901`: Load generator thread pool starvation or unbounded memory growth causing test runner OOM.
+    - `FM-902`: Mock adapter artificially suppresses jitter/latency tails, masking upstream network latency spikes.
+    - `FM-903`: Adversarial multi-tenant injection bypasses tenant predicate via nested JSON object injection or malformed UUID strings.
+    - `FM-904`: Silent provider tier drift introduces paid cloud features breaching $0.00/month cost ceiling.
+- **Sprint Agent position:**
+  - EPIC-009 decomposes into six atomic, single-session stories (S9.1 to S9.6):
+    - `S9.1`: Benchmark contracts, SLA thresholds, performance metrics schema, and scenario definitions (`WU-M9-1`)
+    - `S9.2`: 50 CCU Concurrency stress & load testing harness (`WU-M9-2`)
+    - `S9.3`: Latency SLA benchmark & percentile distribution validator (`WU-M9-3`)
+    - `S9.4`: Multi-tenant security penetration, cross-tenant isolation & secret scanning suite (`WU-M9-4`)
+    - `S9.5`: Zero-dollar cloud cost ceiling attestation & free-tier quota compliance runner (`WU-M9-5`)
+    - `S9.6`: Monorepo regression pass, RC-1 hardening certification, component catalog, and documentation synchronization (`WU-M9-6`)
+  - Clean sequential DAG: `S9.1 → S9.2 → S9.3 → S9.4 → S9.5 → S9.6`.
+
+## Round 2: Trade-offs & Deliberation
+- **Trade-off 1: Load Testing Harness Tooling — Native TypeScript / Bun Concurrent Worker Pool vs External k6 Binary**
+  - *Option A (External k6 CLI Binary):* Standard load test runner. *Cost:* Requires installing external k6 binary in the runtime environment (which fails in locked/sandboxed CI environments), introduces Go-based JavaScript runtime divergence, and cannot directly import `@repo/*` monorepo contracts.
+  - *Option B (Native Bun / TypeScript Asynchronous Worker Pool):* Bounded concurrent worker simulator executing inside Bun test runner with precise `performance.now()` high-resolution timers.
+  - *Synthesis & Consensus:* Option B adopted with k6 script export compatibility. Executes 100% reliably in local Bun and standard CI without external package installations, directly imports typed contracts, and satisfies `NFR-005`.
+- **Trade-off 2: Testing Provider Strategy under Load — Calibrated High-Fidelity Mock Provider Harness vs Live External Cloud APIs**
+  - *Option A (Live External Cloud Endpoints during 50 CCU Load):* Firing 50 CCU against live Google AI Studio and Upstash free tiers. *Cost:* Rapidly exceeds free-tier rate limits (15 RPM / 10k daily commands), triggers hard 429 quota exhaustion for legitimate development, and risks breaching the $0.00 ceiling.
+  - *Option B (High-Fidelity Mock Provider Harness with Calibrated Real-World Jitter):* Calibrated mock adapters simulating realistic Gaussian network distributions (Upstash p95 ~40-80ms, Gemini TTFT p90 ~800-1200ms) with fault injection.
+  - *Synthesis & Consensus:* Option B adopted. Protects free-tier quotas while stress-testing monorepo concurrency, backpressure, circuit breakers, and rate limiters.
+- **Trade-off 3: Multi-Tenant Penetration Test Architecture — Dedicated Adversarial Penetration Suite vs Unit Test Assertions**
+  - *Option A (Scattered Unit Test Assertions):* Rely on existing unit test tenant assertions. *Cost:* Fails to test complex multi-vector attacks, nested object injection, forged signatures, or holistic secret leakage across logs.
+  - *Option B (Dedicated Adversarial Security Penetration Suite in `tests/benchmarks/security-pentest.test.ts`):* Comprehensive security test suite executing fuzzing attacks against SQL, Vector, Memory, and Auth perimeters.
+  - *Synthesis & Consensus:* Option B adopted. Provides definitive evidence of zero cross-tenant leakage (`NFR-007`, `BR-002`) and zero credential leakage (`NFR-026`).
+- **Trade-off 4: Zero-Dollar Cost Ceiling Verification — Automated Runtime Audit Runner vs Static Manual Checklist**
+  - *Option A (Manual Markdown Checklist):* Reading cloud billing dashboards manually. *Cost:* Prone to human error, lacks repeatable CI verification, and cannot catch silent environment variable drift.
+  - *Option B (Programmatic Attestation Runner):* Script validating environment variables, service endpoints, resource command counters, and generating signed markdown attestation.
+  - *Synthesis & Consensus:* Option B adopted. Provides verifiable proof for Gate G6 certification (`NFR-016`).
+- **Trade-off 5: Sprint Story Breakdown & Ordering — 6 Cohesive Stories in Sequential DAG**
+  - *Option A (Monolithic Hardening Story):* Single massive hardening task. *Cost:* Massive cognitive load, violates 5-point atomicity, impossible to isolate failures.
+  - *Option B (6 Atomic Stories):* Discrete, bounded scopes: contracts (`S9.1`), concurrency (`S9.2`), latency SLAs (`S9.3`), security penetration (`S9.4`), cost ceiling (`S9.5`), and RC-1 certification (`S9.6`).
+  - *Synthesis & Consensus:* Option B adopted. Bounded Change Matrices ensure clean, deterministic developer sessions.
+
+## Round 3: Consensus & Decisions
+1. **Charter & Grounding Confirmed:** Milestone M9 scope encompasses `FR-013`, `NFR-001`..`NFR-005`, `NFR-007`, `NFR-016`, `BR-002`, `BR-036`, `NFR-026`, `NFR-027`, `EPIC-009`. Risk tier classified as **HIGH**.
+2. **Architecture Blueprint Sealed:** `05-m9-benchmark-suite-hardening-and-security-audit.md` authored and approved, detailing benchmark harness, concurrency simulator, latency SLA tests, penetration vectors, and cost ceiling audit.
+3. **Sprint Board Certified:** Board `M9-S1` authored in `m9-hardening-benchmark/sprint-status.yaml` with six stories (`S9.1` to `S9.6`), explicit Change Matrices, and verified DAG.
+4. **PM Approval Granted:** `pm-agent` approves the M9 sprint plan for developer handoff. Because the workspace baseline is 100% green (313/313 pass across 53 test files, 11/11 build/typecheck clean), approval is **unconditional**.
+
+## Sealed Decision Register
+
+| Decision ID | Summary | Owner | Sealed State |
+|---|---|---|---|
+| **M9-PM-001** | Scope grounded in FR-013, NFR-001..005, NFR-007, NFR-016, BR-002, BR-036, NFR-026, NFR-027, EPIC-009; classified HIGH risk tier | `pm-agent` | Sealed |
+| **M9-PM-002** | Unconditional PM approval for M9 sprint plan handoff to developer-agent | `pm-agent` | Sealed |
+| **M9-ARCH-001** | Benchmark suite and concurrency harness implemented in Bun/TypeScript with calibrated latency simulation and k6 script compatibility | `architect-agent` | Sealed |
+| **M9-ARCH-002** | Latency SLA benchmark verifying p95 vector (< 100ms), p90 TTFT (< 1,500ms), p90 E2E (< 4,500ms), and p99 RFC 9457 error serialization (< 50ms) | `architect-agent` | Sealed |
+| **M9-ARCH-003** | Adversarial security penetration suite enforcing zero cross-tenant leakage in SQL/Vector/Memory and zero credential leaks in logs | `architect-agent` | Sealed |
+| **M9-ARCH-004** | Automated zero-cost ceiling audit runner certifying $0.00/month spend across all 8 cloud accounts | `architect-agent` | Sealed |
+| **M9-SPR-001** | Six single-session stories `S9.1 → S9.2 → S9.3 → S9.4 → S9.5 → S9.6` with frozen Change Matrices | `sprint-agent` | Sealed |
+| **M9-SPR-002** | Automated verification hooks enforcing full regression pass, closed 17-member RFC 9457 catalogue invariance, and Gate G6 readiness | `sprint-agent` | Sealed |
+
+## Rejected Alternatives (strongest argument, and why it lost)
+- **External k6 binary dependency** — industry standard tool; lost because it requires native binary installation in CI/sandbox, introduces JS runtime differences, and cannot import typed monorepo contracts.
+- **Testing 50 CCU against live cloud free-tier APIs** — tests true production endpoints; lost because 50 concurrent users would burn free tier limits in seconds, trigger 429 lockouts, and risk unexpected billing.
+- **Manual checklist for zero-dollar cloud cost verification** — easier to draft; lost because manual reviews fail to provide repeatable, automated gate evidence and cannot catch environment drift.
+- **Scattered security assertions in existing tests** — avoids new test files; lost because it leaves cross-tenant penetration attack surfaces and regex credential scanning unverified as a cohesive security perimeter.
+
+## Handoff & Next Steps
+1. Hand off to `developer-agent` via `handoff-021-sprint-to-developer-m9.md`.
+2. `developer-agent` starts with **S9.1** (benchmark contracts and scenario schemas) and proceeds sequentially through **S9.6**.
+3. `test-agent` verifies each story against acceptance criteria and certifies closure.
+4. `sprint-agent` maintains board progress in `m9-hardening-benchmark/sprint-status.yaml`.
+
+## Implementation note
+This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
+
+
 
 
