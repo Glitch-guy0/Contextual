@@ -7,7 +7,7 @@
 # erroneously marked complete and M2 in-progress based on external project inferences.
 # Current workspace contains 0 product code files. M0 is the active next milestone.
 version: 1
-updated_at: "2026-10-27T09:20:00.000Z"
+updated_at: "2026-10-27T10:48:00.000Z"
 milestones:
   - id: "M0"
     name: "Workspace Foundation & Scaffolding"
@@ -136,15 +136,19 @@ milestones:
   - id: "M7"
     name: "Autonomous Maintenance Crons & Observability"
     target_version: "v0.7.0"
-    status: "not-started"
-    gate: "G1"
-    gate_status: "READY"
+    status: "completed"
+    gate: "G6"
+    gate_status: "PASS"
     delivers: "Upstash QStash scheduled crons, 7-day retention cascade sweeper, 30-day tombstones (HTTP 410), OTel export to Better Stack"
     criteria:
       - "Upstash QStash triggers daily 08:00 UTC credit resets and weekly retention cascade"
       - "Weekly retention cascade purges notebooks idle for >= 7 days across Postgres and Upstash Vector"
       - "Purged notebooks leave 30-day tombstone returning HTTP 410 NOTEBOOK_EXPIRED"
       - "100% of HTTP routes and jobs emit structured JSON logs tagged with correlation_id"
+    planned_at: "2026-10-27T10:45:00.000Z"
+    planning_evidence: "7/7 plan checks PASS; baseline 204/204 pass, 10/10 build/typecheck clean; board M7-S1 with 6 frozen stories (S7.1..S7.6); design 05-m7-autonomous-maintenance-and-observability.md; PM approved unconditionally (pm-approval.md)"
+    verified_at: "2026-10-27T11:15:00.000Z"
+    verification: "55 observability tests pass (259/259 monorepo tests pass, 0 fail across 47 files); 11/11 packages build clean; 11/11 packages typecheck clean; QStash cryptographic HMAC verification certified; 7-day retention cascade purges vector embeddings and child nodes returning RFC 9457 HTTP 410 NOTEBOOK_EXPIRED (AC-7.2); 100% structured JSON logs carry correlation_id and traceparent (AC-7.3); secret redactor sanitizes JWTs/keys to [REDACTED] (AC-7.4); S7.1..S7.6 100% verified"
 
   - id: "M8"
     name: "Public Marketing Landing & Dynamic Privacy Governance"

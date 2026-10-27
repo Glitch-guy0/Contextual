@@ -54,6 +54,7 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [05-m4-notebook-workspace-and-domain-graph.md](planning/architecture/05-m4-notebook-workspace-and-domain-graph.md) | Milestone M4 Architectural Blueprint | A | `architect-agent` |
 | [05-m5-grounded-reasoning-engine.md](planning/architecture/05-m5-grounded-reasoning-engine.md) | Milestone M5 Architectural Blueprint | A | `architect-agent` |
 | [05-m6-pluggable-long-term-memory-store.md](planning/architecture/05-m6-pluggable-long-term-memory-store.md) | Milestone M6 Architectural Blueprint | A | `architect-agent` |
+| [05-m7-autonomous-maintenance-and-observability.md](planning/architecture/05-m7-autonomous-maintenance-and-observability.md) | Milestone M7 Architectural Blueprint | A | `architect-agent` |
 | [m1-developer-golden-path/sprint-status.yaml](planning/milestones/m1-developer-golden-path/sprint-status.yaml) | Milestone M1 Sprint Board (Completed) | B | `sprint-agent` |
 | [m1-developer-golden-path/dev-log.md](planning/milestones/m1-developer-golden-path/dev-log.md) | Milestone M1 Developer Execution Log | C | `developer-agent` |
 | [m2-metering-spine/milestone.md](planning/milestones/m2-metering-spine/milestone.md) | Milestone M2 Charter (Completed) | A | `pm-agent` |
@@ -70,7 +71,9 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [m6-pluggable-memory/milestone.md](planning/milestones/m6-pluggable-memory/milestone.md) | Milestone M6 Charter (Completed) | A | `pm-agent` |
 | [m6-pluggable-memory/sprint-status.yaml](planning/milestones/m6-pluggable-memory/sprint-status.yaml) | Milestone M6 Sprint Board (Completed) | B | `sprint-agent` |
 | [m6-pluggable-memory/pm-approval.md](planning/milestones/m6-pluggable-memory/pm-approval.md) | M6 PM Verification & Approval Record | A | `pm-agent` |
-| [m7-maintenance-observability/milestone.md](planning/milestones/m7-maintenance-observability/milestone.md) | Milestone M7 Charter (Planned) | A | `pm-agent` |
+| [m7-maintenance-observability/milestone.md](planning/milestones/m7-maintenance-observability/milestone.md) | Milestone M7 Charter (Ready for Implementation) | A | `pm-agent` |
+| [m7-maintenance-observability/sprint-status.yaml](planning/milestones/m7-maintenance-observability/sprint-status.yaml) | Milestone M7 Sprint Board (Ready for Dev) | B | `sprint-agent` |
+| [m7-maintenance-observability/pm-approval.md](planning/milestones/m7-maintenance-observability/pm-approval.md) | M7 PM Verification & Approval Record | A | `pm-agent` |
 | [m8-landing-disclosure/milestone.md](planning/milestones/m8-landing-disclosure/milestone.md) | Milestone M8 Charter (Planned) | A | `pm-agent` |
 | [m9-hardening-benchmark/milestone.md](planning/milestones/m9-hardening-benchmark/milestone.md) | Milestone M9 Charter (Planned) | A | `pm-agent` |
 | [ga-production-release/milestone.md](planning/milestones/ga-production-release/milestone.md) | Milestone GA Charter (Planned) | A | `pm-agent` |
@@ -106,7 +109,11 @@ Records in `logs/` are history, never a description of the current system. A pat
 | [handoff-013](logs/handoff-documents/handoff-013-developer-to-test-m4.md) | Stage 4 M4 Implementation to Test Verification Handoff | C | `developer-agent` |
 | [handoff-014](logs/handoff-documents/handoff-014-sprint-to-developer-m5.md) | Stage 4 M5 Sprint Breakdown to Implementation Handoff | C | `sprint-agent` |
 | [handoff-015](logs/handoff-documents/handoff-015-developer-to-test-m5.md) | Stage 4 M5 Implementation to Test Gate Handoff | C | `developer-agent` |
+| [handoff-016](logs/handoff-documents/handoff-016-sprint-to-developer-m6.md) | Stage 4 M6 Sprint Breakdown to Implementation Handoff | C | `sprint-agent` |
+| [handoff-017](logs/handoff-documents/handoff-017-sprint-to-developer-m7.md) | Stage 4 M7 Sprint Breakdown to Implementation Handoff | C | `sprint-agent` |
 | [m5-dev-log.md](planning/milestones/m5-reasoning-engine/dev-log.md) | Milestone M5 Developer Execution Log | C | `developer-agent` |
+| [m6-dev-log.md](planning/milestones/m6-pluggable-memory/dev-log.md) | Milestone M6 Developer Execution Log | C | `developer-agent` |
+| [m7-dev-log.md](planning/milestones/m7-maintenance-observability/dev-log.md) | Milestone M7 Developer Execution Log | C | `developer-agent` |
 | [questionnaire.yaml](planning/questionnaire.yaml) | Open questions for the user (0 pending) | user | user |
 | [delivery-strategy.yaml](system/delivery-strategy.yaml) | Process depth and artifact budget | B | `delivery-strategy-agent` |
 | [workflow-context.yaml](system/workflow-context.yaml) | Current workflow status | B | stage owners |
@@ -117,6 +124,9 @@ Records in `logs/` are history, never a description of the current system. A pat
 - **M1: Developer Golden Path & Core Authentication (`v0.1.0`)** — Closed 2026-10-26. Delivered containerized local stack (`infra/compose.yaml`), 8-layer `dev:doctor` diagnostic, Clerk OAuth RS256 JWT auth middleware, and Kysely Neon Postgres schemas for users/threads/notebooks. Verified with full suite 50/50 passing, 543 assertions, 6/6 build, 6/6 typecheck. Gates G5 & G6 PASS. Verified by `devprod-specialist`.
 - **M2: Metering Spine & Quota Throttling (`v0.2.0`)** — Closed 2026-10-26. Delivered atomic Upstash Redis Lua credit ledger, 5 RPS sliding window rate limiter, HTTP 402 short-circuit ingress guard, upstream quota classifier with IETF rate-limit headers, closed 17-member RFC 9457 error catalogue, and idempotent daily 08:00 UTC reset. Verified with full suite 50/50 passing, 543 assertions, 6/6 build, 6/6 typecheck. Gate G4 PASS. Verified by `devprod-specialist`.
 - **M4: Notebook Workspace & Domain Graph (`v0.4.0`)** — Closed 2026-10-27. Delivered interactive personal knowledge graph with hierarchical text nodes, document reference cards (< 10ms resolution), typed edges (`cites`/`related`), and ownership-first scoped retrieval. Baseline repaired (precondition P-1). Verified with full monorepo suite 101/101 pass, 784 expect() calls, 8/8 build, 8/8 typecheck. Gate G5 PASS. Certified by `test-agent`.
+- **M5: 6-Phase Grounded Reasoning Engine (`v0.5.0`)** — Closed 2026-10-27. Delivered query decomposition into 2-5 sub-questions, HyDE passage generation, top-3 scoped vector retrieval, Gemini Flash primary synthesis with inline citations, and transparent Groq Llama-3.3-70B circuit breaker failover. Verified with full suite 154/154 pass, 1,021 expect() calls, 9/9 build, 9/9 typecheck. Gate G6 PASS. Certified by `test-agent`.
+- **M6: Pluggable Long-Term Memory Store (`v0.6.0`)** — Closed 2026-10-27. Delivered abstract MemoryStore interface, in-process Mem0 backed by Upstash Redis and Upstash Vector, extraction seam for standalone worker, and pre-synthesis memory recall. Verified with 204/204 pass, 1,396 expect() calls, 10/10 build, 10/10 typecheck. Gate G6 PASS. Certified by `test-agent`.
+- **M7: Autonomous Maintenance Crons & Observability (`v0.7.0`)** — Closed 2026-10-27. Delivered Upstash QStash scheduled crons driver with HMAC SHA-256 signature verification, 7-day retention cascade sweeper with Upstash Vector point purge and Neon Postgres tombstone (RFC 9457 HTTP 410 NOTEBOOK_EXPIRED), centralized structured JSON logging with correlation_id and W3C traceparent, deep secret/PII redactor, OpenTelemetry Node SDK tracer exporting via OTLP/HTTP to Better Stack with 500ms timeout guard, and heartbeat liveness monitor (NFR-031). Verified with 259/259 pass, 1,647 expect() calls, 11/11 build, 11/11 typecheck. Gate G6 PASS. Certified by `developer-agent`.
 
 ## 4. Open Questions & Roadmap Gaps
 

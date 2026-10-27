@@ -397,3 +397,117 @@ This is a DBW documentation and coordination record. All approvals are represent
 ## Implementation note
 This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
 
+---
+
+# Session 5 — M7 Planning Round-Table: Autonomous Maintenance Crons & Observability (PM · Architect · Sprint)
+
+## Session Meta
+- **Date:** 2026-10-27T10:45:00.000Z
+- **State:** Phase 4 (Milestone Detail) → Phase 5 (Implementation Planning)
+- **Task:** Plan M7 Autonomous Maintenance Crons & Observability (`v0.7.0`) for implementation; author architecture blueprint, contracts, and sprint board with frozen Change Matrices; then verify and seal PM approval.
+- **Mode:** Planning → Design → Board → Approval
+- **Session Chairs:** `pm-agent` (Stage 2 Owner), `architect-agent` (Stage 3 Owner), `sprint-agent` (Board Owner)
+- **Log:** this file · **Dispatches:** DSP-031..DSP-035 · **Handoff:** `handoff-017-sprint-to-developer-m7`
+
+## Participants
+- `pm-agent` — requirements governance, grounding validation, risk-tier classification, approval authority
+- `architect-agent` — scheduled maintenance crons architecture, Upstash QStash webhook receiver, retention sweeper, 30-day tombstone HTTP 410 design, Pino structured logging, secret redaction, and OpenTelemetry OTLP pipeline
+- `sprint-agent` — epic slicing, frozen Change Matrices, sprint board authoring (`sprint-status.yaml`), story cards (S7.1 to S7.6)
+- `observability-specialist` — structured JSON logging schema, W3C `traceparent` context propagation, Better Stack OTLP export, heartbeat health probe
+- `security-architect` — QStash webhook signature verification (`Upstash-Signature`), PII & credential redaction regex filters (`NFR-026`, `BR-012`), tenant data isolation during retention purge (`BR-002`)
+- `data-architect` — Neon PostgreSQL retention sweeper queries, `notebooks` table tombstone transition, Upstash Vector vector point deletion cascade, 30-day hard purge TTL
+- `failure-mode-specialist` — FMEA sweep for QStash signature spoofing, partial retention purge failure, log-flooding, Better Stack OTLP timeout/quota exhaustion (FM-701..FM-705)
+
+## Round 1: Positions
+- **PM Agent position:**
+  - Milestone M7 introduces production-grade autonomous maintenance crons and centralized observability (`v0.7.0`).
+  - Grounding is anchored in `project-brief.md` (`FR-015`, `FR-040..FR-042`, `BR-010..BR-012`, `BR-025..BR-027`, `BR-037..BR-040`, `BR-044`, `NFR-009`, `NFR-017`, `NFR-026`, `NFR-031`, `NFR-032`) and `ADR-0004` (Unified Upstash Serverless Ecosystem).
+  - Non-negotiable requirements:
+    1. Daily 08:00 UTC credit reset executed via QStash HTTP trigger and idempotent Redis Lua script (`BR-025`, `BR-026`).
+    2. Weekly retention cascade sweeper identifying notebooks idle for ≥ 7 days (`FR-041`, `BR-037`).
+    3. Idempotent all-or-nothing cascade deletion: deletes Upstash Vector embeddings, purges child nodes/edges in Postgres, and sets a 30-day tombstone (`BR-039`, `BR-040`, `BR-044`).
+    4. Tombstone access protocol: requests to expired/tombstoned notebooks return HTTP 410 `NOTEBOOK_EXPIRED` (RFC 9457 Problem Details) with deletion timestamp (`BR-044`, `AC-7.2`). Hard deletion executes after 30 days.
+    5. Structured JSON logging via Pino: 100% of logs tagged with `correlation_id` and W3C `traceparent` (`FR-042`, `NFR-009`, `BR-010`).
+    6. Strict credential and PII redaction: regex-based sanitizer stripping Bearer tokens, Clerk JWTs/keys, Upstash/Google API keys, and connection strings before stdout emission (`NFR-026`, `BR-012`).
+    7. OpenTelemetry OTLP export: export telemetry spans to Better Stack's free tier via OTLP/HTTP within $0.00/month infrastructure ceiling (`NFR-009`, `NFR-016`).
+    8. Deprecation note: Per `ADR-0004`, Upstash Vector never suspends from inactivity; the artificial 48-hour Qdrant keepalive probe is officially deprecated.
+  - Baseline health: Monorepo test suite has 204 pass, 0 fail across 41 files; 10/10 packages build and typecheck cleanly. No blocking precondition needed.
+- **Architect Agent position:**
+  - Observability and maintenance capabilities belong in a dedicated internal workspace package `@repo/observability`, consuming `@repo/contracts`, `@repo/config`, `@repo/db`, and `@repo/metering`.
+  - Architecture breakdown:
+    1. **Core Logging & Redaction (`@repo/observability`):** Pino logger initialized with ISO timestamp, level, and metadata; Node `AsyncLocalStorage` correlation context automatically injecting `correlation_id` into all log calls; deep redaction transformer replacing secrets and PII with `[REDACTED]`.
+    2. **OpenTelemetry Telemetry (`@repo/observability`):** OpenTelemetry Node SDK tracer provider exporting spans to Better Stack via OTLP HTTP (`OTEL_EXPORTER_OTLP_ENDPOINT`, `BETTER_STACK_SOURCE_TOKEN`); heartbeat emitter recording cron liveness (`NFR-031`).
+    3. **QStash Webhook Security (`@repo/observability`):** Webhook receiver verifying `Upstash-Signature` header using `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` to reject unauthorized external invocations with HTTP 401.
+    4. **Retention Cascade & Tombstone Engine (`@repo/db` & `@repo/observability`):** Kysely retention queries selecting notebooks with `updated_at < NOW() - 7 days`; atomic deletion helper purging vector points from Upstash Vector by `notebook_id` and dropping relational nodes/edges; updates `deleted_at = NOW()` and `expires_at = NOW() + 30 days`; route handler responds with RFC 9457 HTTP 410 `NOTEBOOK_EXPIRED`.
+    5. **Hard Tombstone Purge:** Sweeper identifies notebooks with `deleted_at < NOW() - 30 days` and hard-deletes the notebook record permanently.
+- **Sprint Agent position:**
+  - EPIC-007 breaks into six atomic, single-session stories (S7.1 to S7.6):
+    - `S7.1`: Shared maintenance & observability contracts, DTO types, and RFC 9457 error catalogue verification in `@repo/contracts`.
+    - `S7.2`: Package scaffolding `@repo/observability`, AsyncLocalStorage correlation context, Pino structured JSON logger, and secret/PII redaction engine.
+    - `S7.3`: OpenTelemetry tracing provider, W3C `traceparent` context propagator, Better Stack OTLP exporter, and heartbeat liveness monitor.
+    - `S7.4`: QStash webhook receiver with cryptographic signature verification and idempotent scheduled crons driver (daily credit reset trigger).
+    - `S7.5`: 7-day retention cascade sweeper, Upstash Vector point purge, Neon PostgreSQL cascade, and 30-day tombstone HTTP 410 engine.
+    - `S7.6`: End-to-end integration test suite, latency/throughput verification, and documentation synchronization across contracts and roadmap.
+  - Dependency graph forms a clean DAG: `S7.1 → S7.2 → S7.3 → S7.4 → S7.5 → S7.6`.
+  - All stories conform strictly to the Two-Floor boundary (no root files in `allowed_files`).
+
+## Round 2: Trade-offs & Deliberation
+- **Trade-off 1: Scheduled Cron Execution Engine — Upstash QStash HTTP Webhooks vs Vercel Cron Jobs vs Node-cron / BullMQ**
+  - *Option A (Self-Hosted Node-cron / BullMQ process):* Requires a persistent, long-running Node container. *Cost:* Incompatible with Vercel Hobby serverless deployment and violates `ADR-0004`.
+  - *Option B (Vercel Cron Jobs):* Native Vercel hobby feature. *Cost:* Hobby plan permits only 1 cron job per day; cannot support both daily credit reset (08:00 UTC) and weekly retention cascade, plus lacks signature verification.
+  - *Option C (Upstash QStash Scheduled HTTP Webhooks):* Native serverless scheduled HTTP triggers signed with HMAC SHA-256 (`Upstash-Signature`).
+  - *Synthesis & Consensus:* Option C adopted per `ADR-0004`. Supports unlimited schedules within 500 msgs/day free tier, signed webhook verification, automatic retries with exponential backoff, and zero persistent infrastructure costs.
+- **Trade-off 2: Retention Cascade Purge Strategy — Atomic Vector + DB Cascade with 30-Day Tombstone vs Hard Immediate Delete vs Soft-Delete Only**
+  - *Option A (Hard Immediate Deletion):* Instantly wipe all DB records and vectors with zero tombstone. *Cost:* Breaches `BR-044`; client requests return generic 404 rather than explaining that the personal notebook expired due to 7 days of inactivity.
+  - *Option B (Soft-Delete Flag Only):* Set `is_deleted = true` without deleting vectors or stage files. *Cost:* Violates zero-cost and privacy guarantees; orphan vector embeddings persist indefinitely in Upstash Vector, wasting index quota and risking cross-tenant leakage (`BR-002`, `BR-039`).
+  - *Option C (Two-Tier Cascade: Immediate Vector/Node Purge + 30-Day Tombstone Row):* Immediately purge all vector embeddings from Upstash Vector and cascade-delete relational nodes/edges; retain only a minimal tombstone record on `notebooks` (`deleted_at = NOW()`, `expires_at = NOW() + 30 days`) returning HTTP 410 `NOTEBOOK_EXPIRED`. Hard purge executes after 30 days.
+  - *Synthesis & Consensus:* Option C adopted. Strictly satisfies `FR-041`, `BR-037..BR-040`, `BR-044`, and guarantees zero orphaned vector storage while giving users deterministic expiry notices.
+- **Trade-off 3: Logging Framework & Redaction Architecture — Pino with AsyncLocalStorage vs Console.log Wrappers vs Winston**
+  - *Option A (Console.log Wrapper):* Simple monkey-patching of `console.log`. *Cost:* Lacks structured JSON fields, high serialization overhead, poor performance under concurrency, and high risk of leaking nested secrets.
+  - *Option B (Winston with Transports):* Heavy logging framework with file and remote transports. *Cost:* Heavy bundle footprint, slower JSON serialization than Pino, complex transport configuration for serverless functions.
+  - *Option C (Pino Logger with AsyncLocalStorage Context & Deep Redaction):* Fast JSON logger (5x faster than Winston) paired with Node `AsyncLocalStorage` for transparent correlation ID propagation and regex-based redaction of Bearer tokens, API keys, and connection strings.
+  - *Synthesis & Consensus:* Option C adopted. Delivers sub-millisecond logging overhead, enforces strict JSON schema (`{ timestamp, level, correlation_id, event, payload }`), and guarantees secret sanitization (`NFR-026`).
+- **Trade-off 4: Telemetry & Tracing Integration — Standard OpenTelemetry SDK with HTTP OTLP Exporter vs Proprietary Better Stack SDK**
+  - *Option A (Proprietary Better Stack Logtail SDK):* Directly use `@logtail/node`. *Cost:* Vendor lock-in; violates vendor-neutral telemetry standards (`FR-023`, `NFR-009`) and complicates multi-cloud tracing.
+  - *Option B (Standard OpenTelemetry Node SDK with OTLP/HTTP Exporter targeting Better Stack):* Instrument using standard `@opentelemetry/api` and `@opentelemetry/exporter-trace-otlp-http` pointing to Better Stack OTLP ingest endpoint.
+  - *Synthesis & Consensus:* Option B adopted. Fully compliant with OpenTelemetry and W3C trace context standards (`NFR-009`); operates seamlessly within Better Stack free tier quotas ($0.00/month).
+- **Trade-off 5: 30-Day Tombstone Client HTTP Protocol — HTTP 410 NOTEBOOK_EXPIRED vs HTTP 404 NOT_FOUND**
+  - *Option A (Return 404 Not Found):* Treat expired notebooks identically to non-existent ones. *Cost:* Ambiguous to user; fails `BR-044` and `AC-7.2`, which explicitly require distinguishable expiration feedback.
+  - *Option B (Return HTTP 410 NOTEBOOK_EXPIRED via RFC 9457 Problem Details):* Distinct status indicating permanent resource expiration with deletion timestamp and retention policy explanation.
+  - *Synthesis & Consensus:* Option B adopted. Conforms to HTTP RFC specifications (410 Gone) and uses existing member #13 in the closed 17-member RFC 9457 catalogue (`packages/contracts/src/error-catalog.ts`), requiring zero modifications to the error catalogue.
+
+## Round 3: Consensus & Decisions
+1. **Charter & Grounding Confirmed:** Milestone M7 scope encompasses `FR-015`, `FR-040..FR-042`, `BR-010..BR-012`, `BR-025..BR-027`, `BR-037..BR-040`, `BR-044`, `NFR-009`, `NFR-017`, `NFR-026`, `NFR-031`, `NFR-032`. Risk tier classified as **HIGH** due to automated data deletion, webhook cryptography, and platform-wide telemetry.
+2. **Architecture Blueprint Sealed:** `05-m7-autonomous-maintenance-and-observability.md` authored and approved, detailing QStash crons, retention cascade sweeper, 30-day tombstone HTTP 410, Pino logger, secret redactor, and OpenTelemetry OTLP pipeline.
+3. **Sprint Board Certified:** Board `M7-S1` authored in `m7-maintenance-observability/sprint-status.yaml` with six stories (`S7.1` to `S7.6`), explicit Change Matrices, and verified DAG.
+4. **PM Approval Granted:** `pm-agent` approves the M7 sprint plan for developer handoff. Because the workspace baseline is 100% green (204/204 pass across 41 test files, 10/10 build/typecheck pass), approval is **unconditional**.
+
+## Sealed Decision Register
+
+| Decision ID | Summary | Owner | Sealed State |
+|---|---|---|---|
+| **M7-PM-001** | Scope grounded in FR-015, FR-040..042, BR-010..012, BR-025..027, BR-037..040, BR-044, NFR-009, NFR-017, NFR-026, NFR-031, NFR-032; classified HIGH risk | `pm-agent` | Sealed |
+| **M7-PM-002** | Unconditional PM approval for M7 sprint plan handoff to developer-agent | `pm-agent` | Sealed |
+| **M7-ARCH-001** | Dedicated first-floor package `@repo/observability` encapsulating Pino logger, AsyncLocalStorage correlation context, secret redactor, and OpenTelemetry OTLP tracing | `architect-agent` | Sealed |
+| **M7-ARCH-002** | QStash webhook receiver with cryptographic `Upstash-Signature` verification guarding crons `/api/v1/crons/reset-credits` and `/api/v1/crons/retention-sweep` | `architect-agent` | Sealed |
+| **M7-ARCH-003** | 7-day retention cascade sweeper purging Upstash Vector points and relational child nodes, setting 30-day tombstone returning HTTP 410 `NOTEBOOK_EXPIRED` | `architect-agent` | Sealed |
+| **M7-ARCH-004** | Deep secret and PII redactor sanitizing Bearer tokens, Clerk keys, database URIs, and API tokens before log emission | `architect-agent` | Sealed |
+| **M7-SPR-001** | Six single-session stories `S7.1 → S7.2 → S7.3 → S7.4 → S7.5 → S7.6` with frozen Change Matrices | `sprint-agent` | Sealed |
+| **M7-SPR-002** | Comprehensive E2E test harness verifying QStash webhook verification, daily reset, retention purge, tombstone HTTP 410, and secret redaction without requiring live cloud connectivity | `sprint-agent` | Sealed |
+
+## Rejected Alternatives (strongest argument, and why it lost)
+- **Self-Hosted BullMQ / Node-cron Worker Container** — offers fine-grained queue control; lost because it requires persistent long-running infrastructure incompatible with Vercel Hobby serverless runtime and threatens the $0.00/month operational ceiling.
+- **Immediate Hard Wipe of Idle Notebooks** — eliminates database rows faster; lost because it breaches explicit requirement `BR-044` and returns confusing generic 404 errors instead of informing users of expiration policy.
+- **Proprietary Better Stack Logtail SDK** — fast proprietary library; lost because standard OpenTelemetry Node SDK ensures vendor-neutral W3C trace context propagation across all services (`NFR-009`).
+- **Soft-Delete Only without Vector Purge** — simpler database-only update; lost because leaving orphaned vectors in Upstash Vector wastes free-tier quota and creates severe multi-tenant data leakage risks (`BR-002`, `BR-039`).
+
+## Handoff & Next Steps
+1. Hand off to `developer-agent` via `handoff-017-sprint-to-developer-m7.md`.
+2. `developer-agent` starts with **S7.1** (shared observability contracts in `@repo/contracts`) and proceeds sequentially through **S7.6**.
+3. `test-agent` verifies each story against acceptance criteria and certifies closure.
+4. `sprint-agent` maintains board progress in `m7-maintenance-observability/sprint-status.yaml`.
+
+## Implementation note
+This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
+
+

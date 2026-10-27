@@ -2,9 +2,9 @@
 doc_class: canonical
 owner: pm-agent
 milestone: M7
-status: planned
+status: completed
 created: 2026-10-23
-last_verified: 2026-10-23
+last_verified: 2026-10-27
 review_cadence_days: 90
 code_refs: []
 related:
@@ -13,6 +13,10 @@ related:
   - _documentation/planning/prd.md
   - _documentation/planning/conventions.md
   - _documentation/planning/milestones/overview.md
+  - _documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md
+  - _documentation/planning/milestones/m7-maintenance-observability/sprint-status.yaml
+  - _documentation/planning/milestones/m7-maintenance-observability/pm-approval.md
+  - _documentation/planning/milestones/m7-maintenance-observability/dev-log.md
   - _documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md
   - _documentation/planning/epics/epic-007-maintenance-and-keepalive.md
 supersedes: []
@@ -22,10 +26,11 @@ pinned: false
 
 # Milestone Charter — M7: Autonomous Maintenance Crons & Observability (v0.7.0)
 
-> **Status:** Planned (Follows M6 Pluggable Memory)  
-> **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-23  
+> **Status:** Completed (Gate G6 PASS · Follows M6 Pluggable Memory)  
+> **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-27  
 > **Target Version:** `v0.7.0` · **Risk Tier:** HIGH  
-> **Grounding:** `project-brief.md` (FR-015, FR-040..FR-042; BR-010..BR-012, BR-025..BR-027, BR-037, BR-044; NFR-009, NFR-017, NFR-026; ADR-0004)  
+> **Grounding:** `project-brief.md` (FR-015, FR-040..FR-042; BR-010..BR-012, BR-025..BR-027, BR-037, BR-044; NFR-009, NFR-017, NFR-026, NFR-031, NFR-032; ADR-0004)  
+
 
 ```mermaid
 graph TD

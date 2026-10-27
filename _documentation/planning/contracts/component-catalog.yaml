@@ -331,6 +331,81 @@ components:
         severity: "FATAL"
         type: "internal_package"
 
+  - id: "comp-observability"
+    name: "Telemetry, Structured Logging & Redaction Module"
+    package: "@repo/observability"
+    owner: "architect-agent"
+    milestone: "M7"
+    responsibilities:
+      - "Emit high-performance structured JSON logs conforming to { timestamp, level, correlation_id, event, payload }"
+      - "Manage correlation context (x-correlation-id, W3C traceparent) across asynchronous call stacks"
+      - "Deep-redact credentials, Clerk tokens, database URIs, API keys, and PII before log output"
+      - "Instrument OpenTelemetry Node SDK tracer and export spans via OTLP/HTTP to Better Stack"
+      - "Emit health heartbeat monitoring pulses upon scheduled maintenance job execution"
+    interfaces:
+      public_types:
+        - "Logger"
+        - "LogRecord"
+        - "RequestContext"
+        - "SpanContext"
+        - "HeartbeatPayload"
+      methods:
+        - "getLogger(): Logger"
+        - "runWithCorrelation(context: RequestContext, fn: () => Promise<T>): Promise<T>"
+        - "redactSecrets(input: unknown): unknown"
+        - "withSpan(name: string, fn: (span: Span) => Promise<T>): Promise<T>"
+        - "emitHeartbeat(jobName: string, status: string): Promise<void>"
+    dependencies:
+      - target: "@repo/contracts"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "@repo/config"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "pino"
+        severity: "FATAL"
+        type: "external_package"
+      - target: "@opentelemetry/api"
+        severity: "WARN"
+        type: "external_package"
+
+  - id: "comp-maintenance"
+    name: "Autonomous Maintenance Crons & Retention Sweeper"
+    package: "@repo/observability"
+    owner: "architect-agent"
+    milestone: "M7"
+    responsibilities:
+      - "Verify Upstash-Signature headers on incoming QStash webhook triggers"
+      - "Execute daily 08:00 UTC credit resets with idempotent Redis Lua script"
+      - "Identify notebooks idle for >= 7 days and orchestrate vector purge and cascade deletion"
+      - "Set 30-day tombstones on purged notebooks returning RFC 9457 HTTP 410 NOTEBOOK_EXPIRED"
+      - "Permanently hard-purge expired tombstones older than 30 days"
+    interfaces:
+      public_types:
+        - "CronExecutionResult"
+        - "RetentionSweepSummary"
+        - "TombstoneRecord"
+      methods:
+        - "verifyQStashSignature(headers: Record<string, string>, body: string): Promise<boolean>"
+        - "executeRetentionSweep(): Promise<RetentionSweepSummary>"
+        - "handleTombstoneCheck(notebookId: string): Promise<TombstoneRecord | null>"
+    dependencies:
+      - target: "@repo/contracts"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "@repo/config"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "@repo/db"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "@repo/metering"
+        severity: "FATAL"
+        type: "internal_package"
+      - target: "@upstash/vector"
+        severity: "FATAL"
+        type: "external_service"
+
 rules:
   - "Domain packages must never import Next.js web transport libraries (next/server)"
   - "Graph reads and writes must carry a user_id tenant predicate inside the repository; route handlers never issue their own SQL"
@@ -339,4 +414,7 @@ rules:
   - "All external vector calls must route through @repo/contracts/VectorStore interface"
   - "All upstream error handling must map directly to RFC 9457 Problem Details"
   - "100% of protected API endpoints (/api/v1/*) must sit behind comp-middleware guard"
+  - "All cron endpoints must verify cryptographic Upstash-Signature headers before execution"
+  - "Zero un-redacted credentials, tokens, or connection strings may be emitted to logs or traces"
+
 

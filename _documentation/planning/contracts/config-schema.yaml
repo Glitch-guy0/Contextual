@@ -176,6 +176,18 @@ config_contract:
     secrecy_class: "DEPLOY_VAR"
     description: "OpenTelemetry OTLP HTTP collector endpoint (Better Stack in prod)"
 
+  BETTER_STACK_SOURCE_TOKEN:
+    type: "string"
+    required:
+      local: false
+      test: false
+      production: false
+    secret: true
+    secrecy_class: "SECRET"
+    source: "env://BETTER_STACK_SOURCE_TOKEN"
+    description: "Better Stack telemetry source ingest token for OTLP traces and logs"
+
+
   # --- Filebase S3 Transient Staging (M3) ---
   FILEBASE_ACCESS_KEY_ID:
     type: "string"

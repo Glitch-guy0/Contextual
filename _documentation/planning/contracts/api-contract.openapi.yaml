@@ -134,6 +134,89 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /crons/reset-credits:
+    post:
+      summary: Trigger Daily Credit Reset (QStash Scheduled Webhook)
+      operationId: triggerDailyResetCron
+      tags: [Maintenance, Metering]
+      security: []
+      parameters:
+        - name: Upstash-Signature
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Cryptographic webhook signature from QStash
+      responses:
+        '200':
+          description: Daily credit reset batch executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, processed, idempotent_skips, timestamp]
+                properties:
+                  status:
+                    type: string
+                    example: "completed"
+                  processed:
+                    type: integer
+                    example: 42
+                  idempotent_skips:
+                    type: integer
+                    example: 5
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /crons/retention-sweep:
+    post:
+      summary: Trigger Weekly Retention Cascade Sweep (QStash Scheduled Webhook)
+      operationId: triggerRetentionSweep
+      tags: [Maintenance]
+      security: []
+      parameters:
+        - name: Upstash-Signature
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Cryptographic webhook signature from QStash
+      responses:
+        '200':
+          description: Retention cascade sweep executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, idle_notebooks_purged, vectors_deleted, tombstones_created, expired_tombstones_purged, duration_ms, timestamp]
+                properties:
+                  status:
+                    type: string
+                    example: "completed"
+                  idle_notebooks_purged:
+                    type: integer
+                    example: 12
+                  vectors_deleted:
+                    type: integer
+                    example: 348
+                  tombstones_created:
+                    type: integer
+                    example: 12
+                  expired_tombstones_purged:
+                    type: integer
+                    example: 3
+                  duration_ms:
+                    type: integer
+                    example: 245
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /notebooks:
     get:
       summary: List User Notebooks

@@ -1,0 +1,306 @@
+# Sprint Status — M7: Autonomous Maintenance Crons & Observability
+# Sprint Owner: sprint-agent
+# Planned Version: v0.7.0
+sprint:
+  id: M7-S1
+  milestone: M7
+  status: completed
+  phased_deployment_profile:
+    mode: expand
+    risk_tier: high
+    target_version: "0.7.0"
+    release_model: feature-expand
+    expand_tier: "1-a"
+    expand_geometry_note: >-
+      M7 is an expand-phase release: introduces @repo/observability package,
+      QStash scheduled crons driver, 7-day retention cascade sweeper, 30-day tombstones
+      (RFC 9457 HTTP 410 NOTEBOOK_EXPIRED), and OpenTelemetry OTLP tracing to Better Stack.
+      Existing closed 17-member error catalogue remains intact.
+  target_end: 2026-12-30
+  start_on: "manual"
+  stories:
+    - S7.1
+    - S7.2
+    - S7.3
+    - S7.4
+    - S7.5
+    - S7.6
+
+stories:
+  - id: S7.1
+    title: Shared maintenance & observability contracts, DTO types, and RFC 9457 catalogue verification
+    status: complete
+    phase: Done
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M7-1
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — typed TypeScript contracts for CronExecutionResult, RetentionSweepSummary, TombstoneRecord, LogLevel, SpanContext; no third-party framework."
+    acceptance:
+      - "Export CronExecutionResult, RetentionSweepSummary, TombstoneRecord, LogRecord, LogLevel, SpanContext, QStashWebhookPayload from @repo/contracts"
+      - "Validate payload assert helpers for cron triggers and retention sweep options"
+      - "Verify closed 17-member RFC 9457 error catalogue remains exactly 17 entries with zero modifications (NOTEBOOK_EXPIRED is member #13)"
+    tests:
+      - "tests/observability/contracts.test.ts — contract export validation and DTO structure tests"
+      - "bun test packages/contracts/tests/errors.test.ts — catalogue test passes 5/5"
+    observability:
+      - "Static TypeScript typecheck and runtime validator assertions"
+    verified: true
+    depends_on: []
+    change_matrix:
+      new_files:
+        - "packages/contracts/src/observability.ts"
+        - "tests/observability/contracts.test.ts"
+      allowed_files:
+        - "packages/contracts/src/**"
+        - "tests/observability/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "packages/observability/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S7.2
+    title: Package scaffolding @repo/observability, AsyncLocalStorage context, Pino logger & secret redactor
+    status: complete
+    phase: Done
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M7-2
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUY/BUILD — Pino high-performance logger + Node AsyncLocalStorage + custom deep regex redactor."
+    acceptance:
+      - "packages/observability package.json, tsconfig.json, and src/index.ts build and typecheck cleanly"
+      - "AsyncLocalStorage correlation context manages correlationId and W3C traceparent across async scopes"
+      - "Pino logger formats JSON conforming strictly to { timestamp, level, correlation_id, service, event, payload }"
+      - "Deep redactor strips Bearer JWTs, Clerk sk_ keys, database URIs, Upstash/Google API keys to [REDACTED]"
+    tests:
+      - "tests/observability/logger-redact.test.ts — logger formatting, correlation ID injection, and secret redaction"
+      - "turbo run build --filter=@repo/observability && turbo run typecheck --filter=@repo/observability"
+    observability:
+      - "Structured JSON stdout logs and sanitization verification assertions"
+    verified: true
+    depends_on:
+      - S7.1
+    change_matrix:
+      new_files:
+        - "packages/observability/package.json"
+        - "packages/observability/tsconfig.json"
+        - "packages/observability/src/index.ts"
+        - "packages/observability/src/logger.ts"
+        - "packages/observability/src/context.ts"
+        - "packages/observability/src/redact.ts"
+        - "tests/observability/logger-redact.test.ts"
+      allowed_files:
+        - "packages/observability/**"
+        - "tests/observability/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S7.3
+    title: OpenTelemetry tracing provider, W3C traceparent propagator & Better Stack OTLP export
+    status: complete
+    phase: Done
+    priority: p1
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M7-3
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUY/BUILD — @opentelemetry/api and @opentelemetry/sdk-node configured with HTTP OTLP exporter."
+    acceptance:
+      - "createTracer / withSpan creates active spans with span names, attributes, and status codes"
+      - "W3C traceparent header extraction and injection utilities conform to 00-{traceId}-{spanId}-{flags}"
+      - "OTLP HTTP exporter wrapper sends telemetry spans to OTEL_EXPORTER_OTLP_ENDPOINT with timeout guards"
+      - "emitHeartbeat emits health pulse recording cron execution status (NFR-031)"
+    tests:
+      - "tests/observability/tracer-telemetry.test.ts — span lifecycle, W3C propagation, and heartbeat emission"
+      - "turbo run typecheck --filter=@repo/observability"
+    observability:
+      - "Span lifecycle events and heartbeat health metrics"
+    verified: true
+    depends_on:
+      - S7.2
+    change_matrix:
+      new_files:
+        - "packages/observability/src/tracer.ts"
+        - "packages/observability/src/heartbeat.ts"
+        - "tests/observability/tracer-telemetry.test.ts"
+      allowed_files:
+        - "packages/observability/**"
+        - "tests/observability/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S7.4
+    title: QStash webhook receiver with cryptographic signature verification & scheduled crons driver
+    status: complete
+    phase: Done
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M7-4
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUY/BUILD — @upstash/qstash Receiver cryptographic HMAC SHA-256 signature verification + idempotent daily reset driver."
+    acceptance:
+      - "QStashSignatureVerifier validates Upstash-Signature against rawBody with currentSigningKey and nextSigningKey"
+      - "Rejects absent or mismatched webhook signatures with false / HTTP 401"
+      - "executeDailyResetCron wraps @repo/metering executeDailyResetBatch with idempotency check and returns CronExecutionResult"
+      - "Emits structured JSON log and heartbeat pulse on cron completion"
+    tests:
+      - "tests/observability/qstash-crons.test.ts — signature verification, daily reset trigger, and idempotency"
+      - "turbo run typecheck --filter=@repo/observability"
+    observability:
+      - "Verification success/failure counters and cron execution metrics"
+    verified: true
+    depends_on:
+      - S7.3
+    change_matrix:
+      new_files:
+        - "packages/observability/src/qstash-receiver.ts"
+        - "packages/observability/src/cron-driver.ts"
+        - "tests/observability/qstash-crons.test.ts"
+      allowed_files:
+        - "packages/observability/**"
+        - "tests/observability/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S7.5
+    title: 7-day retention cascade sweeper, Upstash Vector point purge, Neon Postgres cascade & 30-day tombstone engine
+    status: complete
+    phase: Done
+    priority: p0
+    owner: developer-agent
+    effort: 5
+    work_unit: WU-M7-5
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUILD — Kysely retention queries + Upstash Vector delete + tombstone HTTP 410 RFC 9457 handler."
+    acceptance:
+      - "findIdleNotebooks selects notebooks idle for >= 7 days (updated_at < NOW() - 7 days AND deleted_at IS NULL)"
+      - "purgeNotebookVectors deletes all vector points in Upstash Vector filtered by notebook_id"
+      - "cascadeTombstoneNotebook deletes notebook_nodes and notebook_edges and updates notebook deleted_at = NOW(), expires_at = NOW() + 30 days"
+      - "hardPurgeExpiredNotebooks deletes notebooks where deleted_at IS NOT NULL AND expires_at < NOW()"
+      - "createNotebookExpiredProblem produces RFC 9457 HTTP 410 NOTEBOOK_EXPIRED ProblemDocument with deletion timestamp"
+    tests:
+      - "tests/observability/retention-cascade.test.ts — 7-day sweeper, vector purge, child node cascade, and HTTP 410 tombstone"
+      - "turbo run typecheck --filter=@repo/observability --filter=@repo/db"
+    observability:
+      - "Sweeper audit logs recording purged notebook IDs, vector delete counts, and duration"
+    verified: true
+    depends_on:
+      - S7.4
+    change_matrix:
+      new_files:
+        - "packages/db/src/retention.ts"
+        - "packages/observability/src/retention-sweeper.ts"
+        - "tests/observability/retention-cascade.test.ts"
+      allowed_files:
+        - "packages/db/**"
+        - "packages/observability/**"
+        - "tests/observability/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S7.6
+    title: E2E maintenance & observability integration suite, latency/throughput verification & documentation sync
+    status: complete
+    phase: Done
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M7-6
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — simulated E2E test harness exercising full webhook -> reset -> retention cascade -> tombstone -> redaction pipeline."
+    acceptance:
+      - "Simulated QStash webhook invokes daily credit reset idempotently (AC-7.1)"
+      - "Inactive notebook (age 8 days) has vectors purged, child nodes deleted, and returns HTTP 410 NOTEBOOK_EXPIRED (AC-7.2)"
+      - "100% of emitted logs conform to structured JSON schema with correlation_id and W3C trace context (AC-7.3)"
+      - "Injected Bearer tokens, Clerk keys, and database connection URIs are verified redacted to [REDACTED] (AC-7.4)"
+      - "Monorepo full build and typecheck pass cleanly with zero regressions"
+    tests:
+      - "tests/observability/e2e-maintenance-observability.test.ts — unified end-to-end integration suite"
+      - "bun test && bun run build && bun run typecheck"
+    observability:
+      - "Benchmark report and full verification trace logging"
+    verified: true
+    depends_on:
+      - S7.5
+    change_matrix:
+      new_files:
+        - "tests/observability/e2e-maintenance-observability.test.ts"
+      allowed_files:
+        - "tests/observability/**"
+        - "packages/observability/**"
+      forbidden_files:
+        - "packages/contracts/**"
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "packages/memory/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"

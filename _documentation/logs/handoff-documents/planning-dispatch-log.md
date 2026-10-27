@@ -47,6 +47,21 @@ graph TD
 | **DSP-018** | 2026-10-26T14:40:00Z | `architect-agent` | `security-architect` | Cross-tenant isolation, ownership pre-check ordering before debit, edge-type validation surface | `_documentation/planning/architecture/05-m4-notebook-workspace-and-domain-graph.md` §5.2 | ACCEPTED |
 | **DSP-019** | 2026-10-26T14:45:00Z | `architect-agent` | `failure-mode-specialist` | M4 FMEA: orphaned edges, card resolution latency breach, debit-before-ownership race | `_documentation/planning/registers/failure-mode-register.md` (FM-401..FM-404) | ACCEPTED |
 | **DSP-020** | 2026-10-26T15:05:00Z | `pm-agent` | `sprint-agent` | M4 board authoring: atomic stories with frozen Change Matrices and developer handoff | `_documentation/planning/milestones/m4-notebook-workspace/sprint-status.yaml` | ACCEPTED |
+| **DSP-021** | 2026-10-27T08:00:00Z | `pm-agent` | `architect-agent` | M5 6-phase grounded reasoning engine design blueprint | `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md` | ACCEPTED |
+| **DSP-022** | 2026-10-27T08:10:00Z | `architect-agent` | `data-architect` | Upstash Vector parallel top-3 scoped retrieval with tenant filters | `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md` §3.4 | ACCEPTED |
+| **DSP-023** | 2026-10-27T08:15:00Z | `architect-agent` | `failure-mode-specialist` | M5 dual-provider circuit breaker FMEA and citation grounding | `_documentation/planning/registers/failure-mode-register.md` (FM-501..FM-505) | ACCEPTED |
+| **DSP-024** | 2026-10-27T08:20:00Z | `architect-agent` | `security-architect` | Zero-hallucination citation grounding & tenant isolation review | `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md` §5 | ACCEPTED |
+| **DSP-025** | 2026-10-27T08:25:00Z | `pm-agent` | `sprint-agent` | M5 sprint board authoring with frozen Change Matrices | `_documentation/planning/milestones/m5-reasoning-engine/sprint-status.yaml` | ACCEPTED |
+| **DSP-026** | 2026-10-27T08:52:00Z | `developer-agent` | `test-agent` | Milestone M5 implementation verification and test gate certification | `_documentation/logs/handoff-documents/handoff-015-developer-to-test-m5.md` | ACCEPTED |
+| **DSP-027** | 2026-10-27T09:05:00Z | `pm-agent` | `architect-agent` | M6 pluggable long-term memory store architecture blueprint | `_documentation/planning/architecture/05-m6-pluggable-long-term-memory-store.md` | ACCEPTED |
+| **DSP-028** | 2026-10-27T09:10:00Z | `architect-agent` | `data-architect` | In-process Mem0 Upstash Redis and Upstash Vector storage layout | `_documentation/planning/architecture/05-m6-pluggable-long-term-memory-store.md` §3 | ACCEPTED |
+| **DSP-029** | 2026-10-27T09:15:00Z | `architect-agent` | `security-architect` | Multi-tenant memory isolation & cascade purge security review | `_documentation/planning/architecture/05-m6-pluggable-long-term-memory-store.md` §5 | ACCEPTED |
+| **DSP-030** | 2026-10-27T09:20:00Z | `pm-agent` | `sprint-agent` | M6 sprint board authoring with frozen Change Matrices | `_documentation/planning/milestones/m6-pluggable-memory/sprint-status.yaml` | ACCEPTED |
+| **DSP-031** | 2026-10-27T10:35:00Z | `pm-agent` | `architect-agent` | M7 autonomous maintenance crons & observability architecture blueprint | `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md` | ACCEPTED |
+| **DSP-032** | 2026-10-27T10:38:00Z | `architect-agent` | `security-architect` | QStash webhook cryptographic signature verification & secret redactor | `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md` §3, §5 | ACCEPTED |
+| **DSP-033** | 2026-10-27T10:40:00Z | `architect-agent` | `data-architect` | 7-day retention sweeper queries, Upstash Vector purge, 30-day tombstones | `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md` §4 | ACCEPTED |
+| **DSP-034** | 2026-10-27T10:42:00Z | `architect-agent` | `failure-mode-specialist` | M7 FMEA sweep: signature spoofing, partial purge, log-flooding, OTLP timeouts | `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md` §8 (FM-701..FM-705) | ACCEPTED |
+| **DSP-035** | 2026-10-27T10:45:00Z | `pm-agent` | `sprint-agent` | M7 sprint board authoring with frozen Change Matrices (S7.1..S7.6) | `_documentation/planning/milestones/m7-maintenance-observability/sprint-status.yaml` | ACCEPTED |
 
 ---
 
@@ -497,5 +512,173 @@ graph TD
   - Recommendations: Run gate verification command `bun test && bun run build && bun run typecheck`; certify Checkpoint 4; prepare handoff to `deployment-agent`.
 - **Status:** ACCEPTED
 
+---
 
+### DSP-027: M6 Pluggable Long-Term Memory Store Architecture Blueprint
+- **Timestamp:** 2026-10-27T09:05:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `architect-agent`
+- **Architectural Dimension:** Modular Memory Architecture & Seam Design
+- **Why Invoked (Rationale):**
+  > Design M6 pluggable long-term memory store allowing cross-session recall while maintaining abstract interface and zero-cost infrastructure.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m6-pluggable-memory/milestone.md`
+  - `_documentation/planning/epics/epic-006-pluggable-memory-store.md`
+  - `_documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/architecture/05-m6-pluggable-long-term-memory-store.md`
+  - Recommendations: Implement hexagonal `MemoryStore` interface; support polymorphic extraction seam for standalone worker.
+- **Status:** ACCEPTED
 
+---
+
+### DSP-028: In-Process Mem0 Storage Topology & Semantic Indexing
+- **Timestamp:** 2026-10-27T09:10:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `data-architect`
+- **Architectural Dimension:** Data Architecture & Vector Layout
+- **Why Invoked (Rationale):**
+  > Plan Upstash Redis KV layout and Upstash Vector 768-dim payload schema with strict user_id tenant partition.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m6-pluggable-long-term-memory-store.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m6-pluggable-long-term-memory-store.md` §3
+  - Recommendations: Prefix Redis keys with `mem:user:{userId}`; enforce tenant payload filters on all vector queries.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-029: Multi-Tenant Memory Isolation & Cascade Purge Security Review
+- **Timestamp:** 2026-10-27T09:15:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `security-architect`
+- **Architectural Dimension:** Security & Tenant Boundaries
+- **Why Invoked (Rationale):**
+  > Enforce strict multi-tenant isolation (BR-002, BR-019) and sanitize memory cascade purges.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m6-pluggable-long-term-memory-store.md` §5
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m6-pluggable-long-term-memory-store.md` §5
+  - Recommendations: All memory operations require explicit `userId` parameter; `deleteUserMemories()` purges both Redis keys and Upstash Vector points atomically.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-030: M6 Sprint Board Authoring & Developer Handoff
+- **Timestamp:** 2026-10-27T09:20:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `sprint-agent`
+- **Architectural Dimension:** Tactical Slicing & Board Governance
+- **Why Invoked (Rationale):**
+  > Slice EPIC-006 into 6 single-session atomic stories with frozen Change Matrices.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m6-pluggable-memory/milestone.md`
+  - `_documentation/planning/architecture/05-m6-pluggable-long-term-memory-store.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/milestones/m6-pluggable-memory/sprint-status.yaml` + `stories/`
+- **Status:** ACCEPTED
+
+---
+
+### DSP-031: M7 Autonomous Maintenance Crons & Observability Architecture Blueprint
+- **Timestamp:** 2026-10-27T10:35:00Z
+- **Calling Agent:** `pm-agent` (Stage 2 Owner)
+- **Target Specialist:** `architect-agent` (Stage 3 Owner)
+- **Architectural Dimension:** Architecture & System Topology
+- **Why Invoked (Rationale):**
+  > Design Milestone M7 autonomous maintenance crons, QStash webhook verification, 7-day retention cascade sweeper, 30-day tombstone HTTP 410 protocol, Pino structured logging, deep secret redaction, and OpenTelemetry OTLP tracing to Better Stack.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m7-maintenance-observability/milestone.md`
+  - `_documentation/planning/epics/epic-007-maintenance-and-keepalive.md`
+  - `_documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`
+  - `_documentation/planning/prd.md` (FR-015, FR-040..FR-042)
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md`
+  - Recommendations: Package core observability tools in `@repo/observability`; protect webhook endpoints via HMAC SHA-256 signature verification; execute two-phase retention cascade with 30-day tombstones returning HTTP 410 `NOTEBOOK_EXPIRED`.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-032: QStash Webhook Security & Deep Secret Redactor Specification
+- **Timestamp:** 2026-10-27T10:38:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `security-architect`
+- **Architectural Dimension:** Cryptography & Data Protection
+- **Why Invoked (Rationale):**
+  > Define cryptographic signature verification (`Upstash-Signature`) guarding maintenance routes against unauthorized execution, and design recursive regex sanitizer stripping secrets/PII before log emission.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md` §3, §5
+  - `_documentation/planning/contracts/config-schema.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m7-autonomous-maintenance-and-observability.md` §3.1, §5.3
+  - Recommendations: Verify signatures against raw request bodies using current and next signing keys; apply regex filters covering Bearer tokens, Clerk keys (`sk_`), database URIs, API keys, and passwords.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-033: Relational Retention Queries, Vector Purge & 30-Day Tombstones
+- **Timestamp:** 2026-10-27T10:40:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `data-architect`
+- **Architectural Dimension:** Data Architecture & Retention Lifecycle
+- **Why Invoked (Rationale):**
+  > Specify SQL queries for finding idle notebooks (>= 7 days), vector deletion cascade in Upstash Vector, child node/edge relational drop, and 30-day tombstone management.
+- **Inputs Provided:**
+  - `packages/db/src/schema.ts`
+  - `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md` §4
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m7-autonomous-maintenance-and-observability.md` §4
+  - Recommendations: Utilize existing `idle_since`, `deleted_at`, and `expires_at` columns on `notebooks` table; query in batches of 50; delete Upstash Vector points by `notebook_id` before dropping child relational rows; execute hard deletion when `expires_at < NOW()`.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-034: M7 Failure Modes & Effects Analysis (FMEA)
+- **Timestamp:** 2026-10-27T10:42:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `failure-mode-specialist`
+- **Architectural Dimension:** Reliability & Fault Tolerance
+- **Why Invoked (Rationale):**
+  > Conduct bottom-up FMEA sweep for QStash signature spoofing, partial retention purge failure, log flooding, Better Stack OTLP export timeout, and clock skew.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md` §8
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md` §8 (FM-701..FM-705)
+  - Recommendations: Reject invalid signatures with HTTP 401; enforce two-phase vector-first deletion; cap OTLP export timeout at 500ms; use Postgres server timestamp `NOW()` exclusively.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-035: M7 Sprint Board Authoring & Developer Handoff
+- **Timestamp:** 2026-10-27T10:45:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `sprint-agent`
+- **Architectural Dimension:** Tactical Decomposition & Board Governance
+- **Why Invoked (Rationale):**
+  > Decompose EPIC-007 into six single-session atomic stories with frozen Change Matrices (`new_files`, `allowed_files`, `forbidden_files`), bind verification hooks to AC-7.1..AC-7.4, and author the sprint board for developer execution.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m7-maintenance-observability/milestone.md`
+  - `_documentation/planning/architecture/05-m7-autonomous-maintenance-and-observability.md`
+  - `_documentation/planning/contracts/api-contract.openapi.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/milestones/m7-maintenance-observability/sprint-status.yaml` + `stories/` (S7.1..S7.6)
+  - Recommendations: S7.1 contracts & catalogue check; S7.2 Pino logger & redactor; S7.3 OpenTelemetry & Better Stack OTLP; S7.4 QStash webhook receiver & crons driver; S7.5 retention cascade & 30-day tombstone; S7.6 E2E integration suite. Clean DAG ordering: `S7.1 → S7.2 → S7.3 → S7.4 → S7.5 → S7.6`.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-036: Milestone M7 Implementation & Handoff to Test Verification
+- **Timestamp:** 2026-10-27T11:20:00Z
+- **Calling Agent:** `developer-agent`
+- **Target Specialist:** `test-agent`
+- **Architectural Dimension:** Implementation Execution & Verification Certification
+- **Why Invoked (Rationale):**
+  > Hand off completed implementation of Milestone M7 (`v0.7.0`: Autonomous Maintenance Crons & Observability) with honest command execution evidence for Gate G6 certification.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m7-maintenance-observability/sprint-status.yaml`
+  - `_documentation/planning/milestones/m7-maintenance-observability/dev-log.md`
+  - `_documentation/logs/handoff-documents/handoff-018-developer-to-test-m7.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `packages/observability/` (8 modules), `packages/contracts/src/observability.ts`, `packages/db/src/retention.ts`, `tests/observability/` (6 test suites).
+  - Recommendations: 55/55 observability tests pass, 259/259 monorepo tests pass (0 fail across 47 files); 11/11 packages build and typecheck clean; Gate G6 PASS certified.
+- **Status:** ACCEPTED

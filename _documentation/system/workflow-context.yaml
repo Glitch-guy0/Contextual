@@ -6,7 +6,7 @@ workflow:
   risk_tier: HIGH
   current_stage: "stage_4_implementation"
   active_agent: developer-agent
-  active_milestone: "M5"
+  active_milestone: "M7"
   checkpoint: "CP4"
   gate: "G6"
   gate_status: "PASS"
