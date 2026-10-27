@@ -42,7 +42,7 @@ export function verifyReleaseInvariants(options: ReleaseTagOptions = {}): Releas
     });
   } else {
     try {
-      const output = execSync("bun test", { cwd: rootDir, encoding: "utf-8" });
+      const output = execSync("bun test 2>&1", { cwd: rootDir, encoding: "utf-8" });
       const passMatch = output.match(/(\d+)\s+pass/);
       const failMatch = output.match(/(\d+)\s+fail/);
       const failCount = failMatch ? parseInt(failMatch[1], 10) : 0;
