@@ -4,6 +4,7 @@ export * from "./metering.js";
 export * from "./workspace.js";
 export * from "./reasoning.js";
 export * from "./memory.js";
+export * from "./observability.js";
 export { AppProblemError } from "./errors.js";
 export type {
   SourceType,
