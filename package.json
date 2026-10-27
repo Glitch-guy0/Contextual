@@ -8,20 +8,22 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "bun apps/platform/src/server.ts",
+    "start": "bun apps/platform/src/server.ts",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
     "test": "bun test",
     "dev:doctor": "bun run packages/config/src/doctor/cli.ts",
-    "docker:up": "docker compose -f infra/compose.yaml up -d",
-    "docker:down": "docker compose -f infra/compose.yaml down",
-    "docker:logs": "docker compose -f infra/compose.yaml logs -f",
-    "docker:ps": "docker compose -f infra/compose.yaml ps",
     "infra:up": "docker compose -f infra/compose.yaml up -d",
     "infra:down": "docker compose -f infra/compose.yaml down",
     "infra:logs": "docker compose -f infra/compose.yaml logs -f",
-    "infra:ps": "docker compose -f infra/compose.yaml ps"
+    "infra:ps": "docker compose -f infra/compose.yaml ps",
+    "local:up": "docker compose -f infra/compose.local.yaml up -d --build",
+    "local:down": "docker compose -f infra/compose.local.yaml down --rmi local",
+    "local:logs": "docker compose -f infra/compose.local.yaml logs -f app",
+    "local:ps": "docker compose -f infra/compose.local.yaml ps"
   },
   "devDependencies": {
     "turbo": "^2.4.4",

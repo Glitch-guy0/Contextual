@@ -1,0 +1,31 @@
+{
+  "name": "@repo/platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/server.ts",
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "start": "bun src/server.ts",
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@repo/auth": "workspace:*",
+    "@repo/config": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/ingestion": "workspace:*",
+    "@repo/memory": "workspace:*",
+    "@repo/metering": "workspace:*",
+    "@repo/observability": "workspace:*",
+    "@repo/reasoning": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "@repo/workspace": "workspace:*",
+    "uuid": "14.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
