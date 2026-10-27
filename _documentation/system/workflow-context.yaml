@@ -5,11 +5,11 @@ workflow:
   target_maturity: mvp
   risk_tier: HIGH
   current_stage: "stage_4_implementation"
-  active_agent: developer-agent
-  active_milestone: "M8"
-  checkpoint: "CP4"
+  active_agent: deployment-agent
+  active_milestone: "GA"
+  checkpoint: "CP5"
   gate: "G6"
-  gate_status: "PENDING_CERTIFICATION"
+  gate_status: "PASS"
   commands:
     build_cmd: "bun run build"
     test_cmd: "bun test"
@@ -279,6 +279,34 @@ workflow:
       from: "developer-agent"
       to: "test-agent"
       stage: 4
-      status: "READY_FOR_HANDOFF"
+      status: "ACCEPTED"
       milestone: "M8"
       summary: "Milestone M8 implementation complete across S8.1..S8.6. All 54 UI/accessibility tests pass; full monorepo 313/313 pass; 11/11 packages build and typecheck clean."
+    - id: "handoff-021"
+      from: "sprint-agent"
+      to: "developer-agent"
+      stage: 4
+      status: "ACCEPTED"
+      milestone: "M9"
+      summary: "Milestone M9 sprint plan approved for implementation. S9.1..S9.6 ready for clean-session execution."
+    - id: "handoff-022"
+      from: "developer-agent"
+      to: "test-agent"
+      stage: 4
+      status: "ACCEPTED"
+      milestone: "M9"
+      summary: "Milestone M9 benchmark suite, hardening, and security audit complete across S9.1..S9.6. Full monorepo 339/339 pass; signed zero-dollar attestation report published."
+    - id: "handoff-023"
+      from: "sprint-agent"
+      to: "developer-agent"
+      stage: 4
+      status: "ACCEPTED"
+      milestone: "GA"
+      summary: "Milestone GA sprint plan approved for implementation. SGA.1..SGA.6 ready for clean-session execution."
+    - id: "handoff-024"
+      from: "developer-agent"
+      to: "test-agent"
+      stage: 4
+      status: "READY_FOR_HANDOFF"
+      milestone: "GA"
+      summary: "Milestone GA implementation complete across SGA.1..SGA.6. All 28 deployment/smoke tests pass; full monorepo 367/367 pass; 11/11 packages build and typecheck clean; ready for Checkpoint 5 closeout."

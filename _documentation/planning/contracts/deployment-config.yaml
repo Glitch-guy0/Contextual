@@ -149,6 +149,10 @@ ci_pipeline_gates:
     command: "bun run build"
     gate: "Turborepo build artifacts compile cleanly in < 30s"
 
+  - stage: "RFC 9457 Catalogue Invariant"
+    command: "bun test packages/contracts/tests/errors.test.ts"
+    gate: "Closed 17-member RFC 9457 problem catalogue remains strictly unmodified"
+
 health_probes:
   liveness:
     endpoint: "GET /api/health"
@@ -164,6 +168,23 @@ health_probes:
       database: "connected"
       redis: "connected"
 
+production_release_governance:
+  target_version: "v1.0.0"
+  git_tag: "v1.0.0"
+  release_tag_script: "scripts/cut-release-tag.ts"
+  hosting_provider: "Vercel Hobby Serverless"
+  region: "iad1"
+  ci_workflow: ".github/workflows/ci.yml"
+  smoke_suite: "tests/e2e/production-smoke.test.ts"
+  smoke_runner: "scripts/production-smoke.ts"
+  invariants_checked:
+    - "100% test scenario pass across all packages (bun test)"
+    - "Clean TypeScript compilation (bun run typecheck)"
+    - "Clean monorepo build (bun run build)"
+    - "Uncommitted changes strictly 0 (git status --porcelain clean)"
+    - "PM unconditional approval verified in pm-approval.md"
+    - "Zero-dollar cost ceiling attested across all 8 vendors ($0.00/mo, NFR-016)"
+
 preflight_and_hygiene:
   preflight_check:
     - "Verify Docker Engine is active: docker info >/dev/null 2>&1"
@@ -172,3 +193,4 @@ preflight_and_hygiene:
   clean_rebuild_hygiene:
     - "Stop stale containers: docker compose -f infra/compose.yaml down --remove-orphans"
     - "Clear Turbo build caches: bun run clean"
+

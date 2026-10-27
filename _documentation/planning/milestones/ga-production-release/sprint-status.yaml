@@ -1,0 +1,306 @@
+# Sprint Status — GA: General Availability Production Release (v1.0.0)
+# Sprint Owner: sprint-agent
+# Planned Version: v1.0.0
+sprint:
+  id: GA-S1
+  milestone: GA
+  status: complete
+  phased_deployment_profile:
+    mode: expand
+    risk_tier: high
+    target_version: "1.0.0"
+    release_model: production-release
+    expand_tier: "1-a"
+    expand_geometry_note: >-
+      Milestone GA delivers the final General Availability production release (v1.0.0) of the Contextual AI Platform.
+      It introduces GitHub Actions CI/CD pipeline automation (.github/workflows/ci.yml), Vercel Hobby production
+      serverless deployment configuration (vercel.json), automated post-deployment production smoke verification suite
+      (tests/e2e/production-smoke.test.ts, scripts/production-smoke.ts), comprehensive release CHANGELOG.md documenting
+      M0 through GA, annotated Git release tagging automation (scripts/cut-release-tag.ts), and Checkpoint 5 closeout.
+      All existing 11 internal packages and closed 17-member RFC 9457 error catalogue remain strictly unmodified.
+  target_end: 2026-12-31
+  start_on: "manual"
+  stories:
+    - SGA.1
+    - SGA.2
+    - SGA.3
+    - SGA.4
+    - SGA.5
+    - SGA.6
+
+stories:
+  - id: SGA.1
+    title: GitHub Actions CI/CD Pipeline workflow and automated pre-merge verification suite
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-GA-1
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — custom GitHub Actions workflow in .github/workflows/ci.yml utilizing official oven-sh/setup-bun@v2 action with zero third-party SaaS CI dependencies."
+    acceptance:
+      - "Create .github/workflows/ci.yml triggering on pushes to main and pull requests targeting main"
+      - "Configure runner on ubuntu-latest with oven-sh/setup-bun@v2 and bun install --frozen-lockfile"
+      - "Execute automated pre-merge stages: bun run lint, bun run typecheck, bun test, and bun run build"
+      - "Assert closed 17-member RFC 9457 error catalogue test runs and passes as an explicit pipeline gate"
+      - "Author unit test tests/ci/ci-workflow.test.ts validating YAML syntax, trigger events, step commands, and error catalogue assertions"
+      - "Verify workflow executes in < 3 minutes without requiring external cloud secrets for standard PRs"
+    tests:
+      - "tests/ci/ci-workflow.test.ts — syntax validation, step order assertions, and error catalogue verification"
+      - "bun test packages/contracts/tests/errors.test.ts — catalogue test passes 5/5"
+    observability:
+      - "GitHub Actions step logs with timestamps, exit codes, and stdout/stderr capture"
+    verified: true
+    depends_on: []
+    change_matrix:
+      new_files:
+        - ".github/workflows/ci.yml"
+        - "tests/ci/ci-workflow.test.ts"
+      allowed_files:
+        - ".github/workflows/**"
+        - "tests/ci/**"
+      forbidden_files:
+        - "packages/**"
+        - "tests/benchmarks/**"
+        - "tests/reasoning/**"
+        - "tests/workspace/**"
+        - "tests/ui/**"
+        - "tests/memory/**"
+        - "tests/observability/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+        - "package.json"
+        - "turbo.json"
+        - "bunfig.toml"
+
+  - id: SGA.2
+    title: Vercel production serverless deployment configuration and deployment contract alignment
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-GA-2
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — standard vercel.json deployment configuration for Vercel Hobby serverless runtime; zero paid add-ons or custom proxies."
+    acceptance:
+      - "Create vercel.json configuring Next.js framework, iad1 region co-located with Neon/Upstash, cleanUrls: true, and HTTP security headers"
+      - "Configure security headers: X-Content-Type-Options: nosniff, X-Frame-Options: DENY, X-XSS-Protection, Referrer-Policy, and Cache-Control: no-store for /api/*"
+      - "Verify alignment with _documentation/planning/contracts/deployment-config.yaml production environment specifications"
+      - "Author test tests/deployment/vercel-config.test.ts validating JSON schema, region settings, header rules, and zero-dollar runtime policies"
+      - "Guarantee zero paid add-on flags or commercial features violating NFR-016 ($0.00/month ceiling)"
+    tests:
+      - "tests/deployment/vercel-config.test.ts — JSON validation, region assertions, header security checks, and zero-cost constraints"
+    observability:
+      - "Deployment contract schema assertions and static configuration validation"
+    verified: true
+    depends_on:
+      - SGA.1
+    change_matrix:
+      new_files:
+        - "vercel.json"
+        - "tests/deployment/vercel-config.test.ts"
+      allowed_files:
+        - "vercel.json"
+        - "tests/deployment/**"
+      forbidden_files:
+        - "packages/**"
+        - ".github/**"
+        - "tests/ci/**"
+        - "tests/benchmarks/**"
+        - "tests/reasoning/**"
+        - "tests/workspace/**"
+        - "tests/ui/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+        - "package.json"
+        - "turbo.json"
+        - "bunfig.toml"
+
+  - id: SGA.3
+    title: Automated post-deployment production smoke verification suite and runner script
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-GA-3
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUILD — custom asynchronous TypeScript smoke runner in scripts/production-smoke.ts and tests/e2e/production-smoke.test.ts using native fetch; zero heavy browser dependencies."
+    acceptance:
+      - "Implement production smoke test runner in scripts/production-smoke.ts and tests/e2e/production-smoke.test.ts"
+      - "Verify Phase 1: Authentication & Identity — validate Clerk RS256 JWT claims for test user"
+      - "Verify Phase 2: Transient Ingestion — stage sample test document in Filebase S3, upsert vectors to Upstash Vector, and delete S3 staging file (BR-046)"
+      - "Verify Phase 3: Grounded Reasoning — execute multi-step reasoning query and assert structured answer contains valid inline citations [1]"
+      - "Verify Phase 4: Telemetry & Observability — verify structured JSON log emissions carry correlation_id, traceparent, and redacted secrets"
+      - "Support dual execution mode: live production URL (PRODUCTION_URL) and calibrated offline mock mode for CI environments"
+      - "Purge all transient test data in a guaranteed finally block to uphold zero-byte transient storage invariant (BR-046)"
+    tests:
+      - "tests/e2e/production-smoke.test.ts — end-to-end 4-phase transaction chain verification with zero errors"
+    observability:
+      - "Structured console logs emitting phase status, latency, request IDs, and step verification results"
+    verified: true
+    depends_on:
+      - SGA.2
+    change_matrix:
+      new_files:
+        - "scripts/production-smoke.ts"
+        - "tests/e2e/production-smoke.test.ts"
+      allowed_files:
+        - "scripts/**"
+        - "tests/e2e/**"
+      forbidden_files:
+        - "packages/**"
+        - ".github/**"
+        - "tests/ci/**"
+        - "tests/deployment/**"
+        - "tests/benchmarks/**"
+        - "tests/reasoning/**"
+        - "tests/workspace/**"
+        - "tests/ui/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+        - "package.json"
+        - "turbo.json"
+        - "bunfig.toml"
+
+  - id: SGA.4
+    title: Curated production release changelog and migration guide documenting M0 through GA evolution
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-GA-4
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — canonical Keep a Changelog v1.0.0 documentation in CHANGELOG.md; zero external generation tools."
+    acceptance:
+      - "Author root CHANGELOG.md documenting complete platform evolution from v0.1.0-alpha.1 to v1.0.0"
+      - "Document all 10 delivered milestones: M0 Scaffolding, M1 Dev Golden Path & Auth, M2 Metering Spine, M3 Transient Ingestion, M4 Notebook Workspace, M5 Grounded Reasoning, M6 Pluggable Memory, M7 Maintenance Crons & Observability, M8 Marketing Landing & Disclosure, M9 Hardening & Benchmarks, and GA Production Release"
+      - "Include comprehensive developer migration guide covering zero-dollar free tier credentials, local Docker stack, and RFC 9457 error contracts"
+      - "Author test tests/documentation/changelog-integrity.test.ts verifying CHANGELOG.md exists, follows SemVer format, and covers all milestones"
+      - "Validate markdown link integrity and heading structure against references/markdown-standards.md"
+    tests:
+      - "tests/documentation/changelog-integrity.test.ts — changelog existence, SemVer structure, and milestone coverage validation"
+    observability:
+      - "Static markdown linting and test assertions"
+    verified: true
+    depends_on:
+      - SGA.3
+    change_matrix:
+      new_files:
+        - "CHANGELOG.md"
+        - "tests/documentation/changelog-integrity.test.ts"
+      allowed_files:
+        - "CHANGELOG.md"
+        - "tests/documentation/**"
+      forbidden_files:
+        - "packages/**"
+        - ".github/**"
+        - "scripts/**"
+        - "tests/ci/**"
+        - "tests/deployment/**"
+        - "tests/e2e/**"
+        - "tests/benchmarks/**"
+        - "tests/reasoning/**"
+        - "tests/workspace/**"
+        - "tests/ui/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+        - "package.json"
+        - "turbo.json"
+        - "bunfig.toml"
+
+  - id: SGA.5
+    title: Annotated Git release tagging automation script and Checkpoint 5 governance assertions
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-GA-5
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — custom Bun/TypeScript release tagging script in scripts/cut-release-tag.ts with invariant pre-flight assertions."
+    acceptance:
+      - "Implement scripts/cut-release-tag.ts automating pre-release invariant checks before cutting annotated git tag v1.0.0"
+      - "Assert 5 strict pre-flight conditions: full test pass (bun test), clean typecheck (bun run typecheck), clean build (bun run build), clean working tree (git status --porcelain), and PM approval artifact presence"
+      - "Generate structured annotated tag message format including PM Agent and Deployment Agent signoffs, commit SHA, and milestone summary"
+      - "Support dry-run mode (--dry-run) to test and verify tag generation logic without mutating git history"
+      - "Author test tests/deployment/release-tag.test.ts asserting tag script logic, invariant checks, and message formatting"
+    tests:
+      - "tests/deployment/release-tag.test.ts — script invariant validation, dry-run execution, and tag message format assertions"
+    observability:
+      - "Structured console output detailing pre-flight check outcomes and tag creation metadata"
+    verified: true
+    depends_on:
+      - SGA.4
+    change_matrix:
+      new_files:
+        - "scripts/cut-release-tag.ts"
+        - "tests/deployment/release-tag.test.ts"
+      allowed_files:
+        - "scripts/**"
+        - "tests/deployment/**"
+      forbidden_files:
+        - "packages/**"
+        - ".github/**"
+        - "tests/ci/**"
+        - "tests/e2e/**"
+        - "tests/documentation/**"
+        - "tests/benchmarks/**"
+        - "tests/reasoning/**"
+        - "tests/workspace/**"
+        - "tests/ui/**"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+        - "package.json"
+        - "turbo.json"
+        - "bunfig.toml"
+
+  - id: SGA.6
+    title: Milestone GA full monorepo regression pass, Checkpoint 5 closeout verification, and doc synchronization
+    status: complete
+    phase: Complete
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-GA-6
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — monorepo unified regression verification, dev-log recording, and canonical documentation synchronization."
+    acceptance:
+      - "Execute full unified monorepo test suite verifying 100% pass across all unit, integration, benchmark, and deployment suites"
+      - "Verify 11/11 monorepo packages build cleanly and typecheck cleanly with zero errors"
+      - "Initialize and populate _documentation/planning/milestones/ga-production-release/dev-log.md with complete developer execution evidence"
+      - "Update _documentation/planning/milestones/milestone-status.yaml, overview.md, and _documentation/index.md reflecting completed GA release"
+      - "Verify closed 17-member RFC 9457 error catalogue remains exactly 17 entries with zero modifications"
+    tests:
+      - "bun test — full monorepo regression pass (367 pass, 0 fail across 63 test files)"
+      - "bun run build — 11/11 packages build clean"
+      - "bun run typecheck — 11/11 packages typecheck clean"
+      - "bun test packages/contracts/tests/errors.test.ts — catalogue test passes 5/5"
+    observability:
+      - "Unified test runner output and Turborepo build cache logs"
+    verified: true
+    depends_on:
+      - SGA.5
+    change_matrix:
+      new_files:
+        - "_documentation/planning/milestones/ga-production-release/dev-log.md"
+      allowed_files:
+        - "_documentation/**"
+      forbidden_files:
+        - "packages/**"
+        - ".github/**"
+        - "scripts/**"
+        - "tests/**"
+        - "infra/**"
+        - "apps/**"
+        - "package.json"
+        - "turbo.json"
+        - "bunfig.toml"

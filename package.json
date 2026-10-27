@@ -1,6 +1,6 @@
 {
   "name": "contextual",
-  "version": "0.1.0-alpha.1",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -13,7 +13,15 @@
     "lint": "turbo run lint",
     "clean": "turbo run clean",
     "test": "bun test",
-    "dev:doctor": "bun run packages/config/src/doctor/cli.ts"
+    "dev:doctor": "bun run packages/config/src/doctor/cli.ts",
+    "docker:up": "docker compose -f infra/compose.yaml up -d",
+    "docker:down": "docker compose -f infra/compose.yaml down",
+    "docker:logs": "docker compose -f infra/compose.yaml logs -f",
+    "docker:ps": "docker compose -f infra/compose.yaml ps",
+    "infra:up": "docker compose -f infra/compose.yaml up -d",
+    "infra:down": "docker compose -f infra/compose.yaml down",
+    "infra:logs": "docker compose -f infra/compose.yaml logs -f",
+    "infra:ps": "docker compose -f infra/compose.yaml ps"
   },
   "devDependencies": {
     "turbo": "^2.4.4",

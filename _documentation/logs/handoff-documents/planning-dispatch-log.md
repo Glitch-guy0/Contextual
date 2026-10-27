@@ -856,4 +856,92 @@ graph TD
   - Recommendations: S9.1 benchmark contracts & SLA thresholds; S9.2 50 CCU concurrency load harness; S9.3 latency SLA percentile validator; S9.4 multi-tenant penetration & secret scanning; S9.5 zero-cost ceiling attestation runner; S9.6 monorepo hardening & doc sync. Sequential DAG: `S9.1 → S9.2 → S9.3 → S9.4 → S9.5 → S9.6`.
 - **Status:** ACCEPTED
 
+---
+
+### DSP-047: Milestone GA CI/CD Pipeline & Vercel Deployment Specification
+- **Timestamp:** 2026-10-27T13:05:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `deployment-agent`
+- **Architectural Dimension:** CI/CD & Runtime Hosting Architecture
+- **Why Invoked (Rationale):**
+  > Design GitHub Actions CI pipeline (.github/workflows/ci.yml) and Vercel Hobby serverless deployment configuration (vercel.json) ensuring $0.00/month infrastructure ceiling (NFR-016), zero cold-start bloat, and automated error catalogue gating.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/ga-production-release/milestone.md`
+  - `_documentation/planning/contracts/deployment-config.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-ga-general-availability-production-release.md` §3.1, §3.2
+  - Recommendations: Use `oven-sh/setup-bun@v2` with `--frozen-lockfile`; enforce strict build, lint, typecheck, test, and closed RFC 9457 catalogue check; pin Vercel serverless region to `iad1` with HTTP response security headers (CSP, nosniff, DENY).
+- **Status:** ACCEPTED
+
+---
+
+### DSP-048: Post-Deployment Production Smoke Verification Suite Design
+- **Timestamp:** 2026-10-27T13:08:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `test-agent`
+- **Architectural Dimension:** Verification & Live Production Testing
+- **Why Invoked (Rationale):**
+  > Formulate lightweight, deterministic post-deployment production smoke harness exercising all 4 platform pillars (auth, transient ingestion, grounded reasoning, telemetry) against live cloud or calibrated offline mock simulation.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/ga-production-release/milestone.md` §2
+  - `_documentation/planning/architecture/05-ga-general-availability-production-release.md` §3.3
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-ga-general-availability-production-release.md` §3.3
+  - Recommendations: Implement dual-mode runner in `scripts/production-smoke.ts` and `tests/e2e/production-smoke.test.ts`; verify Clerk RS256 JWT validation, S3 transient staging with immediate purge (BR-046), 6-phase grounded reasoning with inline citations [1], and Better Stack structured JSON log output with correlation_id; purge all test vectors in finally block.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-049: Release Versioning, Curated Changelog & Tag Governance Review
+- **Timestamp:** 2026-10-27T13:10:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `versioning-specialist`
+- **Architectural Dimension:** Release Governance & Semantic Versioning
+- **Why Invoked (Rationale):**
+  > Establish release versioning strategy for v1.0.0 General Availability release, author curated CHANGELOG.md documenting milestones M0 through GA, and formulate automated release tagging script with 5 invariant checks.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/overview.md`
+  - `references/semver-release-policy.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-ga-general-availability-production-release.md` §3.4
+  - Recommendations: Format `CHANGELOG.md` following Keep a Changelog v1.0.0; detail milestones M0 through GA; include developer migration guide; author `scripts/cut-release-tag.ts` enforcing 5 strict invariant checks (tests pass, clean typecheck, clean build, clean git working tree, PM approval artifact present).
+- **Status:** ACCEPTED
+
+---
+
+### DSP-050: Milestone GA FMEA & Reliability Analysis
+- **Timestamp:** 2026-10-27T13:12:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `failure-mode-specialist`
+- **Architectural Dimension:** Reliability & Fault Tolerance
+- **Why Invoked (Rationale):**
+  > Perform FMEA analysis for CI pipeline execution, Vercel serverless runtime configuration, post-deployment smoke test flakiness, and premature git tag cutting (FM-1001..FM-1004).
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-ga-general-availability-production-release.md` §5
+  - `_documentation/planning/registers/failure-mode-register.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-1001..FM-1004)
+  - Recommendations: GitHub branch protection rules gating merges on green CI; Zod environment variable validation; exponential backoff with jitter on smoke network requests; dry-run validation for release tag creation.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-051: Milestone GA Sprint Board Authoring & Developer Handoff
+- **Timestamp:** 2026-10-27T13:15:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `sprint-agent`
+- **Architectural Dimension:** Tactical Decomposition & Board Governance
+- **Why Invoked (Rationale):**
+  > Decompose EPIC-010 into six single-session atomic stories with frozen Change Matrices (new_files, allowed_files, forbidden_files), bind verification hooks to AC-GA.1..AC-GA.4, author the sprint board for developer execution, and generate story cards.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/ga-production-release/milestone.md`
+  - `_documentation/planning/architecture/05-ga-general-availability-production-release.md`
+  - `_documentation/planning/contracts/deployment-config.yaml`
+  - `_documentation/planning/contracts/component-catalog.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/milestones/ga-production-release/sprint-status.yaml` + `stories/` (SGA.1..SGA.6)
+  - Recommendations: SGA.1 CI/CD pipeline automation; SGA.2 Vercel deployment configuration; SGA.3 post-deployment smoke verification suite; SGA.4 curated changelog & migration guide; SGA.5 release tag automation script; SGA.6 monorepo regression pass & doc sync. Sequential DAG: `SGA.1 → SGA.2 → SGA.3 → SGA.4 → SGA.5 → SGA.6`.
+- **Status:** ACCEPTED
+
+
 

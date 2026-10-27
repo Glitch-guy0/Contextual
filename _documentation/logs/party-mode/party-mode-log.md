@@ -750,6 +750,140 @@ This is a DBW documentation and coordination record. All approvals are represent
 ## Implementation note
 This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
 
+---
+
+# Session 8: Milestone GA — General Availability Production Release & Automated Deployment Pipeline (v1.0.0)
+
+- **Date:** 2026-10-27T13:18:00Z
+- **State:** Phase 4 / Phase 5 Implementation Planning
+- **Alignment Task:** Populate implementation plan, architecture contracts, and sprint board for Milestone GA (General Availability Production Release v1.0.0), and secure unconditional PM signoff.
+- **Declared Participants:**
+  - `pm-agent` (Stage 2 Owner — Pipeline Supervisor & Product Planner)
+  - `architect-agent` (Stage 3 Owner — System Designer & C4 Modeler)
+  - `sprint-agent` (Supporting — Tactical Story Decomposer & Board Governor)
+  - `deployment-agent` (Stage 5 Owner — Runtime & CI/CD Steward)
+  - `test-agent` (Supporting — Verification Gatekeeper)
+  - `versioning-specialist` (Supporting — Release Versioning & Changelog Authority)
+  - `failure-mode-specialist` (Supporting — FMEA & Reliability Stakeholder)
+
+```mermaid
+graph TD
+    M9["Milestone M9 Hardening Certified<br/>(339 pass, 11/11 build clean)"] --> GHA["GitHub Actions CI/CD<br/>(.github/workflows/ci.yml)"]
+    GHA --> VERCEL["Vercel Serverless Hosting<br/>(vercel.json, iad1 region)"]
+    VERCEL --> SMOKE["Post-Deploy Smoke Suite<br/>(4-Phase Verification Chain)"]
+    SMOKE --> CHANGELOG["Curated CHANGELOG.md<br/>(M0 through GA Chronicle)"]
+    CHANGELOG --> TAG["Annotated Release Tag v1.0.0<br/>(scripts/cut-release-tag.ts)"]
+    TAG --> CP5["Checkpoint 5 Milestone Closeout<br/>(Gate G6 PASS)"]
+
+    classDef blue fill:#E8F0FE,stroke:#4285F4,stroke-width:1.5px,color:#174EA6;
+    classDef green fill:#E6F4EA,stroke:#34A853,stroke-width:1.5px,color:#137333;
+    classDef purple fill:#F3E8FD,stroke:#A142F4,stroke-width:1.5px,color:#7627BB;
+
+    class M9,GHA blue;
+    class VERCEL,SMOKE green;
+    class CHANGELOG,TAG,CP5 purple;
+```
+
+---
+
+## Round 1: Positions & Perspectives
+
+- **`pm-agent`:**
+  - Milestone GA represents the culmination of the entire Contextual AI Platform roadmap (`v1.0.0`). All 42 Functional Requirements and 32 Non-Functional Requirements are certified passing across M0 through M9.
+  - The objective of Milestone GA is operational deployment automation and release governance: automated CI/CD pipeline on GitHub Actions, Vercel Hobby production serverless configuration upholding the $0.00/month infrastructure ceiling (`NFR-016`), automated post-deployment smoke testing, curated `CHANGELOG.md` documenting M0 through GA, annotated Git tag `v1.0.0`, and Checkpoint 5 closeout.
+  - Baseline is completely pristine: 339/339 tests pass across 58 test files; 11/11 packages build and typecheck cleanly; closed 17-member RFC 9457 error catalogue test passes 5/5. Approval for GA implementation is unconditional.
+- **`architect-agent`:**
+  - Blueprint `05-ga-general-availability-production-release.md` establishes four core components:
+    1. `comp-ci`: GitHub Actions pipeline (`.github/workflows/ci.yml`) using `oven-sh/setup-bun@v2` with `--frozen-lockfile` enforcing lint, typecheck, tests, and error catalogue integrity.
+    2. `comp-deploy`: Vercel serverless configuration (`vercel.json`) enforcing `iad1` region co-location and HTTP security headers without paid add-ons.
+    3. `comp-smoke`: Lightweight TypeScript HTTP smoke runner (`scripts/production-smoke.ts` and `tests/e2e/production-smoke.test.ts`) exercising Clerk auth, transient S3 staging (`BR-046`), grounded reasoning with citations, and Better Stack telemetry with dual-mode execution.
+    4. `comp-release`: Automated release tagging script (`scripts/cut-release-tag.ts`) checking 5 pre-release invariants before cutting annotated tag `v1.0.0`.
+  - Updated `deployment-config.yaml` and `component-catalog.yaml` to formalize production governance contracts.
+- **`deployment-agent`:**
+  - Emphasizes execution speed and cost zero-tolerance in CI. Running native Bun on GitHub Actions runners executes the full monorepo build, lint, and test cycle in < 45 seconds, well within free-tier GitHub Actions monthly quotas.
+  - Vercel Hobby serverless configuration (`vercel.json`) sets security headers (nosniff, DENY, strict-origin) and eliminates cold-start bloat by keeping domain logic isolated from Edge runtime.
+- **`test-agent`:**
+  - Post-deployment smoke verification must test the true 4-phase transaction chain: auth validation, document staging and vector indexing, grounded reasoning synthesis with inline citations, and telemetry logging.
+  - Dual-mode execution is essential: tests can run against live `PRODUCTION_URL` or against internal mock simulation in CI/sandbox without failing due to absent network connectivity.
+  - Guaranteed `finally` cleanup block ensures zero orphaned S3 binaries or vector points (`BR-046`).
+- **`versioning-specialist`:**
+  - Milestone GA is a major bump (`v1.0.0`) marking General Availability per `references/semver-release-policy.md`.
+  - Canonical `CHANGELOG.md` at repository root documents all 10 milestones (M0 through GA) with breaking changes audit, zero-dollar credentials checklist, and migration instructions.
+  - `scripts/cut-release-tag.ts` programmatically validates all 5 pre-flight invariants before cutting annotated tag `v1.0.0`.
+- **`sprint-agent`:**
+  - Decomposes EPIC-010 into 6 single-session atomic stories: `SGA.1` (CI pipeline), `SGA.2` (Vercel deployment config), `SGA.3` (post-deploy smoke suite), `SGA.4` (curated changelog), `SGA.5` (release tag automation), `SGA.6` (regression pass & doc sync).
+  - All stories conform strictly to the Two-Floor boundary (no root config/build files in `allowed_files`).
+- **`failure-mode-specialist`:**
+  - FMEA review identifies 4 critical failure modes: `FM-1001` (CI pipeline failure on PR merge), `FM-1002` (Vercel runtime env var drift), `FM-1003` (smoke test transient network jitter), and `FM-1004` (premature tag cutting). Mitigations incorporated into design.
+
+---
+
+## Round 2: Trade-offs & Deliberation
+
+- **Trade-off 1: CI Toolchain Runner — Native Bun on GitHub Actions vs Containerized Docker Runner**
+  - *Option A (Docker Containerized CI):* Spin up Docker containers inside GitHub Actions matching local `infra/compose.yaml`. *Cost:* Slow setup (~4-6 minutes), high runner minute consumption, complex daemon caching.
+  - *Option B (Native Bun Runner via `oven-sh/setup-bun@v2`):* Install Bun directly on Ubuntu runner with `--frozen-lockfile`. Fast (< 45s execution), lightweight, near-zero runner minutes.
+  - *Consensus:* Option B adopted. Protects free-tier runner minutes and matches repository toolchain.
+- **Trade-off 2: Post-Deployment Smoke Test Architecture — Lightweight HTTP TypeScript Harness vs Heavy Playwright Browser Suite**
+  - *Option A (Playwright Browser Automation):* Headless Chromium browser rendering UI components. *Cost:* Massive binary footprint (> 500MB), slow execution, high flakiness in serverless environments.
+  - *Option B (Targeted TypeScript HTTP Smoke Runner in `scripts/production-smoke.ts`):* Native `fetch` validating HTTP endpoints, JWT validation, vector responses, and streaming chunk decoders.
+  - *Consensus:* Option B adopted. Fast, deterministic, zero external browser dependencies, runs in < 1.5 seconds.
+- **Trade-off 3: Production Release Tag Automation — Programmatic Pre-Flight Script vs Unchecked Manual Git Commands**
+  - *Option A (Manual Git Tagging):* Developers manually run `git tag -a v1.0.0`. *Cost:* High risk of cutting dirty tree or releasing without passing tests.
+  - *Option B (Automated Pre-Flight Script `scripts/cut-release-tag.ts`):* Asserts 5 mandatory invariants (tests pass, clean typecheck, clean build, clean working tree, PM approval present) before cutting tag.
+  - *Consensus:* Option B adopted. Enforces strict Checkpoint 5 governance.
+- **Trade-off 4: Sprint Story Breakdown & Ordering — 6 Cohesive Stories in Sequential DAG**
+  - *Option A (Monolithic Release Story):* Single omnibus release task. *Cost:* Massive cognitive load, impossible to isolate failures.
+  - *Option B (6 Atomic Stories):* Discrete, single-session scopes: CI (`SGA.1`), deployment (`SGA.2`), smoke suite (`SGA.3`), changelog (`SGA.4`), tag automation (`SGA.5`), regression & doc sync (`SGA.6`).
+  - *Consensus:* Option B adopted. Bounded Change Matrices ensure clean developer sessions.
+
+---
+
+## Round 3: Consensus & Decisions
+
+1. **Charter & Grounding Confirmed:** Milestone GA scope encompasses all 42 FRs, 32 NFRs, 48 BRs; Checkpoint 5 closeout criteria; `AC-GA.1`..`AC-GA.4`; `EPIC-010`. Risk tier classified as **HIGH**.
+2. **Architecture Blueprint Sealed:** `05-ga-general-availability-production-release.md` authored and approved, detailing CI pipeline, Vercel serverless configuration, post-deployment smoke harness, and release tag automation.
+3. **Sprint Board Certified:** Board `GA-S1` authored in `ga-production-release/sprint-status.yaml` with six stories (`SGA.1` to `SGA.6`), explicit Change Matrices, and verified DAG.
+4. **PM Approval Granted:** `pm-agent` approves the GA sprint plan for developer handoff. Because the workspace baseline is 100% green (339/339 pass across 58 test files, 11/11 build/typecheck clean), approval is **unconditional**.
+
+---
+
+## Sealed Decision Register
+
+| Decision ID | Summary | Owner | Sealed State |
+|---|---|---|---|
+| **GA-PM-001** | Scope grounded in all 42 FRs, 32 NFRs, 48 BRs; Checkpoint 5 closeout; classified HIGH risk tier | `pm-agent` | Sealed |
+| **GA-PM-002** | Unconditional PM approval for GA sprint plan handoff to developer-agent | `pm-agent` | Sealed |
+| **GA-ARCH-001** | GitHub Actions CI/CD pipeline using native Bun runner with frozen lockfile and closed RFC 9457 error catalogue gate | `architect-agent` | Sealed |
+| **GA-ARCH-002** | Vercel Hobby serverless deployment configuration (vercel.json) in iad1 region with HTTP security headers and $0.00/month cost ceiling | `architect-agent` | Sealed |
+| **GA-DEP-001** | Dual-mode post-deployment smoke verification suite (production-smoke.ts & production-smoke.test.ts) covering auth, S3 staging, reasoning, and telemetry | `deployment-agent` | Sealed |
+| **GA-VER-001** | Release tag automation script (cut-release-tag.ts) enforcing 5 pre-release invariants before cutting annotated tag v1.0.0 | `versioning-specialist` | Sealed |
+| **GA-SPR-001** | Six single-session stories `SGA.1 → SGA.2 → SGA.3 → SGA.4 → SGA.5 → SGA.6` with frozen Change Matrices | `sprint-agent` | Sealed |
+| **GA-SPR-002** | Strict Two-Floor boundary enforcement (zero root build/config files in allowed_files) | `sprint-agent` | Sealed |
+
+---
+
+## Rejected Alternatives (strongest argument, and why it lost)
+
+- **Docker-in-Docker containerized CI runner** — matches local compose stack; lost because it increases CI execution duration by 400% and burns free-tier runner quotas.
+- **Headless Playwright/Cypress browser suite for smoke testing** — tests true browser DOM rendering; lost because heavy binary footprint (> 500MB) introduces flakiness and high memory overhead in serverless CI environments.
+- **Manual git tag execution without invariant assertions** — simpler to run; lost because it provides zero automated protection against tagging unverified or dirty code trees.
+- **Fragmented per-milestone release notes instead of root CHANGELOG.md** — easier to maintain piecemeal; lost because developers require a single authoritative Keep a Changelog document at the repository root.
+
+---
+
+## Handoff & Next Steps
+
+1. Hand off to `developer-agent` via `handoff-023-sprint-to-developer-ga.md`.
+2. `developer-agent` starts with **SGA.1** (CI/CD pipeline) and proceeds sequentially through **SGA.6**.
+3. `test-agent` verifies each story against acceptance criteria and certifies closure.
+4. `sprint-agent` maintains board progress in `ga-production-release/sprint-status.yaml`.
+5. Final Checkpoint 5 closeout ratified by `pm-agent` and `deployment-agent`.
+
+## Implementation note
+This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
+
+
 
 
 

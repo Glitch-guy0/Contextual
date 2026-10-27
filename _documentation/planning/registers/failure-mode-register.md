@@ -77,11 +77,15 @@ graph TD
 | **FM-902** | LatencyProbe | omission | Mock provider adapter uses zero-delay responses, masking true latency percentiles | False positive SLA compliance claims (`NFR-001`..`NFR-003`) | Latency benchmark execution | 8 | 2 | 3 | **M** | Calibrated Gaussian latency distribution simulator matching real-world Upstash and Gemini tail distributions | `site-reliability-architect` |
 | **FM-903** | PentestSuite | commission | Nested JSON injection or malformed UUID bypasses tenant equality predicate | Cross-tenant data leakage in SQL or Vector stores (`NFR-007`, `BR-002`) | Adversarial penetration probe | 9 | 2 | 2 | **M** | Enforce strict Zod schema validation and parameterized SQL/metadata boundaries across all layers | `security-architect` |
 | **FM-904** | CostAudit | omission | Cloud vendor changes default SKU to paid tier or environment enables billable add-on | Violates platform $0.00/month infrastructure ceiling (`NFR-016`) | Cloud account drift or deploy | 9 | 2 | 2 | **M** | Automated free-tier manifest verification and zero-card audit runner before Release Candidate ratification | `governance-specialist` |
-
+| **FM-1001** | CIPipeline | omission | Unpinned action or environment timeout causes CI job failure on PR merge | Production deployment blocked or bad commit merged to main (`AC-GA.1`) | Pull request merge to main | 8 | 3 | 2 | **M** | GitHub branch protection gates merge on green CI; action dependencies pinned to major version with frozen Bun lockfile | `deployment-agent` |
+| **FM-1002** | RuntimeConfig | omission | Missing or malformed environment variable on Vercel Hobby serverless runtime | Edge route panics on request; HTTP 500 error returned to end users | Production deployment activation | 9 | 2 | 2 | **M** | Pre-deployment environment variable schema validation via Zod; liveness and readiness probes gate traffic shift | `site-reliability-architect` |
+| **FM-1003** | SmokeSuite | timing | Transient cloud network jitter causes false-alarm post-deployment smoke failure | Rollout falsely aborted or flagged as degraded (`AC-GA.2`) | Post-deployment smoke test run | 6 | 3 | 3 | **M** | Exponential backoff retry (3 attempts) with jitter; dual-mode execution with local calibrated fallback | `test-agent` |
+| **FM-1004** | ReleaseTagger | commission | Release tag v1.0.0 cut prematurely without 100% passing tests or PM sign-off | Unverified build released as GA (`AC-GA.3`, Checkpoint 5 breach) | Git release tag execution | 8 | 2 | 2 | **M** | Automated tag automation script (scripts/cut-release-tag.ts) asserts 5 mandatory pre-release invariants before tag creation | `versioning-specialist` |
 
 ---
 
 ## 3. Fault Tree Analysis — Single Point of Failure (SPOF)
+
 
 ### FT-01: Total Authentication Outage on Edge Middleware
 - **Catastrophic Outcome:** 100% of incoming user requests to `/api/v1/*` fail with HTTP 401 Unauthorized or HTTP 500 Internal Server Error.
