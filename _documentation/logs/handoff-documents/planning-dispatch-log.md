@@ -390,3 +390,112 @@ graph TD
   - Recommendations: implementation starts at S4.1 and proceeds in dependency order; no story may open a root-level file (Two-Floor boundary); every story closes on unified `bun test` evidence, never on assertion.
 - **Status:** ACCEPTED
 
+---
+
+### DSP-021: M5 6-Phase Grounded Reasoning Engine Design Blueprint
+- **Timestamp:** 2026-10-27T08:05:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `architect-agent`
+- **Architectural Dimension:** System Architecture & Interface Contracts
+- **Why Invoked (Rationale):**
+  > Design the M5 6-phase grounded reasoning pipeline so `developer-agent` can implement each unit against explicit outcomes: query decomposition into 2-5 sub-questions (`FR-008`), HyDE generation (`FR-009`), multi-vector top-3 retrieval with tenant filter (`FR-010`), Gemini Flash primary synthesis with clickable inline citations (`FR-011`), transparent Groq Llama-3.3-70B fallback circuit breaker on 429 (`NFR-022`, `ADR-0004`), and unavailable sources footer (`FR-039`).
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m5-reasoning-engine/milestone.md`
+  - `_documentation/planning/epics/epic-005-multi-step-reasoning-engine.md`
+  - `_documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`
+  - `_documentation/planning/prd.md` (FR-008..FR-011, FR-039)
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md`
+  - Recommendations: encapsulate in `@repo/reasoning`; implement adapter pattern for LLM providers (`InferenceProvider`); ensure in-process circuit-breaker fails over within 50ms with `x-fallback-provider` header; assemble context with deterministic numeric citation anchors `[1]`, `[2]`.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-022: Multi-Vector Top-3 Tenant Retrieval & HyDE Embedding Pipeline
+- **Timestamp:** 2026-10-27T08:10:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `data-architect`
+- **Architectural Dimension:** Data Architecture & Vector Retrieval
+- **Why Invoked (Rationale):**
+  > Design Upstash Vector parallel query strategy across sub-questions, cosine similarity thresholding, payload filtering by `{ user_id }`, and dense embedding fallback integration.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md` §3.4
+  - `packages/ingestion/src/vector/upsert.ts`
+  - `packages/workspace/src/search.ts`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m5-grounded-reasoning-engine.md` §3.4
+  - Recommendations: dispatch sub-question vector queries via `Promise.all` with individual tenant filters; retrieve strictly `top_k: 3` (`BR-008`); deduplicate overlapping chunks by `chunk_id` / document boundary; enforce p95 < 100ms vector retrieval SLA (`NFR-001`).
+- **Status:** ACCEPTED
+
+---
+
+### DSP-023: Dual-Provider Resilience & Circuit Breaker FMEA
+- **Timestamp:** 2026-10-27T08:15:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `failure-mode-specialist`
+- **Architectural Dimension:** Reliability & Fault Tolerance
+- **Why Invoked (Rationale):**
+  > Conduct bottom-up FMEA sweep for Google AI Studio 429 quota exhaustion, Groq fallback latency, client stream dropouts, and hallucination containment.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md` §7
+  - `_documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/registers/failure-mode-register.md` (FM-501..FM-505)
+  - Recommendations: transparent in-process catch on HTTP 429 or `RESOURCE_EXHAUSTED` immediately switching to Groq Llama-3.3-70B; propagate `AbortSignal` to cancel upstream inference on client disconnect; return 502 `UPSTREAM_PROVIDER_UNAVAILABLE` only if both providers fail.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-024: Zero-Hallucination Citation Grounding & Tenant Isolation Review
+- **Timestamp:** 2026-10-27T08:20:00Z
+- **Calling Agent:** `architect-agent`
+- **Target Specialist:** `security-architect`
+- **Architectural Dimension:** Security, Privacy & Grounding Invariants
+- **Why Invoked (Rationale):**
+  > Validate that prompt synthesis envelopes enforce zero hallucination outside retrieved context (`BR-009`), that citation anchors link exclusively to authenticated tenant chunks (`BR-002`), and that streaming telemetry redacts secrets.
+- **Inputs Provided:**
+  - `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md` §5
+  - `_documentation/planning/contracts/api-contract.openapi.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered design: `05-m5-grounded-reasoning-engine.md` §5
+  - Recommendations: system prompt explicitly instructs model: "Answer strictly based on provided context. If context is insufficient, state: 'Insufficient context available to answer fully.' Never invent facts." Every factual claim must carry anchor `[N]`. Vector payload filter `{ user_id }` prevents cross-tenant vector contamination.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-025: M5 Sprint Board Authoring & Developer Handoff
+- **Timestamp:** 2026-10-27T08:25:00Z
+- **Calling Agent:** `pm-agent`
+- **Target Specialist:** `sprint-agent`
+- **Architectural Dimension:** Tactical Decomposition & Board Governance
+- **Why Invoked (Rationale):**
+  > Decompose `EPIC-005` into single-session atomic stories with frozen Change Matrices (`new_files`, `allowed_files`, `forbidden_files`), bind verification hooks to AC-5.1..AC-5.5, and author the milestone sprint board for clean-session execution by `developer-agent`.
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m5-reasoning-engine/milestone.md`
+  - `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md`
+  - `_documentation/planning/contracts/api-contract.openapi.yaml`
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/planning/milestones/m5-reasoning-engine/sprint-status.yaml` + `stories/`
+  - Recommendations: S5.1 defines shared contracts and error envelopes; S5.2 implements decomposition & HyDE; S5.3 implements parallel vector retrieval; S5.4 implements Gemini synthesis & citation stream; S5.5 implements Groq circuit-breaker; S5.6 delivers unified E2E suite and benchmark evidence. Clean DAG ordering: `S5.1 → S5.2 → S5.3 → S5.4 → S5.5 → S5.6`.
+- **Status:** ACCEPTED
+
+---
+
+### DSP-026: Milestone M5 Implementation Verification & Test Gate Handoff
+- **Timestamp:** 2026-10-27T08:52:00Z
+- **Calling Agent:** `developer-agent` (Stage 4 Owner)
+- **Target Specialist:** `test-agent` (Stage 4 Verification Gatekeeper)
+- **Architectural Dimension:** Implementation Verification & Gate Sign-off
+- **Why Invoked (Rationale):**
+  > Certify implementation evidence for Stories S5.1 through S5.6; verify AC-5.1..AC-5.5 truth tables, zero regression across M0-M5 suites (154 pass, 0 fail), and latency benchmark compliance (p90 = 27ms < 4,500ms).
+- **Inputs Provided:**
+  - `_documentation/planning/milestones/m5-reasoning-engine/sprint-status.yaml` (M5-S1 complete)
+  - `_documentation/planning/milestones/m5-reasoning-engine/dev-log.md` (complete per-story evidence)
+  - `tests/reasoning/` (6 test suites)
+- **How Supported (Deliverables & Recommendations):**
+  - Delivered artifact: `_documentation/logs/handoff-documents/handoff-015-developer-to-test-m5.md`
+  - Recommendations: Run gate verification command `bun test && bun run build && bun run typecheck`; certify Checkpoint 4; prepare handoff to `deployment-agent`.
+- **Status:** ACCEPTED
+
+
+

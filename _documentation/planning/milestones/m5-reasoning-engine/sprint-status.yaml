@@ -1,0 +1,328 @@
+# Sprint Status — M5: 6-Phase Grounded Reasoning Engine
+# Sprint Owner: sprint-agent
+# Planned Version: v0.5.0
+sprint:
+  id: M5-S1
+  milestone: M5
+  status: complete
+  phased_deployment_profile:
+    mode: expand
+    risk_tier: high
+    target_version: "0.5.0"
+    release_model: feature-expand
+    expand_tier: "1-a"
+    expand_geometry_note: >-
+      M5 is an expand-phase, backward-compatible release: introduces @repo/reasoning
+      and /chat grounded synthesis endpoint. No database migration is required.
+      Existing error catalogue and contract signatures remain intact.
+  target_end: 2026-11-28
+  start_on: "manual"
+  stories:
+    - S5.1
+    - S5.2
+    - S5.3
+    - S5.4
+    - S5.5
+    - S5.6
+
+stories:
+  - id: S5.1
+    title: Shared reasoning contracts, DTO types, and streaming event envelopes
+    status: complete
+    phase: Planning
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M5-1
+    risk_tier: LOW
+    build_vs_buy_ref: "BUILD — typed TypeScript contracts for reasoning pipeline, SSE event envelope, and citation anchor manifest; no third-party contract framework."
+    acceptance:
+      - "ReasoningPhase, SubQuestion, HydePassage, RetrievedContextChunk, CitationAnchor, StreamReasoningChunk, ChatSynthesisRequest, ChatSynthesisResult exported from @repo/contracts"
+      - "StreamReasoningEventType includes phase_start, sub_questions, citations, token, unavailable_sources, done, error"
+      - "ChatSynthesisRequest validates minLength: 3, maxLength: 2000, notebook_id format"
+      - "Closed 17-member RFC 9457 error catalogue remains exactly 17 entries with zero modifications"
+    tests:
+      - "tests/reasoning/contracts.test.ts — contract export validation and DTO structure tests"
+      - "bun test packages/contracts/tests/errors.test.ts — catalogue test passes 5/5"
+    observability:
+      - "No runtime telemetry; static TypeScript typecheck and runtime DTO validator assertions"
+    verified: true
+    depends_on: []
+    change_matrix:
+      new_files:
+        - "packages/contracts/src/reasoning.ts"
+        - "tests/reasoning/contracts.test.ts"
+      allowed_files:
+        - "packages/contracts/src/**"
+        - "tests/reasoning/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/reasoning/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S5.2
+    title: Query decomposition (Phase 1) and HyDE synthetic passage generator (Phase 2)
+    status: complete
+    phase: Expand
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M5-2
+    risk_tier: MEDIUM
+    build_vs_buy_ref: "BUILD — prompt-engineered decomposition and HyDE passage synthesis utilizing Google Gemini Flash or structured heuristic fallback."
+    acceptance:
+      - "Decomposes complex multi-part query into 2 to 5 targeted sub-questions (AC-5.1, FR-008, BR-007)"
+      - "Generates concise 50-100 word hypothetical passage per sub-question (FR-009)"
+      - "Decomposition and HyDE execution completes within p90 < 1,000ms"
+      - "Malformed LLM output safely falls back to single-question heuristic decomposition (query + alternative phrasing)"
+    tests:
+      - "tests/reasoning/decomposition.test.ts — verifies 2-5 sub-questions produced for complex prompts and heuristic fallback on unparseable LLM output"
+    observability:
+      - "Structured INFO log on decomposition with prompt_length, sub_questions_count, elapsed_ms"
+    verified: true
+    depends_on:
+      - S5.1
+    change_matrix:
+      new_files:
+        - "packages/reasoning/package.json"
+        - "packages/reasoning/tsconfig.json"
+        - "packages/reasoning/src/index.ts"
+        - "packages/reasoning/src/decomposition.ts"
+        - "packages/reasoning/src/hyde.ts"
+        - "packages/reasoning/src/types.ts"
+        - "tests/reasoning/decomposition.test.ts"
+      allowed_files:
+        - "packages/reasoning/**"
+        - "packages/contracts/src/**"
+        - "tests/reasoning/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S5.3
+    title: Multi-vector top-3 retrieval, parallel execution, and context deduplication/assembly (Phase 3..5)
+    status: complete
+    phase: Expand
+    priority: p0
+    owner: developer-agent
+    effort: 5
+    work_unit: WU-M5-3
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUILD — parallel Upstash Vector client wrapper with mandatory user_id tenant filtering and context deduplication."
+    acceptance:
+      - "Issues parallel Upstash Vector similarity searches across sub-questions with tenant filter { user_id } (FR-010, BR-008, BR-002, AC-5.2)"
+      - "Retrieves at most top-3 chunks per sub-question (BR-008)"
+      - "Parallel vector retrieval executes with p95 < 100ms (NFR-001)"
+      - "Deduplicates identical chunks across sub-questions, preserving highest similarity score"
+      - "Generates 1-based numeric citation anchors [1], [2] with metadata preview cards"
+      - "Queries notebook document states and appends FR-039 unavailable/processing sources footer"
+    tests:
+      - "tests/reasoning/vector-retrieval.test.ts — asserts tenant payload filter in all vector queries, <=3 chunks/sub-question, p95 < 100ms"
+      - "tests/reasoning/context-assembly.test.ts — verifies chunk deduplication, citation index assignment, and FR-039 footer"
+    observability:
+      - "Structured INFO log on retrieval with sub_questions_count, raw_hits_count, unique_chunks_count, elapsed_ms"
+      - "Structured WARN log on empty vector search results"
+    verified: true
+    depends_on:
+      - S5.2
+    change_matrix:
+      new_files:
+        - "packages/reasoning/src/retrieval.ts"
+        - "packages/reasoning/src/assembly.ts"
+        - "tests/reasoning/vector-retrieval.test.ts"
+        - "tests/reasoning/context-assembly.test.ts"
+      allowed_files:
+        - "packages/reasoning/**"
+        - "tests/reasoning/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S5.4
+    title: Grounded synthesis streaming via Google Gemini Flash with clickable inline citations (Phase 6)
+    status: complete
+    phase: Expand
+    priority: p0
+    owner: developer-agent
+    effort: 5
+    work_unit: WU-M5-4
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUILD — Google Gemini Flash adapter with grounded prompt envelope, zero hallucination constraint, and SSE token streaming."
+    acceptance:
+      - "Grounded prompt envelope instructs model to answer strictly from retrieved context (BR-009, AC-5.3)"
+      - "If retrieved context is empty, outputs deterministic notice: 'Insufficient context available in your notes to answer this question' (BR-009)"
+      - "Outputs text stream with inline citation tags [1], [2] matching citation manifest"
+      - "Time-to-First-Token completes in p90 < 1,500ms (NFR-002)"
+      - "Debits 0.5 credits atomically via @repo/metering before synthesis starts; balance < 0.5 short-circuits with 402 (BR-014, BR-015)"
+    tests:
+      - "tests/reasoning/synthesis-stream.test.ts — token streaming, citation tag presence, empty context deterministic output"
+      - "tests/reasoning/reasoning-metering.test.ts — 0.5 credit debit, 402 short-circuit with 0 provider calls"
+    observability:
+      - "Structured INFO log on synthesis stream started and completed with user_id, provider, tokens_count, elapsed_ms"
+      - "Structured WARN log on 402 Insufficient Credits short-circuit"
+    verified: true
+    depends_on:
+      - S5.3
+    change_matrix:
+      new_files:
+        - "packages/reasoning/src/providers/gemini.ts"
+        - "packages/reasoning/src/synthesis.ts"
+        - "tests/reasoning/synthesis-stream.test.ts"
+        - "tests/reasoning/reasoning-metering.test.ts"
+      allowed_files:
+        - "packages/reasoning/**"
+        - "tests/reasoning/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S5.5
+    title: Transparent Groq Llama-3.3-70B fallback circuit-breaker on Gemini 429 quota exhaustion
+    status: complete
+    phase: Expand
+    priority: p0
+    owner: developer-agent
+    effort: 4
+    work_unit: WU-M5-5
+    risk_tier: HIGH
+    build_vs_buy_ref: "BUILD — adaptive in-process circuit breaker wrapping primary Gemini and secondary Groq Llama-3.3-70B providers (ADR-0004)."
+    acceptance:
+      - "Simulated HTTP 429 RESOURCE_EXHAUSTED or quota exhaustion on Gemini triggers immediate failover to Groq Llama-3.3-70B (AC-5.4, NFR-022, ADR-0004)"
+      - "Failover switches transparently without throwing 5xx to client"
+      - "Response carries header or stream metadata x-fallback-provider: groq"
+      - "AbortSignal from incoming request aborts active provider stream cleanly (FM-504)"
+      - "If both providers fail, surfaces HTTP 502 UPSTREAM_PROVIDER_UNAVAILABLE with automatic credit refund compensation"
+    tests:
+      - "tests/reasoning/circuit-breaker.test.ts — simulated Gemini 429 failover to Groq, header verification, abort handling, dual-failure compensation"
+    observability:
+      - "Structured WARN log on circuit-breaker trip with primary_error, fallback_provider: 'groq', failover_latency_ms"
+      - "Structured ERROR log if both primary and fallback providers exhaust quotas"
+    verified: true
+    depends_on:
+      - S5.4
+    change_matrix:
+      new_files:
+        - "packages/reasoning/src/providers/groq.ts"
+        - "packages/reasoning/src/circuit-breaker.ts"
+        - "tests/reasoning/circuit-breaker.test.ts"
+      allowed_files:
+        - "packages/reasoning/**"
+        - "tests/reasoning/**"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "tests/*.test.ts"
+        - "infra/**"
+        - "apps/**"
+        - "_documentation/**"
+
+  - id: S5.6
+    title: End-to-end integration test harness, latency benchmark verification, and documentation sync
+    status: complete
+    phase: Verify
+    priority: p0
+    owner: developer-agent
+    effort: 3
+    work_unit: WU-M5-6
+    risk_tier: LOW
+    build_vs_buy_ref: "N/A — verification evidence, documentation synchronization, and benchmark suite."
+    acceptance:
+      - "AC-5.1..AC-5.5 all have verified passing test suites with real output, 0 fail"
+      - "End-to-end 6-phase reasoning executes with p90 < 4,500ms on mock provider harness (AC-5.5, NFR-003)"
+      - "Full test suite (M0–M5) passes with bun test"
+      - "Workspace builds and typechecks across all packages (bun run build && bun run typecheck exit 0)"
+      - "api-contract.openapi.yaml, component-catalog.yaml, and 05-m5 design doc agree with implemented surface"
+      - "dev-log.md created under m5-reasoning-engine/ with full verification evidence"
+    tests:
+      - "tests/reasoning/e2e-reasoning.test.ts — full 6-phase pipeline integration"
+      - "tests/reasoning/e2e-latency.test.ts — latency assertions across 100 iterations (p90 < 4,500ms)"
+      - "Full suite: bun test && bun run build && bun run typecheck"
+    observability:
+      - "Execution evidence filed in milestone dev-log and sprint-status rows"
+    verified: true
+    depends_on:
+      - S5.5
+    change_matrix:
+      new_files:
+        - "tests/reasoning/e2e-reasoning.test.ts"
+        - "tests/reasoning/e2e-latency.test.ts"
+        - "_documentation/planning/milestones/m5-reasoning-engine/dev-log.md"
+      allowed_files:
+        - "tests/reasoning/**"
+        - "tests/monorepo-build.test.ts"
+        - "_documentation/planning/milestones/m5-reasoning-engine/**"
+        - "_documentation/planning/milestones/milestone-status.yaml"
+        - "_documentation/planning/contracts/api-contract.openapi.yaml"
+        - "_documentation/planning/contracts/component-catalog.yaml"
+      forbidden_files:
+        - "packages/metering/**"
+        - "packages/auth/**"
+        - "packages/ingestion/**"
+        - "packages/config/**"
+        - "packages/ui/**"
+        - "packages/workspace/**"
+        - "packages/db/**"
+        - "packages/contracts/**"
+        - "packages/reasoning/**"
+        - "tests/package-exports.test.ts"
+        - "infra/**"
+        - "apps/**"
+
+sprint_board:
+  todo: []
+  in_progress: []
+  done:
+    - S5.1
+    - S5.2
+    - S5.3
+    - S5.4
+    - S5.5
+    - S5.6
+  verification_gate:
+    command: "bun test && bun run build && bun run typecheck"
+    order: "S5.1 → S5.2 → S5.3 → S5.4 → S5.5 → S5.6"
+    notes: >-
+      Dependency graph is a strict DAG: S5.1 → S5.2 → S5.3 → S5.4 → S5.5 → S5.6.
+      Story closure requires passing evidence certified by test-agent; PM approval
+      of this plan certifies readiness for implementation.

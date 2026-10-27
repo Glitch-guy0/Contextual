@@ -2,9 +2,9 @@
 doc_class: canonical
 owner: pm-agent
 milestone: M5
-status: planned
+status: ready-for-implementation
 created: 2026-10-23
-last_verified: 2026-10-23
+last_verified: 2026-10-27
 review_cadence_days: 90
 code_refs: []
 related:
@@ -15,6 +15,9 @@ related:
   - _documentation/planning/milestones/overview.md
   - _documentation/planning/decisions/adr-0004-unified-upstash-serverless-architecture.md
   - _documentation/planning/epics/epic-005-multi-step-reasoning-engine.md
+  - _documentation/planning/architecture/05-m5-grounded-reasoning-engine.md
+  - _documentation/planning/milestones/m5-reasoning-engine/pm-approval.md
+  - _documentation/planning/milestones/m5-reasoning-engine/sprint-status.yaml
 supersedes: []
 regenerable: false
 pinned: false
@@ -22,10 +25,10 @@ pinned: false
 
 # Milestone Charter — M5: 6-Phase Grounded Reasoning Engine (v0.5.0)
 
-> **Status:** Planned (Follows M3 Ingestion & M4 Notebook Workspace)  
-> **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-23  
+> **Status:** Ready for Implementation (Plan Approved 2026-10-27)  
+> **Author:** pm-agent (Stage 2 Owner) · **Date:** 2026-10-27  
 > **Target Version:** `v0.5.0` · **Risk Tier:** HIGH  
-> **Grounding:** `project-brief.md` (FR-008..FR-011, FR-036, FR-038..FR-039; BR-008..BR-009, BR-041..BR-042; NFR-001..NFR-003, NFR-022; ADR-0004)  
+> **Grounding:** `project-brief.md` (FR-008..FR-011, FR-039; BR-002, BR-007..BR-009, BR-027; NFR-001..NFR-003, NFR-022; ADR-0004)  
 
 ```mermaid
 graph TD
@@ -98,6 +101,7 @@ Milestone M5 delivers the core 6-phase grounded reasoning pipeline (`v0.5.0`). I
 
 ## 5. Next Steps & Pipeline Handoff
 
-1. Follows completion and sign-off of Milestone M3 (Ingestion) and M4 (Notebook Workspace).
-2. `sprint-agent` authors `m5-reasoning-engine/sprint-status.yaml` and story cards.
-3. Hands off to `developer-agent` for reasoning pipeline and Groq fallback implementation.
+1. Milestone M5 plan approved unconditionally by `pm-agent` (`pm-approval.md`) on 2026-10-27 (Gate G5 PASS).
+2. Architecture blueprint sealed in `_documentation/planning/architecture/05-m5-grounded-reasoning-engine.md`.
+3. Sprint board authored in `_documentation/planning/milestones/m5-reasoning-engine/sprint-status.yaml` with 6 atomic stories (S5.1..S5.6) and story cards.
+4. Handed off to `developer-agent` via `_documentation/logs/handoff-documents/handoff-014-sprint-to-developer-m5.md` for clean-session execution starting with Story S5.1.

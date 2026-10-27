@@ -175,3 +175,114 @@ This is a DBW documentation and coordination record. The approval is represented
 
 ## Implementation note
 This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.
+
+---
+
+# Session 3 — M5 Planning Round-Table: 6-Phase Grounded Reasoning Engine (PM · Architect · Sprint)
+
+## Session Meta
+- **Date:** 2026-10-27T08:00:00.000Z
+- **State:** Phase 4 (Milestone Detail) → Phase 5 (Implementation Planning)
+- **Task:** Plan M5 6-Phase Grounded Reasoning Engine & Dual-Provider Inference (`v0.5.0`) for implementation; author architecture blueprint, shared contracts, and sprint board with frozen Change Matrices; then verify and seal PM approval.
+- **Mode:** Planning → Design → Board → Approval
+- **Session Chairs:** `pm-agent` (Stage 2 Owner), `architect-agent` (Stage 3 Owner), `sprint-agent` (Board Owner)
+- **Log:** this file · **Dispatches:** DSP-021..DSP-025 · **Handoff:** `handoff-014-sprint-to-developer-m5`
+
+## Participants
+- `pm-agent` — requirements governance, grounding validation, risk-tier classification, approval authority
+- `architect-agent` — 6-phase reasoning pipeline design, dual-provider circuit breaker architecture, OpenAPI contract, component catalog
+- `sprint-agent` — epic slicing, frozen Change Matrices, sprint board authoring (`sprint-status.yaml`), story cards
+- `data-architect` — Upstash Vector top-3 multi-vector query structure, cosine similarity thresholding, tenant filtering
+- `security-architect` — zero-hallucination prompt boundaries, tenant context isolation, secret redaction in streaming logs
+- `failure-mode-specialist` — bottom-up FMEA sweep for LLM quota exhaustion, stream dropouts, and circuit-breaker failover (FM-501..FM-505)
+
+## Round 1: Positions
+- **PM Agent position:**
+  - Milestone M5 delivers the core reasoning spine (`v0.5.0`) bridging user prompts with ingested knowledge.
+  - Grounding is anchored in `project-brief.md` (`FR-008..FR-011`, `FR-039`, `BR-002`, `BR-007..BR-009`, `BR-027`, `NFR-001..NFR-003`, `NFR-022`) and `ADR-0004` (Unified Upstash Serverless & Groq Fallback).
+  - Non-negotiable requirements:
+    1. Query decomposition into 2 to 5 targeted sub-questions (`FR-008`, `BR-007`).
+    2. HyDE hypothetical passage generation per sub-question (`FR-009`).
+    3. Multi-vector search retrieving at most top-3 chunks per sub-question with tenant payload filter (`FR-010`, `BR-008`).
+    4. Grounded synthesis with clickable inline citations `[1]`, `[2]` linking directly to document chunk previews (`FR-011`, `BR-009`).
+    5. Primary Google Gemini 1.5/2.0 Flash with automatic, transparent circuit-breaker fallback to Groq Llama-3.3-70B Versatile on HTTP 429 quota exhaustion (`NFR-022`, `ADR-0004`).
+    6. Unavailable or still-processing source documents explicitly enumerated in the answer footer (`FR-039`).
+    7. Overall pipeline latency SLA: p90 < 4,500ms (`NFR-003`), vector retrieval p95 < 100ms (`NFR-001`), TTFT p90 < 1,500ms (`NFR-002`).
+  - Baseline health: clean workspace, 101/101 tests pass, 8/8 packages build and typecheck cleanly. No blocking precondition needed.
+- **Architect Agent position:**
+  - Reasoning logic belongs in a new workspace package `@repo/reasoning`, consuming `@repo/contracts`, `@repo/config`, and `@repo/metering`.
+  - The 6-phase pipeline structure:
+    1. Phase 1: Query Decomposition (heuristic + few-shot prompt producing 2-5 sub-questions).
+    2. Phase 2: HyDE Synthesis (concise synthetic answers bridging vocabulary mismatch).
+    3. Phase 3: Query & HyDE Embeddings (Google `gemini-embedding-001` with in-process ONNX fallback from `@repo/ingestion`).
+    4. Phase 4: Top-3 Scoped Vector Retrieval (`@upstash/vector` query with mandatory `{ user_id }` tenant filter).
+    5. Phase 5: Context Assembly & Citation Deduplication (group by document, build deterministic numeric citation tags `[1]`, `[2]`, prune duplicate spans).
+    6. Phase 6: Grounded Synthesis & Streaming (primary Google Gemini Flash via `@google/genai` or REST stream; intercept 429 / rate limit errors and transparently fail over to Groq Llama-3.3-70B via `groq-sdk` with header `x-fallback-provider: groq`).
+  - Strict separation of concern: Provider clients reside behind adapter ports (`InferenceProvider` interface) so LLM swap and test mocking require zero changes to the orchestration pipeline.
+  - No database migration required for M5 (pure stateless reasoning execution; conversation message persistence is handled by existing M1 schemas).
+- **Sprint Agent position:**
+  - EPIC-005 breaks into six atomic, single-session stories (S5.1 to S5.6):
+    - `S5.1`: Shared reasoning contracts, DTO types, and streaming event envelopes in `@repo/contracts`.
+    - `S5.2`: Query decomposition (Phase 1) and HyDE synthetic passage generator (Phase 2).
+    - `S5.3`: Multi-vector top-3 retrieval, parallel execution, and context deduplication/assembly (Phase 3..5).
+    - `S5.4`: Grounded synthesis streaming via Google Gemini Flash with clickable inline citations and unavailable sources footer (Phase 6).
+    - `S5.5`: Transparent Groq Llama-3.3-70B fallback circuit-breaker on Gemini 429 quota exhaustion.
+    - `S5.6`: End-to-end integration test harness, latency benchmark verification, and documentation sync.
+  - Dependency graph forms a clean DAG: `S5.1 → S5.2 → S5.3 → S5.4 → S5.5 → S5.6`.
+  - All stories conform strictly to the Two-Floor boundary (no root files in `allowed_files`).
+
+## Round 2: Trade-offs & Deliberation
+- **Trade-off 1: Dual-Provider Fallback Orchestration — In-Process Circuit Breaker vs External Gateway/Proxy**
+  - *Option A (External Gateway / Proxy e.g. Portkey, LiteLLM):* Unified external URL. *Cost:* Introduces a 5th external vendor/service, potential latency overhead, breaks the zero-cost $0.00/month architectural ceiling (`NFR-016`), and violates `ADR-0004`.
+  - *Option B (In-Process Adaptive Circuit Breaker):* Lightweight TypeScript retry and fallback interceptor wrapping SDK calls with typed error detection (`429 RESOURCE_EXHAUSTED` / `quota_exceeded`).
+  - *Synthesis & Consensus:* Option B adopted. Zero additional infrastructure costs, sub-millisecond switching overhead, and deterministic unit-testability using mock providers.
+- **Trade-off 2: Sub-Question & HyDE Generation — Sequential vs Parallel Execution**
+  - *Option A (Sequential):* Generate sub-questions, then sequentially generate HyDE passages for each. *Cost:* 3 sub-questions × 800ms = 2,400ms alone, exhausting >50% of the 4,500ms E2E latency budget (`NFR-003`).
+  - *Option B (Batched / Parallel Generation):* Single structured decomposition prompt returning `{ sub_questions: [{ text, hyde_passage }] }` or generating sub-questions and dispatching `Promise.all` for HyDE passages.
+  - *Synthesis & Consensus:* Option B adopted. A unified single-prompt decomposition and HyDE generation or concurrent `Promise.all` execution completes within < 1,200ms, preserving headroom for vector retrieval and token streaming.
+- **Trade-off 3: Vector Retrieval Concurrency across Sub-Questions**
+  - *Option A (Serial Queries):* Query Upstash Vector sequentially for each sub-question. *Cost:* 3 to 5 HTTP round trips × 40ms = 120–200ms; breaches `NFR-001` p95 < 100ms budget.
+  - *Option B (Parallel `Promise.all` Queries):* Dispatch vector queries concurrently with individual tenant filter payload `{ user_id }` and `top_k: 3`.
+  - *Synthesis & Consensus:* Option B adopted. Upstash Vector handles concurrent REST queries cleanly; parallel execution resolves in ~45ms p95, easily satisfying `NFR-001`.
+- **Trade-off 4: Citation Format & Frontend Anchoring Protocol**
+  - *Option A (Raw Markdown Footnotes `[^doc_1_chunk_2]`):* Standard markdown syntax. *Cost:* Parsing and mapping footnotes on streaming tokens in real time requires buffering or complex regex lookaheads on the client.
+  - *Option B (Structured Inline Anchors `[1]`, `[2]` paired with a Citation Reference Manifest):* Stream tokens contain numeric anchors `[1]`, `[2]`; the initial metadata event or concluding event emits `citations: [{ index: 1, document_id, document_title, snippet, chunk_id }]`.
+  - *Synthesis & Consensus:* Option B adopted. Enables instant clickable card previews in the UI, conforms to `FR-011` / `FR-033`, and simplifies parsing.
+- **Trade-off 5: Unavailable Sources Disclosure Protocol (`FR-039`)**
+  - *Option A (Silent Omission):* Only retrieve from indexed documents; ignore pending/failed sources. *Cost:* Directly violates `FR-039` and creates user confusion when an uploaded document produces no answers.
+  - *Option B (Explicit Footer Enumeration):* During context assembly, check the notebook's documents state from `@repo/db`; if any document has status `queued`, `processing`, or `failed`, append an informational footer: `"Sources currently unavailable or processing: [Doc Title (processing)]"`.
+  - *Synthesis & Consensus:* Option B adopted. Fully satisfies `FR-039` without penalizing synthesis quality.
+
+## Round 3: Consensus & Decisions
+1. **Charter & Grounding Confirmed:** Milestone M5 scope encompasses `FR-008..FR-011`, `FR-039`, `BR-002`, `BR-007..BR-009`, `BR-027`, `NFR-001..NFR-003`, `NFR-022`. Risk tier classified as **HIGH** due to dual-provider external inference, circuit-breaker failover, and strict latency SLAs.
+2. **Architecture Blueprint Sealed:** `05-m5-grounded-reasoning-engine.md` authored and approved, detailing the 6-phase pipeline, adapter contracts, Upstash Vector retrieval, Gemini Flash primary, Groq Llama-3.3 fallback, and citation streaming.
+3. **Sprint Board Certified:** Board `M5-S1` authored in `m5-reasoning-engine/sprint-status.yaml` with six stories (`S5.1` to `S5.6`), explicit Change Matrices, and verified DAG.
+4. **PM Approval Granted:** `pm-agent` approves the M5 sprint plan for developer handoff. Because the workspace baseline is 100% green (101/101 pass, 8/8 build/typecheck pass), approval is **unconditional**.
+
+## Sealed Decision Register
+
+| Decision ID | Summary | Owner | Sealed State |
+|---|---|---|---|
+| **M5-PM-001** | Scope grounded in FR-008..011, FR-039, BR-002, BR-007..009, BR-027, NFR-001..003, NFR-022; classified HIGH risk | `pm-agent` | Sealed |
+| **M5-PM-002** | Unconditional PM approval for M5 sprint plan handoff to developer-agent | `pm-agent` | Sealed |
+| **M5-ARCH-001** | In-process reasoning package `@repo/reasoning` with adapter interfaces for Google and Groq | `architect-agent` | Sealed |
+| **M5-ARCH-002** | In-process circuit-breaker: transparent Groq Llama-3.3-70B failover on Gemini 429 quota exhaustion with `x-fallback-provider` header | `architect-agent` | Sealed |
+| **M5-ARCH-003** | Parallel sub-question decomposition and concurrent Upstash Vector queries (< 100ms p95) | `architect-agent` | Sealed |
+| **M5-ARCH-004** | Structured inline citation anchors `[1]`, `[2]` with document preview manifest and FR-039 unavailable sources footer | `architect-agent` | Sealed |
+| **M5-SPR-001** | Six single-session stories `S5.1 → S5.2 → S5.3 → S5.4 → S5.5 → S5.6` with frozen Change Matrices | `sprint-agent` | Sealed |
+| **M5-SPR-002** | Mock provider harnesses built in tests to enable deterministic CI testing of Gemini 429 failover without consuming live quotas | `sprint-agent` | Sealed |
+
+## Rejected Alternatives (strongest argument, and why it lost)
+- **External AI Gateway (Portkey / LiteLLM)** — unified dashboard and routing; lost because it adds an external cloud dependency, latency, and operational cost threatening the $0.00/month invariant (`NFR-016`).
+- **Sequential Decomposition & HyDE** — simplicity of single-threaded code; lost because it consumes > 2,400ms, violating the 4,500ms pipeline SLA (`NFR-003`).
+- **Footnote-based Citations (`[^1]`)** — standard markdown; lost because streaming token parsing on client requires complex buffering, whereas numeric anchors `[1]` with an accompanying manifest render immediately.
+- **Silent Omission of Unavailable Documents** — reduces token count in prompt; lost because it breaches explicit requirement `FR-039` and creates opaque failure modes for users.
+
+## Handoff & Next Steps
+1. Hand off to `developer-agent` via `handoff-014-sprint-to-developer-m5.md`.
+2. `developer-agent` starts with **S5.1** (shared reasoning contracts in `@repo/contracts`) and proceeds sequentially through **S5.6**.
+3. `test-agent` verifies each story against acceptance criteria and certifies closure.
+4. `sprint-agent` maintains board progress in `m5-reasoning-engine/sprint-status.yaml`.
+
+## Implementation note
+This is a DBW documentation and coordination record. All approvals are represented through workspace artifacts; downstream agent work proceeds from those artifacts rather than from this chat turn.

@@ -562,6 +562,12 @@ paths:
       responses:
         '200':
           description: Streamed synthesized answer chunks with inline citations
+          headers:
+            x-fallback-provider:
+              schema:
+                type: string
+                enum: [gemini, groq]
+              description: The active inference provider that satisfied the request (gemini primary, groq on 429 failover)
           content:
             text/event-stream:
               schema:
@@ -572,6 +578,8 @@ paths:
           $ref: '#/components/responses/InsufficientCredits'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 
 components:
   securitySchemes:

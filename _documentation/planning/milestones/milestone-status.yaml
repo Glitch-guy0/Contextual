@@ -7,7 +7,7 @@
 # erroneously marked complete and M2 in-progress based on external project inferences.
 # Current workspace contains 0 product code files. M0 is the active next milestone.
 version: 1
-updated_at: "2026-10-26T09:37:00.000Z"
+updated_at: "2026-10-27T08:25:00.000Z"
 milestones:
   - id: "M0"
     name: "Workspace Foundation & Scaffolding"
@@ -99,15 +99,20 @@ milestones:
   - id: "M5"
     name: "6-Phase Grounded Reasoning Engine"
     target_version: "v0.5.0"
-    status: "not-started"
-    gate: "G1"
-    gate_status: "READY"
+    status: "in-progress"
+    gate: "G6"
+    gate_status: "PASS"
     delivers: "Query decomposition, HyDE summary generation, Top-3 vector retrieval from Upstash Vector, Gemini Flash primary synthesis, Groq Llama-3.3-70B fallback"
     criteria:
-      - "Complex query decomposes into 2 to 5 targeted sub-questions"
-      - "Top-3 relevant chunks retrieved per sub-question with tenant payload filter from Upstash Vector"
-      - "Synthesized responses stream with clickable inline citations; zero hallucinations outside context"
-      - "Primary LLM exhaustion falls through to Groq Llama-3.3-70B fallback transparently"
+      - "Complex query decomposes into 2 to 5 targeted sub-questions (AC-5.1, FR-008, BR-007)"
+      - "Top-3 relevant chunks retrieved per sub-question with tenant payload filter from Upstash Vector (AC-5.2, FR-010, BR-008)"
+      - "Synthesized responses stream with clickable inline citations; zero hallucinations outside context (AC-5.3, FR-011, BR-009)"
+      - "Primary LLM exhaustion falls through to Groq Llama-3.3-70B fallback transparently (AC-5.4, NFR-022, ADR-0004)"
+      - "End-to-end 6-phase reasoning executes in p90 < 4,500ms (AC-5.5, NFR-003)"
+    planned_at: "2026-10-27T08:25:00.000Z"
+    planning_evidence: "7/7 plan checks PASS; baseline 101/101 pass, 8/8 build/typecheck clean; board M5-S1 with 6 frozen stories (S5.1..S5.6); design 05-m5-grounded-reasoning-engine.md; PM approved unconditionally (pm-approval.md)"
+    verified_at: "2026-10-27T08:52:00.000Z"
+    verification: "154 pass, 0 fail, 1021 expect() calls across 32 files; 9/9 build clean; 9/9 typecheck clean; latency p90 = 27ms < 4,500ms (NFR-003); S5.1..S5.6 100% verified"
 
   - id: "M6"
     name: "Pluggable Long-Term Memory Store"
