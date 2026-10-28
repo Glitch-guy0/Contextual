@@ -48,8 +48,8 @@ services:
       DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/contextual_dev"
       REDIS_URL: "redis://redis:6379"
       LOG_LEVEL: "info"
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_contextual_local_mock"
-      CLERK_SECRET_KEY: "sk_test_contextual_local_mock"
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_YWRqdXN0ZWQtY29sdC00NDExLmNsZXJrLmFjY291bnRzLmRldiQ"
+      CLERK_SECRET_KEY: sk_test_K1CGZvefMfehMCLKA2zOHob95MXdqse51tZiID0kYl
     depends_on:
       postgres:
         condition: service_healthy
